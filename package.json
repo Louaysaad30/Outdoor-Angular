@@ -54,6 +54,7 @@
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "lottie-web": "^5.12.2",
+    "maplibre-gl": "^5.2.0",
     "masonry-layout": "^4.2.2",
     "moment": "^2.29.4",
     "ng-apexcharts": "^1.8.0",

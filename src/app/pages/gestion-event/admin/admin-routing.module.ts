@@ -1,7 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import {EventAreaListComponent} from "./event-area-list/event-area-list.component";
 
-const routes: Routes = [];
+const routes: Routes = [
+  {path : 'event-area-list',component : EventAreaListComponent},
+];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
