@@ -7,4 +7,5 @@ export class EventArea {
   description!: string ;
   areaImg!: string ;
   events!: Event[];
+  address?: string ;
 }

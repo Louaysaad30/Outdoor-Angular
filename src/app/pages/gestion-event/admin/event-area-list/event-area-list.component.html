@@ -97,17 +97,14 @@
                     </div>
                     <h6 class="fs-lg text-capitalize text-truncate"><a routerLink="/real-estate/property-overview" class="text-reset">{{data.name}}</a></h6>
                     <p class="text-muted"><i class="bi bi-geo-alt align-baseline me-1"></i>
-                      {{data.latitude}}</p>
+                      {{data.address}}</p>
                   </div>
                   <ul class="d-flex align-items-center gap-2 flex-wrap list-unstyled">
                     <li>
                       <p class="text-muted mb-0"><i class="bi bi-house align-baseline text-primary me-1"></i>
-                        {{data.capacity}} Bedroom</p>
+                        {{data.capacity}} People Capacity</p>
                     </li>
-                    <li>
-                      <p class="text-muted mb-0"><i class="ph ph-bathtub align-middle text-primary me-1"></i>
-                        {{data.longitude}} Bathroom</p>
-                    </li>
+
                     <li>
                       <p class="text-muted mb-0"><i class="bi bi-columns align-baseline text-primary me-1"></i>
                         {{data.description}} sqft
@@ -115,7 +112,7 @@
                     </li>
                   </ul>
                   <div class="border-top border-dashed mt-auto pt-3 d-flex align-items-center justify-content-between gap-3">
-                    <h5 class="mb-0">${{data.name}}</h5>
+<!--                    <h5 class="mb-0">${{data.name}}</h5>-->
                     <a routerLink="/real-estate/property-overview" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>
                   </div>
                 </div>
@@ -134,16 +131,26 @@
           <div class="row align-items-center" id="pagination-element">
             <div class=" col-sm">
               <div class="text-muted text-center text-sm-start">
-                Showing <span class="fw-semibold">{{maps?.length}}</span> of <span class="fw-semibold">{{maplist?.length}}</span> Results
+                Showing <span class="fw-semibold">{{eventAreas?.length}}</span> of <span class="fw-semibold">{{allEventAreas?.length}}</span> Results
               </div>
             </div><!--end col-->
             <div class="col-sm-auto mt-3 mt-sm-0">
-              <pagination class="pagination-wrap hstack justify-content-center gap-2" [totalItems]="maplist?.length" [itemsPerPage]="3" (pageChanged)="pageChanged($event)"></pagination>
+              <pagination class="pagination-wrap hstack justify-content-center gap-2" [totalItems]="allEventAreas.length" [itemsPerPage]="3" (pageChanged)="pageChanged($event)"></pagination>
             </div><!--end col-->
           </div><!--end row-->
         </div><!--end card-body-->
       </div><!--end col-->
-!--end col-->
+       <div class="col-xl-7">
+          <div
+            id="leaflet-map-group-control1"
+            leaflet
+            [leafletOptions]="options"
+            [leafletLayers]="mapMarkers"
+            (leafletClick)="handleMapClick($event)"
+            class="leaflet-map leaflet-gray rounded"
+            style="height: 750px !important;">
+          </div>
+      </div><!--end col-->
     </div><!--end row-->
   </div>
 </div>
@@ -251,15 +258,7 @@
     <!-- modal-content -->
   </div>
 </div><!--end add Property modal-->
-<div
-  id="leaflet-map-group-control"
-  leaflet
-  [leafletOptions]="options"
-  [leafletLayers]="mapMarkers"
-  (leafletClick)="handleMapClick($event)"
-  class="leaflet-map leaflet-gray rounded"
-  style="height: 750px !important;">
-</div>
+
 <!-- deleteRecordModal -->
 <div bsModal #deleteRecordModal="bs-modal" id="deleteRecordModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
