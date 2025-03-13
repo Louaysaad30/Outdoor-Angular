@@ -1,4 +1,118 @@
+
+
+<!--add post-->
+<div class="post-container">
+  <div class="profile">
+    <img [src]="profileImage" alt="Profile Image" class="profile-pic" />
+    <input type="text" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+  </div>
+</div>
+
+<!-- Modal -->
+<div  class="modal-dialog modal-dialog-centered modal-lg"
+      class="modal fade"
+      [ngClass]="{ show: isModalOpen }"
+      [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+      tabindex="-1"
+      aria-modal="true"
+      role="dialog"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header px-4 pt-4">
+        <h5 class="modal-title">Créer une publication</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="chat-input-section p-3 p-lg-4 border-top border-2">
+
+          <form id="chatinput-form" enctype="multipart/form-data">
+            <div class="row g-0 align-items-center">
+              <div class="col-auto">
+                <div class="chat-input-links me-2">
+                  <div class="links-list-item">
+                    <button type="button" class="btn btn-link text-decoration-none emoji-btn" (click)="toggleEmojiPicker()" id="emoji-btn">
+                      <i class="bx bx-smile align-middle"></i>
+                    </button>
+                    <!-- Afficher le sélecteur d'emoji sous l'icône si activé -->
+                    <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+                      <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)" title="Pick your emoji…"></emoji-mart>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col">
+                <div *ngIf="submitted1 && form['message'].errors" class="chat-input-feedback">
+                  <span *ngIf="form['message'].errors['required']">Please Enter a Message</span>
+                </div>
+                <textarea class="form-control"
+                          [(ngModel)]="postContent"
+                          name="postContent"
+                          rows="3"
+                          (blur)="onBlur()"
+                          (focus)="onFocus()"
+                          id="chat-input"
+                          placeholder="Quoi de neuf, Iyed ?"
+                          autocomplete="off"></textarea>
+              </div>
+
+              <div class="col-auto">
+                <div class="chat-input-links ms-2"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="add-options mt-3 d-flex align-items-center">
+          <span class="options-label">Ajouter à votre publication</span>
+          <button class="btn btn-outline-secondary ml-3 custom-btn" (click)="addPhoto()">
+            <i class="bi bi-image-fill custom-icon"></i>
+            <span class="custom-text">Photo/Video</span>
+          </button>
+        </div>
+
+        <div *ngIf="showFileUpload" class="mt-3">
+          <label class="form-label">Product Images</label>
+          <ngx-dropzone (change)="onSelect($event)" [multiple]="true">
+            <ngx-dropzone-label>Drop files here or click to upload.</ngx-dropzone-label>
+          </ngx-dropzone>
+
+          <ul class="list-unstyled mb-0" *ngIf="uploadedFiles.length > 0">
+            <li *ngFor="let file of uploadedFiles; let i = index" class="mt-2">
+              <div class="border rounded">
+                <div class="d-flex p-2">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm bg-light rounded p-2">
+                      <img class="img-fluid rounded d-block" [src]="file.objectURL" alt="Dropzone-Image" />
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="pt-1">
+                      <h5 class="fs-md mb-1">{{ file.name }}</h5>
+                      <p class="fs-sm text-muted mb-0">{{ (file.size / 1024).toFixed(2) }} KB</p>
+                    </div>
+                  </div>
+                  <div class="flex-shrink-0 ms-3">
+                    <button (click)="removeFile(file)" class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer px-4 pb-4">
+        <button type="button" class="btn btn-primary" (click)="publishPost()">Publier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--end post-->
 <!-- Start Breadcrumbs -->
+
 <app-breadcrumbs title="Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
 <!-- End Breadcrumbs -->
 
@@ -35,16 +149,23 @@
             <a routerLink="/tickets/list" class="btn btn-primary btn-sm"> Add Ticket</a>
           </div>
         </div>
-
-        <h6 class="fw-semibold text-uppercase mb-2">Ticket Descriptions</h6>
-        <p class="text-muted mb-4">It's used for building interactive user interfaces and web applications
-          quickly and efficiently with significantly less code than you would with vanilla JavaScript. In
-          React, you develop your applications by creating reusable components that you can think of as
-          independent Lego blocks. React is a JavaScript library developed by Facebook which, among other
-          things, was used to build Instagram.com. Its aim is to allow developers to easily create fast user
-          interfaces for websites and applications alike. The main concept of React. js is virtual DOM. If you
-          need a fast and responsive user interface, ReactJS is the better option. But if you need to handle
-          complex data analysis or number-crunching.</p>
+<h6 class="fw-semibold text-uppercase mb-2">Ticket Descriptions</h6>
+          <p class="text-muted mb-4">
+            <span *ngIf="!showFullDescription">
+              It's used for building interactive user interfaces and web applications quickly and efficiently...
+              <a href="javascript:void(0);" (click)="showFullDescription = true">Read more</a>
+            </span>
+            <span *ngIf="showFullDescription">
+              It's used for building interactive user interfaces and web applications
+              quickly and efficiently with significantly less code than you would with vanilla JavaScript. In
+              React, you develop your applications by creating reusable components that you can think of as
+              independent Lego blocks. React is a JavaScript library developed by Facebook which, among other
+              things, was used to build Instagram.com. Its aim is to allow developers to easily create fast user
+              interfaces for websites and applications alike. The main concept of React. js is virtual DOM. If you
+              need a fast and responsive user interface, ReactJS is the better option. But if you need to handle
+              complex data analysis or number-crunching.
+            </span>
+          </p>
 
         <h6 class="fw-semibold text-uppercase mb-4">Discussion with Themesbrand</h6>
           <div class="d-flex mb-4">

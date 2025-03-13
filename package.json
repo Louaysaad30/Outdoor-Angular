@@ -63,6 +63,7 @@
     "ngx-color-picker": "^15.0.0",
     "ngx-cookie-service": "^17.0.0",
     "ngx-countup": "^13.1.0",
+    "ngx-dropzone": "^3.1.0",
     "ngx-dropzone-wrapper": "^15.0.0",
     "ngx-echarts": "^17.1.0",
     "ngx-editor": "^16.0.1",
