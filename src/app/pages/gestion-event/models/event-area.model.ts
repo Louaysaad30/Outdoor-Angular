@@ -5,7 +5,7 @@ export class EventArea {
   latitude!: number;
   longitude!: number ;
   description!: string ;
-  areaImg!: string ;
+  areaImg?: string ;
   events!: Event[];
   address?: string ;
 }

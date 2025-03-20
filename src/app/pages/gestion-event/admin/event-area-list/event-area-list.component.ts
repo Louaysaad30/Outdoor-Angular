@@ -134,28 +134,13 @@ handleMapClick(event: any): void {
   this.addProperty?.show();
 }
 
-  // File Upload
-  public dropzoneConfig: DropzoneConfigInterface = {
-    clickable: true,
-    addRemoveLinks: true,
-    previewsContainer: false,
-  };
+
 
   uploadedFiles: any[] = [];
+  uploadedFile: File | null = null;
 
   // File Upload
   imageURL: any;
-  onUploadSuccess(event: any) {
-    setTimeout(() => {
-      this.uploadedFiles.push(event[0]);
-      this.propertyForm.controls['img'].setValue(event[0].dataURL);
-    }, 0);
-  }
-
-  // File Remove
-  removeFile(event: any) {
-    this.uploadedFiles.splice(this.uploadedFiles.indexOf(event), 1);
-  }
 
   // filter data
   searchList() {
@@ -177,31 +162,19 @@ handleMapClick(event: any): void {
   /**
    * Basic Maps
    */
-  options = {
-    layers: [
-      tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-      })
-    ],
-    zoom: 10,
-    center: latLng(39.73, -104.99)
-  };
+// File: src/app/pages/gestion-event/admin/event-area-list/event-area-list.component.ts
+options = {
+  layers: [
+    tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors © CARTO'
+    })
+  ],
+  zoom: 7,
+  center: latLng(34.0, 9.0)
+};
   mapMarkers: any[] = [];
 
-  GroupsLayers = [
-    marker([39.61, -105.02]).bindPopup('This is Littleton, CO.'),
-    marker([39.63, -105.09]).bindPopup('This is Littleton, CO.'),
-    marker([39.74, -104.99]).bindPopup('This is Denver, CO.'),
-    marker([39.77, -105.01]).bindPopup('This is Denver, CO.'),
-    marker([39.90, -105.03]).bindPopup('This is Denver, CO.'),
-    marker([39.96, -105.04]).bindPopup('This is Denver, CO.'),
-    marker([39.73, -104.8]).bindPopup('This is Aurora, CO.'),
-    marker([39.70, -104.9]).bindPopup('This is Aurora, CO.'),
-    marker([39.77, -105.23]).bindPopup("This is Golden, CO."),
-    marker([39.80, -105.01]).bindPopup("This is Golden, CO."),
-    marker([39.95, -105.09]).bindPopup("This is Golden, CO.")
-  ];
 
 
   // Edit Data
@@ -231,11 +204,25 @@ editList(index: number) {
   }
   this.propertyForm.patchValue(formData);
 }
-  // Add EVENT AREA
-// File: src/app/pages/gestion-event/admin/event-area-list/event-area-list.component.ts
+
+  onFileSelected(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement.files && inputElement.files.length > 0) {
+      this.uploadedFile = inputElement.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Update form control with a preview URL
+        this.propertyForm.patchValue({ img: reader.result });
+      };
+      reader.readAsDataURL(this.uploadedFile);
+    }
+  }
+
+
 saveProperty() {
   if (this.propertyForm.valid) {
     if (this.propertyForm.get('id')?.value) {
+      // Update existing event area
       const id = Number(this.propertyForm.get('id')?.value);
       const updatedEventArea: Omit<EventArea, 'address'> = {
         name: this.propertyForm.value.title,
@@ -264,25 +251,35 @@ saveProperty() {
         }
       );
     } else {
+      // Create new event area
       const newEventArea: Omit<EventArea, 'address'> = {
         name: this.propertyForm.value.title,
         capacity: Number(this.propertyForm.value.price),
         latitude: Number(this.propertyForm.value.Atitude),
         longitude: Number(this.propertyForm.value.Longitude),
         description: this.propertyForm.value.location,
-        areaImg: this.propertyForm.value.img,
+        areaImg: '',
         events: []
       };
+
+      // Check if any files were uploaded
+      if (!this.uploadedFile) {
+        console.error('No image file selected');
+        return;
+      }
+      // We now know the file exists, so it's safe to use it
+      const imageFile = this.uploadedFile;
+
       console.log('Creating event area with payload:', newEventArea);
-      this.eventAreaService.createEventArea(newEventArea as EventArea).subscribe(
+      this.eventAreaService.createEventAreaWithImage(newEventArea as EventArea, this.uploadedFile).subscribe(
         (response: EventArea) => {
-          // Retrieve and set the address using reverse geocoding
           this.reverseGeocodingService.reverseGeocode(response.latitude, response.longitude)
             .subscribe((address: string) => {
               response.address = address;
               this.allEventAreas.push(response);
               this.refreshPagination();
               this.propertyForm.reset();
+              this.uploadedFile = null;
               this.addProperty?.hide();
             });
         },
@@ -295,6 +292,7 @@ saveProperty() {
     console.log('Form is invalid:', this.propertyForm.errors, this.propertyForm.controls);
   }
 }
+
 refreshPagination(): void {
   const startItem = (this.currentPage - 1) * this.itemsPerPage;
   const endItem = this.currentPage * this.itemsPerPage;

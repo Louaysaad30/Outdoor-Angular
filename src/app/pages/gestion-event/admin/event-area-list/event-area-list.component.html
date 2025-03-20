@@ -131,7 +131,7 @@
           <div class="row align-items-center" id="pagination-element">
             <div class=" col-sm">
               <div class="text-muted text-center text-sm-start">
-                Showing <span class="fw-semibold">{{eventAreas?.length}}</span> of <span class="fw-semibold">{{allEventAreas?.length}}</span> Results
+                Showing <span class="fw-semibold">{{eventAreas.length}}</span> of <span class="fw-semibold">{{allEventAreas.length}}</span> Results
               </div>
             </div><!--end col-->
             <div class="col-sm-auto mt-3 mt-sm-0">
@@ -174,40 +174,13 @@
           <input type="hidden" id="discount-field">
 
           <div class="mb-3">
-            <label class="form-label">EVENT AREA Image<span class="text-danger">*</span></label>
-            <dropzone class="dropzone" [config]="dropzoneConfig" [message]="'Drop files here or click to upload.'" (success)="onUploadSuccess($event)"></dropzone>
-            @if (uploadedFiles) {
-              <ul class="list-unstyled mb-0" id="dropzone-preview">
-                @for (file of uploadedFiles; track $index) {
-                  <li class="mt-2" id="dropzone-preview-list">
-                    <div class="border rounded">
-                      <div class="d-flex flex-wrap gap-2 p-2">
-                        <div class="flex-shrink-0 me-3">
-                          <div class="avatar-sm bg-light rounded p-2">
-                            @if (file.dataURL) {
-                              <img class="img-fluid rounded d-block" [src]="file.dataURL" alt="Dropzone-Image" />
-                            }@else {
-                              <img class="img-fluid rounded d-block" [src]="file" alt="Dropzone-Image" />
-                            }
-                          </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <div class="pt-1">
-                            @if (file.name) {<h5 class="fs-md mb-1">{{ file.name }}</h5>}
-                            @if (file.size) {<p class="fs-sm text-muted mb-0">{{ file.size }}</p>}
-                          </div>
-                        </div>
-                        <div class="flex-shrink-0 ms-3">
-                          <button (click)="removeFile(file)" class="btn btn-sm btn-danger">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                }
-              </ul>
-              <!-- end dropzon-preview -->
-            }
+            <label class="form-label">Event Area Image<span class="text-danger">*</span></label>
+            <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+            <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
+              <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+            </div>
           </div>
+
 
           <div class="mb-3">
             <label for="EVENT AREA-title-input" class="form-label">EVENT AREA NAME<span class="text-danger">*</span></label>
