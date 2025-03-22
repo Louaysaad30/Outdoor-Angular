@@ -16,37 +16,12 @@
           <div class="col-xl-2 col-sm-6">
             <select class="form-control" id="idType" (change)="selectstatus()">
               <option value="all">Select All Type</option>
-              <option value="Villa">Villa</option>
-              <option value="Apartment">Apartment</option>
-              <option value="Residency">Residency</option>
-              <option value="Others">Others</option>
+              <option value="Villa">IN DOOR</option>
+              <option value="Apartment">OUTDOOR</option>
+
             </select>
           </div>
-          <div class="col-xl-2 col-sm-6">
-            <select class="form-control" id="idBedroom" data-choices data-choices-search-false>
-              <option value="all">Select All</option>
-              <option value="1">1 Bedroom</option>
-              <option value="2">2 Bedroom</option>
-              <option value="3">3 Bedroom</option>
-              <option value="4">4 Bedroom</option>
-              <option value="5">5 Bedroom</option>
-            </select>
-          </div>
-          <div class="col-xl-2 col-sm-6">
-            <select class="form-control" data-choices data-choices-search-false>
-              <option value="all">Select All</option>
-              <option value="0-$2000">0-$1000</option>
-              <option value="$1000-$2000">$1000-$2000</option>
-              <option value="$2000-$3000">$2000-$3000</option>
-              <option value="$3000-$4000">$3000-$4000</option>
-              <option value="$4000-$5000">$4000-$5000</option>
-            </select>
-          </div>
-          <div class="col-xl-2 col-sm-6">
-            <div>
-              <input type="text" class="form-control" mwlFlatpickr [altInput]="true" [convertModelValue]="true" dateFormat="d M,Y" altFormat="d M,Y" mode="range" id="demo-datepicker" placeholder="Select date">
-            </div>
-          </div>
+
           <div class="col-xl col-sm-6">
             <button class="btn btn-primary w-100" (click)="addProperty.show()">Add Property</button>
           </div>
@@ -95,7 +70,7 @@
                         <li><a class="dropdown-item" href="javascript:void(0);" (click)="removeItem(data.id)"><i class="bi bi-trash3 me-1 align-baseline"></i> Delete</a></li>
                       </ul>
                     </div>
-                    <h6 class="fs-lg text-capitalize text-truncate"><a routerLink="/real-estate/property-overview" class="text-reset">{{data.name}}</a></h6>
+                    <h6 class="fs-lg text-capitalize text-truncate"><a [routerLink]="['/eventback/admin/event-area-details', data.id]" class="text-reset">{{data.name}}</a></h6>
                     <p class="text-muted"><i class="bi bi-geo-alt align-baseline me-1"></i>
                       {{data.address}}</p>
                   </div>
@@ -112,9 +87,8 @@
                     </li>
                   </ul>
                   <div class="border-top border-dashed mt-auto pt-3 d-flex align-items-center justify-content-between gap-3">
-<!--                    <h5 class="mb-0">${{data.name}}</h5>-->
-                    <a routerLink="/real-estate/property-overview" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>
-                  </div>
+                  <!--<h5 class="mb-0">${{data.name}}</h5>-->
+                  <a [routerLink]="['/eventback/admin/event-area-details', data.id]" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>                  </div>
                 </div>
               </div><!--end col-->
             </div><!--end row-->

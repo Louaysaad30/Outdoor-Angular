@@ -143,14 +143,15 @@ handleMapClick(event: any): void {
   imageURL: any;
 
   // filter data
-  searchList() {
-    if (this.term) {
-      this.eventAreas = this.allEventAreas.filter((data: any) =>
-        data.title.toLowerCase().includes(this.term.toLowerCase()))
-    } else {
-      this.eventAreas = this.allEventAreas.slice(0, 3)
-    }
+searchList() {
+  if (this.term) {
+    this.eventAreas = this.allEventAreas.filter((data: EventArea) =>
+      data.name.toLowerCase().includes(this.term.toLowerCase())
+    );
+  } else {
+    this.eventAreas = this.allEventAreas.slice(0, this.itemsPerPage);
   }
+}
   // select apartment type
   selectstatus() {
     const status = (document.getElementById('idType') as HTMLInputElement).value
