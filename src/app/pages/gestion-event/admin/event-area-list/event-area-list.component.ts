@@ -107,7 +107,7 @@ export class EventAreaListComponent implements OnInit{
 
   }
 updateMarkers(): void {
-  this.mapMarkers = this.eventAreas.map((area: EventArea) => {
+  this.mapMarkers = this.allEventAreas.map((area: EventArea) => {
     return marker([area.latitude, area.longitude], {
       icon: icon({
         iconSize: [25, 41],
@@ -234,7 +234,7 @@ saveProperty() {
         events: []
       };
       console.log('Updating event area with payload:', updatedEventArea);
-      this.eventAreaService.updateEventArea(id, updatedEventArea as EventArea).subscribe(
+      this.eventAreaService.updateEventArea(id, updatedEventArea as EventArea, this.uploadedFile || undefined).subscribe(
         (response: EventArea) => {
           // Call reverse geocoding to update the address
           this.reverseGeocodingService.reverseGeocode(response.latitude, response.longitude)
@@ -292,7 +292,6 @@ saveProperty() {
     console.log('Form is invalid:', this.propertyForm.errors, this.propertyForm.controls);
   }
 }
-
 refreshPagination(): void {
   const startItem = (this.currentPage - 1) * this.itemsPerPage;
   const endItem = this.currentPage * this.itemsPerPage;

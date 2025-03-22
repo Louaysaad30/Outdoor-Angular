@@ -36,8 +36,18 @@ export class EventAreaService {
     return this.http.post<EventArea>(`${this.apiUrl}/upload`, formData);
   }
 
-  updateEventArea(id: number, eventArea: EventArea): Observable<EventArea> {
-    return this.http.put<EventArea>(`${this.apiUrl}/${id}`, eventArea);
+  updateEventArea(id: number, eventArea: EventArea, imageFile?: File): Observable<EventArea> {
+    const formData = new FormData();
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    formData.append('name', eventArea.name);
+    formData.append('capacity', eventArea.capacity.toString());
+    formData.append('latitude', eventArea.latitude.toString());
+    formData.append('longitude', eventArea.longitude.toString());
+    formData.append('description', eventArea.description);
+
+    return this.http.put<EventArea>(`${this.apiUrl}/${id}/update`, formData);
   }
 
   deleteEventArea(id: number): Observable<void> {
