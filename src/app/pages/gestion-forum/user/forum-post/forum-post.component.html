@@ -1,6 +1,7 @@
+<!--
 
 
-<!--add post-->
+&lt;!&ndash;add post&ndash;&gt;
 <div class="post-container">
   <div class="profile">
     <img [src]="profileImage" alt="Profile Image" class="profile-pic" />
@@ -8,26 +9,24 @@
   </div>
 </div>
 
-<!-- Modal -->
-<div  class="modal-dialog modal-dialog-centered modal-lg"
-      class="modal fade"
-      [ngClass]="{ show: isModalOpen }"
-      [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
-      tabindex="-1"
-      aria-modal="true"
-      role="dialog"
->
+&lt;!&ndash; Modal &ndash;&gt;
+<div class="modal fade"
+     [ngClass]="{ show: isModalOpen }"
+     [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+     tabindex="-1"
+     aria-modal="true"
+     role="dialog">
+
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-
       <div class="modal-header px-4 pt-4">
         <h5 class="modal-title">Créer une publication</h5>
         <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
       </div>
+
       <div class="modal-body p-4">
         <div class="chat-input-section p-3 p-lg-4 border-top border-2">
-
-          <form id="chatinput-form" enctype="multipart/form-data">
+          <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
             <div class="row g-0 align-items-center">
               <div class="col-auto">
                 <div class="chat-input-links me-2">
@@ -35,7 +34,7 @@
                     <button type="button" class="btn btn-link text-decoration-none emoji-btn" (click)="toggleEmojiPicker()" id="emoji-btn">
                       <i class="bx bx-smile align-middle"></i>
                     </button>
-                    <!-- Afficher le sélecteur d'emoji sous l'icône si activé -->
+                    &lt;!&ndash; Emoji picker &ndash;&gt;
                     <div *ngIf="showEmojiPicker" class="emoji-picker-container">
                       <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)" title="Pick your emoji…"></emoji-mart>
                     </div>
@@ -44,10 +43,11 @@
               </div>
 
               <div class="col">
-                <div *ngIf="submitted1 && form['message'].errors" class="chat-input-feedback">
-                  <span *ngIf="form['message'].errors['required']">Please Enter a Message</span>
+                <div *ngIf="submitted1 && form?.['message']?.errors" class="chat-input-feedback">
+                  <span *ngIf="form?.['message']?.errors?.['required']">Please Enter a Message</span>
                 </div>
                 <textarea class="form-control"
+                          formControlName="message"
                           [(ngModel)]="postContent"
                           name="postContent"
                           rows="3"
@@ -74,9 +74,9 @@
         </div>
 
         <div *ngIf="showFileUpload" class="mt-3">
-          <label class="form-label">Product Images</label>
+          <label class="form-label">Images/Vidéos</label>
           <ngx-dropzone (change)="onSelect($event)" [multiple]="true">
-            <ngx-dropzone-label>Drop files here or click to upload.</ngx-dropzone-label>
+            <ngx-dropzone-label>Déposez vos fichiers ici ou cliquez pour télécharger.</ngx-dropzone-label>
           </ngx-dropzone>
 
           <ul class="list-unstyled mb-0" *ngIf="uploadedFiles.length > 0">
@@ -103,18 +103,25 @@
           </ul>
         </div>
       </div>
+
       <div class="modal-footer px-4 pb-4">
-        <button type="button" class="btn btn-primary" (click)="publishPost()">Publier</button>
+        <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="publishPost()">
+          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+          Publier
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!--end post-->
-<!-- Start Breadcrumbs -->
+&lt;!&ndash;end post&ndash;&gt;
+
+
+
+&lt;!&ndash; Start Breadcrumbs &ndash;&gt;
 
 <app-breadcrumbs title="Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
-<!-- End Breadcrumbs -->
+&lt;!&ndash; End Breadcrumbs &ndash;&gt;
 
 <div class="card">
   <div class="row g-0">
@@ -203,109 +210,207 @@
           </div>
         </form>
       </div>
-    </div><!--end col-->
-    <div class="col-xl-3 col-lg-4">
-      <div class="card-header">
-        <h6 class="card-title mb-0">Ticket Details</h6>
+    </div>&lt;!&ndash;end col&ndash;&gt;
+  </div>&lt;!&ndash;end row&ndash;&gt;
+</div>
+
+
+-->
+
+
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="container">
+  <div class="row justify-content-center">
+    <!-- Main Content Area - Forum Feed -->
+    <div class="col-lg-8">
+      <!--add post-->
+      <div class="post-container">
+        <div class="profile">
+          <img [src]="profileImage" alt="Profile Image" class="profile-pic" />
+          <input type="text" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+        </div>
       </div>
-      <div class="card-body mt-2">
-        <div class="table-responsive table-card">
-          <table class="table table-borderless align-middle mb-0">
-            <tbody>
-            <tr>
-              <th>Ticket No</th>
-              <td>#TBS<span id="t-no">24301901</span> </td>
-            </tr>
-            <tr>
-              <th>Client</th>
-              <td id="t-client">Themesbrand</td>
-            </tr>
-            <tr>
-              <th>Project</th>
-              <td>Steex - Admin & Dashboard</td>
-            </tr>
-            <tr>
-              <th>Assigned To:</th>
-              <td>
-                <div class="avatar-group">
-                  <a href="javascript:void(0);" class="avatar-group-item" placement="top" tooltip="Erica Kernan">
-                    <img src="assets/images/users/avatar-4.jpg" alt="" class="rounded-circle avatar-xs">
-                  </a>
-                  <a href="javascript:void(0);" class="avatar-group-item" placement="top" tooltip="Alexis Clarke">
-                    <img src="assets/images/users/avatar-10.jpg" alt="" class="rounded-circle avatar-xs">
-                  </a>
-                  <a href="javascript:void(0);" class="avatar-group-item" placement="top" tooltip="James Price">
-                    <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle avatar-xs">
-                  </a>
-                  <a href="javascript: void(0);" class="avatar-group-item" placement="top" tooltip="Add Members">
-                    <div class="avatar-xs">
-                      <div class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
-                        +
+      <!-- Modal -->
+      <div class="modal fade"
+           [ngClass]="{ show: isModalOpen }"
+           [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+           tabindex="-1"
+           aria-modal="true"
+           role="dialog">
+
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header px-4 pt-4">
+              <h5 class="modal-title">Créer une publication</h5>
+              <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+            </div>
+
+            <div class="modal-body p-4">
+              <div class="chat-input-section p-3 p-lg-4 border-top border-2">
+                <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
+                  <div class="row g-0 align-items-center">
+                    <div class="col-auto">
+                      <div class="chat-input-links me-2">
+                        <div class="links-list-item">
+                          <button type="button" class="btn btn-link text-decoration-none emoji-btn" (click)="toggleEmojiPicker()" id="emoji-btn">
+                            <i class="bx bx-smile align-middle"></i>
+                          </button>
+                          <!-- Emoji picker -->
+                          <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+                            <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)" title="Pick your emoji…"></emoji-mart>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </a>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <th>Status:</th>
-              <td>
-                <select class="form-select" id="t-status" data-choices data-choices-search-false aria-label="Default select example">
-                  <option value>Status</option>
-                  <option value="New" selected>New</option>
-                  <option value="Open">Open</option>
-                  <option value="Inprogress">Inprogress</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </td>
-            </tr>
-            <tr>
-              <th>Priority</th>
-              <td>
-                <span class="badge bg-danger" id="t-priority">High</span>
-              </td>
-            </tr>
-            <tr>
-              <th>Create Date</th>
-              <td id="c-date">20 Dec, 2023</td>
-            </tr>
-            <tr>
-              <th>Due Date</th>
-              <td id="d-date">29 Dec, 2023</td>
-            </tr>
-            <tr>
-              <th>Last Activity</th>
-              <td>14 min ago</td>
-            </tr>
-            <tr>
-              <th>Labels</th>
-              <td class="hstack text-wrap gap-1">
-                <span class="badge bg-primary-subtle text-primary">Admin</span>
-                <span class="badge bg-primary-subtle text-primary">UI</span>
-                <span class="badge bg-primary-subtle text-primary">Dashboard</span>
-                <span class="badge bg-primary-subtle text-primary">Design</span>
-              </td>
-            </tr>
-            </tbody>
-          </table>
+
+                    <div class="col">
+                      <div *ngIf="submitted1 && form?.['message']?.errors" class="chat-input-feedback">
+                        <span *ngIf="form?.['message']?.errors?.['required']">Please Enter a Message</span>
+                      </div>
+                      <textarea class="form-control"
+                                formControlName="message"
+                                [(ngModel)]="postContent"
+                                name="postContent"
+                                rows="3"
+                                (blur)="onBlur()"
+                                (focus)="onFocus()"
+                                id="chat-input"
+                                placeholder="Quoi de neuf, Iyed ?"
+                                autocomplete="off"></textarea>
+                    </div>
+
+                    <div class="col-auto">
+                      <div class="chat-input-links ms-2"></div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div class="add-options mt-3 d-flex align-items-center">
+                <span class="options-label">Ajouter à votre publication</span>
+                <button class="btn btn-outline-secondary ml-3 custom-btn" (click)="addPhoto()">
+                  <i class="bi bi-image-fill custom-icon"></i>
+                  <span class="custom-text">Photo/Video</span>
+                </button>
+              </div>
+
+              <div *ngIf="showFileUpload" class="mt-3">
+                <label class="form-label">Images/Vidéos</label>
+                <ngx-dropzone (change)="onSelect($event)" [multiple]="true">
+                  <ngx-dropzone-label>Déposez vos fichiers ici ou cliquez pour télécharger.</ngx-dropzone-label>
+                </ngx-dropzone>
+
+                <ul class="list-unstyled mb-0" *ngIf="uploadedFiles.length > 0">
+                  <li *ngFor="let file of uploadedFiles; let i = index" class="mt-2">
+                    <div class="border rounded">
+                      <div class="d-flex p-2">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="avatar-sm bg-light rounded p-2">
+                            <img class="img-fluid rounded d-block" [src]="file.objectURL" alt="Dropzone-Image" />
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <div class="pt-1">
+                            <h5 class="fs-md mb-1">{{ file.name }}</h5>
+                            <p class="fs-sm text-muted mb-0">{{ (file.size / 1024).toFixed(2) }} KB</p>
+                          </div>
+                        </div>
+                        <div class="flex-shrink-0 ms-3">
+                          <button (click)="removeFile(file)" class="btn btn-sm btn-danger">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="modal-footer px-4 pb-4">
+              <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="publishPost()">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+                Publier
+              </button>
+            </div>
+          </div>
         </div>
-      </div><!--end card-body-->
-      <div class="card-body border-top mt-2">
-        <a href="javascript:void(0);" class="float-end link-effect">View More <i class="bi bi-arrow-right align-baseline ms-1"></i></a>
-        <h6 class="card-title mb-0">Support Team</h6>
       </div>
-      <div class="card-body">
-        <div class="d-flex gap-2 align-items-center mb-3">
-          <div class="flex-shrink-0">
-            <img src="assets/images/users/avatar-1.jpg" alt="" class="avatar-sm rounded">
+      <!-- Feed Posts -->
+      <!-- Update the feed posts section in forum-post.component.html -->
+      <!-- Loading state -->
+      <div *ngIf="loading" class="text-center my-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+
+      <!-- No posts message -->
+      <div *ngIf="!loading && posts.length === 0 && !error" class="card mb-4 shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-newspaper fs-1 text-muted mb-3"></i>
+          <h5>No posts yet</h5>
+          <p class="text-muted">Be the first to share something with the community!</p>
+        </div>
+      </div>
+
+      <!-- Posts list -->
+      <div *ngFor="let post of posts" class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/images/users/avatar-1.jpg" alt="" class="rounded-circle me-3" style="width: 48px; height: 48px;">
+            <div>
+              <h6 class="mb-0 fw-semibold">{{ post.username || 'Anonymous User' }}</h6>
+              <p class="text-muted small mb-0">{{ post.createdAt | date:'dd MMM yyyy - hh:mm a' }}</p>
+            </div>
           </div>
-          <div class="flex-grow-1">
-            <h6 class="fs-md">Morton Satterfield</h6>
-            <p class="text-muted mb-0">Admin & Founder</p>
+
+          <!-- Post content with read more functionality -->
+          <p class="mb-3">{{ post.content }}</p>
+
+          <!-- Post media -->
+          <!-- Post media -->
+          <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media">
+            <ng-container *ngFor="let media of post.media">
+              <!-- Afficher une image si c'est une image -->
+              <img *ngIf="isImage(media.mediaUrl!)"
+                   [src]="media.mediaUrl!"
+                   alt="Post image"
+                   class="img-fluid rounded mb-3"
+                   [ngClass]="{'media-single': post.media.length === 1, 'media-grid': post.media.length > 1}">
+
+              <video *ngIf="isVideo(media.mediaUrl!)"
+                     controls
+                     class="img-fluid rounded mb-3 media-video">
+                <source [src]="media.mediaUrl!" type="video/mp4">
+                Your browser does not support HTML video.
+              </video>
+            </ng-container>
+          </div>
+          <!-- Interaction buttons -->
+          <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+            <button class="btn btn-sm text-primary">
+              <i class="bi bi-hand-thumbs-up me-1"></i>Like {{ (post.reactions || []).length ? '(' + (post.reactions || []).length + ')' : '' }}
+            </button>
+            <button class="btn btn-sm text-primary">
+              <i class="bi bi-chat-dots me-1"></i>Comment {{ (post.comments || []).length ? '(' + (post.comments || []).length + ')' : '' }}
+            </button>
+            <button class="btn btn-sm text-primary"><i class="bi bi-share me-1"></i>Share</button>
+          </div>
+
+          <!-- Comment Input -->
+          <div class="d-flex gap-2">
+            <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle" style="width: 38px; height: 38px;">
+            <input type="text" class="form-control bg-light rounded-pill" placeholder="Write a comment...">
           </div>
         </div>
-        <button class="btn btn-secondary w-100" id="agent-chat"><i class="bi bi-chat-text align-baseline me-1"></i> Get In Touch</button>
       </div>
     </div>
-  </div><!--end row-->
+  </div>
 </div>

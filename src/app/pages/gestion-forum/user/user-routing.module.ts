@@ -5,8 +5,8 @@ import {ForumPostComponent} from "./forum-post/forum-post.component";
 import {AddPostComponent} from "./add-post/add-post.component";
 
 const routes: Routes = [
-  {path:"forumDetail",component:ForumDetailComponent},
-  {path:"forumPost",component:ForumPostComponent},
+  {path:"forumdetail",component:ForumDetailComponent},
+  {path:"forumpost",component:ForumPostComponent},
   {path:"addPost",component:AddPostComponent},
 
 ];
