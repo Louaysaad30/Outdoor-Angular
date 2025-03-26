@@ -1,0 +1,74 @@
+<div class="row">
+  <div class="col-lg-12">
+      <div class="card">
+          <div class="card-body">
+              <div class="row">
+
+                  <div class="col-xxl-">
+                    <div class="col-xxl-4">
+                      <h5 class="card-title mb-3">Product Information</h5>
+                      <p class="text-muted">Enter the basic product information below</p>
+                  </div>
+                      <form>
+                          <!-- Product Name -->
+                          <div class="mb-3">
+                              <label for="productName" class="form-label">Product Name <span class="text-danger">*</span></label>
+                              <input type="text" class="form-control" id="productName" formControlName="nomProduit"
+                                  placeholder="Enter product name" required>
+                          </div>
+
+                          <!-- Product Description -->
+                          <div class="mb-3">
+                              <label for="productDescription" class="form-label">Description <span class="text-danger">*</span></label>
+                              <textarea class="form-control" id="productDescription" formControlName="descriptionProduit"
+                                  placeholder="Enter product description" rows="3"></textarea>
+                          </div>
+
+                          <!-- Product Price -->
+                          <div class="mb-3">
+                              <label class="form-label">Price <span class="text-danger">*</span></label>
+                              <div class="input-group">
+                                  <span class="input-group-text">$</span>
+                                  <input type="number" class="form-control" formControlName="prixProduit"
+                                      placeholder="Enter price">
+                              </div>
+                          </div>
+
+                          <!-- Product Stock -->
+                          <div class="mb-3">
+                              <label class="form-label">Stock <span class="text-danger">*</span></label>
+                              <input type="number" class="form-control" formControlName="stockProduit"
+                                  placeholder="Enter stock quantity">
+                          </div>
+
+                          <!-- Product Category -->
+                          <div class="mb-3">
+                              <label class="form-label">Category <span class="text-danger">*</span></label>
+                              <select class="form-control" formControlName="categorie">
+                                  <option value="">Select category</option>
+                                  <option  *ngFor="let category of categories">
+                                      {{category.name}}
+                                  </option>
+                              </select>
+                          </div>
+
+                          <!-- Product Image -->
+                          <div class="mb-3">
+                              <label class="form-label">Product Image <span class="text-danger">*</span></label>
+                              <input type="file" class="form-control"  accept="image/*">
+                          </div>
+
+                          <!-- Submit Buttons -->
+                          <div class="mb-3">
+
+                            <button type="submit" class="btn btn-primary" >
+                                Submit
+                            </button>
+                        </div>
+                      </form>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
