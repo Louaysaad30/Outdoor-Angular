@@ -1,56 +1,69 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ProductService } from '../../services/product.service';
+import { Product } from '../../models/product';
 
-// Ck Editer
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 @Component({
   selector: 'app-add-product',
-  templateUrl: './add-product.component.html',
-  styleUrls: ['./add-product.component.scss']
+  templateUrl: './add-product.component.html'
 })
+export class AddProductComponent implements OnInit {
+  productForm: FormGroup;
+  categories: any[] = [];
+  selectedFile: File | null = null;
 
-// Add Product Component
-export class AddProductComponent {
-
-  // bread crumb items
-  breadCrumbItems!: Array<{}>;
-  public Editor = ClassicEditor;
-  files: File[] = [];
-  constructor() { }
+  constructor(
+    private fb: FormBuilder,
+    private productService: ProductService,
+    private router: Router
+  ) {
+    this.productForm = this.fb.group({
+      nomProduit: [''],
+      descriptionProduit: [''],
+      prixProduit: [''],
+      stockProduit: [''],
+      categorie: [''],
+      imageProduit: ['']
+    });
+  }
 
   ngOnInit(): void {
-    /**
-     * BreadCrumb
-     */
-    this.breadCrumbItems = [
-      { label: 'Ecommerce', active: true },
-      { label: 'Add Product', active: true }
-    ];
-
-  }
-  // File Upload
-  public dropzoneConfig: DropzoneConfigInterface = {
-    clickable: true,
-    addRemoveLinks: true,
-    previewsContainer: false
-  };
-
-  uploadedFiles: any[] = [];
-
-  // File Upload
-  imageURL: any;
-  onUploadSuccess(event: any) {
-    setTimeout(() => {
-      this.uploadedFiles.push(event[0]);
-    }, 0);
+    this.loadCategories();
   }
 
-  // File Remove
-  removeFile(event: any) {
-    this.uploadedFiles.splice(this.uploadedFiles.indexOf(event), 1);
+  loadCategories(): void {
+    // TODO: Implement your category loading logic here
   }
 
-  selectedValue = ['Fashion', 'Style', 'Brands', 'Puma'];
-  public items: string[] = ['Fashion', 'Style', 'Brands', 'Puma'];
+  onFileSelected(event: any): void {
+    if (event.target.files && event.target.files[0]) {
+      this.selectedFile = event.target.files[0];
+    }
+  }
 
+  onSubmit(): void {
+    const productData = this.productForm.value;
+    const product = new Product();
+    product.nomProduit = productData.nomProduit;
+    product.descriptionProduit = productData.descriptionProduit;
+    product.prixProduit = productData.prixProduit;
+    product.stockProduit = productData.stockProduit;
+    product.categorie = productData.categorie;
+    product.imageProduit = this.selectedFile?.name || '';
+
+    this.productService.addProduct(product).subscribe({
+      next: (response) => {
+        console.log('Product added successfully', response);
+
+      },
+      error: (error) => {
+        console.error('Error adding product', error);
+      }
+    });
+  }
+
+  onCancel(): void {
+    this.router.navigate(['/products']);
+  }
 }
