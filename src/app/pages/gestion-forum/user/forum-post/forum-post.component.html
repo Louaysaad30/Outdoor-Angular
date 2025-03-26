@@ -218,21 +218,75 @@
 -->
 
 
-<!-- Start Breadcrumbs -->
-<app-breadcrumbs [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
-<!-- End Breadcrumbs -->
 
-<div class="container">
-  <div class="row justify-content-center">
-    <!-- Main Content Area - Forum Feed -->
-    <div class="col-lg-8">
-      <!--add post-->
-      <div class="post-container">
-        <div class="profile">
-          <img [src]="profileImage" alt="Profile Image" class="profile-pic" />
-          <input type="text" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+
+  <div class="row  ">
+    <!-- Left Sidebar - Navigation -->
+    <div class="card col-lg-3 d-none d-lg-block position-fixed" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; left: 20px;">
+      <div class="left-sidebar p-4">
+        <div class="user-profile d-flex align-items-center mb-3">
+          <img [src]="profileImage" alt="Profile Image" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+          <h6 class="mb-0 fw-bold">Iyed Mejri</h6>
+        </div>
+
+        <div class="navigation-menu">
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-people-fill fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Amis</span>
+          </div>
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-bookmark-fill fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Enregistrements</span>
+          </div>
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-calendar-event fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Événements</span>
+          </div>
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-clock-history fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Souvenirs</span>
+          </div>
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-shop fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Marketplace</span>
+          </div>
+          <hr>
+          <h6 class="text-muted mb-2 small">Vos raccourcis</h6>
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-file-earmark-text fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Documents récents</span>
+          </div>
+          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+            <i class="bi bi-chat-square-dots fs-5 me-3 text-primary"></i>
+            <span class="fw-medium">Forums de discussion</span>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- Main Content Area - Forum Feed -->
+    <div class="col-lg-6 offset-lg-3 ">
+      <!--add post-->
+      <div class="card mb-2 shadow-sm">
+        <div class="card-body">
+          <div class="profile d-flex align-items-center">
+            <img [src]="profileImage" alt="Profile Image" class="profile-pic rounded-circle me-2" style="width: 40px; height: 40px;" />
+            <input type="text" class="form-control rounded-pill bg-light" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+          </div>
+          <div class="d-flex justify-content-around mt-3 pt-2 border-top">
+            <button class="btn btn-light d-flex align-items-center" (click)="openPostModal()">
+              <i class="bi bi-camera-video-fill text-danger me-2"></i> Vidéo en direct
+            </button>
+            <button class="btn btn-light d-flex align-items-center" (click)="addPhoto()">
+              <i class="bi bi-image text-success me-2"></i> Photo/Vidéo
+            </button>
+            <button class="btn btn-light d-flex align-items-center" (click)="openPostModal()">
+              <i class="bi bi-emoji-smile text-warning me-2"></i> Humeur
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Modal -->
       <div class="modal fade"
            [ngClass]="{ show: isModalOpen }"
@@ -249,87 +303,98 @@
             </div>
 
             <div class="modal-body p-4">
-              <div class="chat-input-section p-3 p-lg-4 border-top border-2">
+              <div class="d-flex align-items-center mb-3">
+                <img [src]="profileImage" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                <div>
+                  <h6 class="mb-0 fw-semibold">Iyed Mejri</h6>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill dropdown-toggle" type="button" id="privacyDropdown" data-bs-toggle="dropdown">
+                      <i class="bi bi-globe"></i> Public
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-globe me-2"></i>Public</a></li>
+                      <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-people me-2"></i>Amis</a></li>
+                      <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-lock me-2"></i>Privé</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-input-section">
                 <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
                   <div class="row g-0 align-items-center">
-                    <div class="col-auto">
-                      <div class="chat-input-links me-2">
-                        <div class="links-list-item">
-                          <button type="button" class="btn btn-link text-decoration-none emoji-btn" (click)="toggleEmojiPicker()" id="emoji-btn">
-                            <i class="bx bx-smile align-middle"></i>
-                          </button>
-                          <!-- Emoji picker -->
-                          <div *ngIf="showEmojiPicker" class="emoji-picker-container">
-                            <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)" title="Pick your emoji…"></emoji-mart>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <div class="col">
                       <div *ngIf="submitted1 && form?.['message']?.errors" class="chat-input-feedback">
                         <span *ngIf="form?.['message']?.errors?.['required']">Please Enter a Message</span>
                       </div>
-                      <textarea class="form-control"
+                      <textarea class="form-control border-0"
                                 formControlName="message"
                                 [(ngModel)]="postContent"
                                 name="postContent"
-                                rows="3"
+                                rows="5"
                                 (blur)="onBlur()"
                                 (focus)="onFocus()"
                                 id="chat-input"
                                 placeholder="Quoi de neuf, Iyed ?"
                                 autocomplete="off"></textarea>
                     </div>
-
-                    <div class="col-auto">
-                      <div class="chat-input-links ms-2"></div>
-                    </div>
                   </div>
                 </form>
               </div>
 
-              <div class="add-options mt-3 d-flex align-items-center">
-                <span class="options-label">Ajouter à votre publication</span>
-                <button class="btn btn-outline-secondary ml-3 custom-btn" (click)="addPhoto()">
-                  <i class="bi bi-image-fill custom-icon"></i>
-                  <span class="custom-text">Photo/Video</span>
-                </button>
+              <div class="bg-light rounded p-3 mt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Ajouter à votre publication</span>
+                  <div>
+                    <button class="btn btn-icon me-2" (click)="addPhoto()">
+                      <i class="bi bi-image-fill fs-5 text-success"></i>
+                    </button>
+                    <button class="btn btn-icon me-2">
+                      <i class="bi bi-person-plus-fill fs-5 text-primary"></i>
+                    </button>
+                    <button class="btn btn-icon me-2">
+                      <i class="bi bi-emoji-smile fs-5 text-warning"  (click)="toggleEmojiPicker()"></i>
+                    </button>
+                    <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+                      <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)"></emoji-mart>
+                    </div>
+                    <button class="btn btn-icon me-2">
+                      <i class="bi bi-geo-alt-fill fs-5 text-danger"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div *ngIf="showFileUpload" class="mt-3">
-                <label class="form-label">Images/Vidéos</label>
-                <ngx-dropzone (change)="onSelect($event)" [multiple]="true">
-                  <ngx-dropzone-label>Déposez vos fichiers ici ou cliquez pour télécharger.</ngx-dropzone-label>
+                <ngx-dropzone (change)="onSelect($event)" [multiple]="true" class="border-primary">
+                  <ngx-dropzone-label>
+                    <div class="text-center py-4">
+                      <i class="bi bi-cloud-arrow-up-fill fs-2 text-primary"></i>
+                      <p class="mb-0">Déposez vos fichiers ici ou cliquez pour télécharger</p>
+                    </div>
+                  </ngx-dropzone-label>
                 </ngx-dropzone>
 
-                <ul class="list-unstyled mb-0" *ngIf="uploadedFiles.length > 0">
-                  <li *ngFor="let file of uploadedFiles; let i = index" class="mt-2">
-                    <div class="border rounded">
-                      <div class="d-flex p-2">
-                        <div class="flex-shrink-0 me-3">
-                          <div class="avatar-sm bg-light rounded p-2">
-                            <img class="img-fluid rounded d-block" [src]="file.objectURL" alt="Dropzone-Image" />
-                          </div>
-                        </div>
-                        <div class="flex-grow-1">
-                          <div class="pt-1">
-                            <h5 class="fs-md mb-1">{{ file.name }}</h5>
-                            <p class="fs-sm text-muted mb-0">{{ (file.size / 1024).toFixed(2) }} KB</p>
-                          </div>
-                        </div>
-                        <div class="flex-shrink-0 ms-3">
-                          <button (click)="removeFile(file)" class="btn btn-sm btn-danger">Delete</button>
+                <div class="row g-2 mt-2" *ngIf="uploadedFiles.length > 0">
+                  <div *ngFor="let file of uploadedFiles; let i = index" class="col-md-4">
+                    <div class="card">
+                      <img class="card-img-top" [src]="file.objectURL" alt="Uploaded media">
+                      <div class="card-body p-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <small class="text-truncate">{{ file.name }}</small>
+                          <button (click)="removeFile(file)" class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                          </button>
                         </div>
                       </div>
                     </div>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div class="modal-footer px-4 pb-4">
-              <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="publishPost()">
+              <button type="button" class="btn btn-primary w-100 rounded-pill" [disabled]="isSubmitting" (click)="publishPost()">
                 <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
                 Publier
               </button>
@@ -337,8 +402,8 @@
           </div>
         </div>
       </div>
+
       <!-- Feed Posts -->
-      <!-- Update the feed posts section in forum-post.component.html -->
       <!-- Loading state -->
       <div *ngIf="loading" class="text-center my-4">
         <div class="spinner-border text-primary" role="status">
@@ -355,8 +420,8 @@
       <div *ngIf="!loading && posts.length === 0 && !error" class="card mb-4 shadow-sm">
         <div class="card-body text-center py-5">
           <i class="bi bi-newspaper fs-1 text-muted mb-3"></i>
-          <h5>No posts yet</h5>
-          <p class="text-muted">Be the first to share something with the community!</p>
+          <h5>Aucune publication pour le moment</h5>
+          <p class="text-muted">Soyez le premier à partager quelque chose avec la communauté!</p>
         </div>
       </div>
 
@@ -365,9 +430,19 @@
         <div class="card-body">
           <div class="d-flex align-items-center mb-3">
             <img src="assets/images/users/avatar-1.jpg" alt="" class="rounded-circle me-3" style="width: 48px; height: 48px;">
-            <div>
+            <div class="flex-grow-1">
               <h6 class="mb-0 fw-semibold">{{ post.username || 'Anonymous User' }}</h6>
               <p class="text-muted small mb-0">{{ post.createdAt | date:'dd MMM yyyy - hh:mm a' }}</p>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-three-dots"></i>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="javascript:void(0);">Enregistrer la publication</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Masquer la publication</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Signaler la publication</a></li>
+              </ul>
             </div>
           </div>
 
@@ -377,22 +452,35 @@
           <!-- Post media -->
           <!-- Post media -->
           <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media">
-            <ng-container *ngFor="let media of post.media">
-              <!-- Afficher une image si c'est une image -->
-              <img *ngIf="isImage(media.mediaUrl!)"
-                   [src]="media.mediaUrl!"
-                   alt="Post image"
-                   class="img-fluid rounded mb-3"
-                   [ngClass]="{'media-single': post.media.length === 1, 'media-grid': post.media.length > 1}">
+            <div class="media-container" [ngClass]="{
+    'media-single': post.media.length === 1,
+    'media-double': post.media.length === 2,
+    'media-grid-4': post.media.length === 4,
+    'media-grid-more': post.media.length > 4
+  }">
+              <ng-container *ngFor="let media of post.media.slice(0, post.media.length > 4 ? 3 : post.media.length); let i = index">
+                <div class="media-item">
+                  <img *ngIf="isImage(media.mediaUrl!)"
+                       [src]="media.mediaUrl!"
+                       alt="Post image"
+                       class="img-fluid rounded fixed-size">
 
-              <video *ngIf="isVideo(media.mediaUrl!)"
-                     controls
-                     class="img-fluid rounded mb-3 media-video">
-                <source [src]="media.mediaUrl!" type="video/mp4">
-                Your browser does not support HTML video.
-              </video>
-            </ng-container>
+                  <video *ngIf="isVideo(media.mediaUrl!)"
+                         controls
+                         class="img-fluid rounded fixed-size">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                    Your browser does not support HTML video.
+                  </video>
+                </div>
+              </ng-container>
+
+              <div *ngIf="post.media.length > 4" class="show-more-overlay">
+                <button class="btn btn-dark" (click)="showAllMedia(post.media)">+{{ post.media.length - 3 }}</button>
+              </div>
+            </div>
           </div>
+
+
           <!-- Interaction buttons -->
           <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
             <button class="btn btn-sm text-primary">
@@ -404,13 +492,186 @@
             <button class="btn btn-sm text-primary"><i class="bi bi-share me-1"></i>Share</button>
           </div>
 
+
           <!-- Comment Input -->
           <div class="d-flex gap-2">
             <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle" style="width: 38px; height: 38px;">
-            <input type="text" class="form-control bg-light rounded-pill" placeholder="Write a comment...">
+            <div class="flex-grow-1">
+              <div class="input-group">
+                <input type="text"
+                       [(ngModel)]="newComment"
+                       class="form-control bg-light"
+                       placeholder="Écrivez un commentaire...">
+                <button class="btn btn-primary comment-btn"
+                        [disabled]="!newComment.trim()"
+                        (click)="addComment(post.id!)">
+                  <i class="bi bi-send-fill"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+
+    <!-- right Sidebar - Navigation -->
+
+    <div class="col-lg-3 d-none d-lg-block position-fixed" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; right: 20px;">
+      <!-- Contacts Section -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">Contacts</h6>
+            <div>
+              <button class="btn btn-icon btn-sm">
+                <i class="bi bi-search"></i>
+              </button>
+              <button class="btn btn-icon btn-sm ms-1">
+                <i class="bi bi-three-dots"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Online Users List -->
+          <div class="contact-list">
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-2.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Ahmed Ben Ali</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-3.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Sophia Trabelsi</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-4.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Mohamed Karoui</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-5.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-secondary rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Amina Sassi</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-6.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Karim Bensalem</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Friend Suggestions -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Suggestions d'amis</h6>
+
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/images/users/avatar-7.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Leila Mansour</h6>
+              <p class="text-muted fs-xs mb-0">3 amis en commun</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Suivre</button>
+          </div>
+
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/images/users/avatar-8.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Youssef Hakim</h6>
+              <p class="text-muted fs-xs mb-0">7 amis en commun</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Suivre</button>
+          </div>
+
+          <div class="d-flex align-items-center">
+            <img src="assets/images/users/avatar-9.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Nadia Cherif</h6>
+              <p class="text-muted fs-xs mb-0">5 amis en commun</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Suivre</button>
+          </div>
+
+          <a href="javascript:void(0);" class="d-block text-center text-primary mt-3 small">
+            Voir plus de suggestions
+          </a>
+        </div>
+      </div>
+
+      <!-- Group Suggestions -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Groupes suggérés</h6>
+
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+              <i class="bi bi-people-fill text-white"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Développeurs Angular</h6>
+              <p class="text-muted fs-xs mb-0">12.4K membres</p>
+            </div>
+            <button class="btn btn-sm btn-light">Rejoindre</button>
+          </div>
+
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+              <i class="bi bi-people-fill text-white"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Tunisie Tech</h6>
+              <p class="text-muted fs-xs mb-0">8.7K membres</p>
+            </div>
+            <button class="btn btn-sm btn-light">Rejoindre</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Birthdays Section -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="fs-4 text-primary me-2">
+              <i class="bi bi-gift-fill"></i>
+            </div>
+            <h6 class="fw-bold mb-0">Anniversaires</h6>
+          </div>
+
+          <p class="mb-0">
+            <a href="javascript:void(0);" class="fw-medium text-decoration-none">Ahmed Ben Ali</a> et
+            <a href="javascript:void(0);" class="fw-medium text-decoration-none">2 autres personnes</a>
+            fêtent leur anniversaire aujourd'hui.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+

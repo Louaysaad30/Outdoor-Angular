@@ -1,5 +1,6 @@
 import {Media} from "./media.model";
 import {Reaction} from "./reaction.model";
+import {ForumComment} from "./ForumComment.model";
 
 export class Post {
   id?: string;
@@ -10,6 +11,6 @@ export class Post {
   username?: string;
   email?: string;
   media?: Media[];
-  comments?: Comment[];
+  comments?: ForumComment[];
   reactions?: Reaction[];
 }

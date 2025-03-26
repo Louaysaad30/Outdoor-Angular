@@ -9,6 +9,9 @@ import {NgxDropzoneModule} from "ngx-dropzone";
 import {PickerComponent} from "@ctrl/ngx-emoji-mart";
 import {PostService} from "../../services/post.service";
 import {Post} from "../../models/post.model";
+import {Media} from "../../models/media.model";
+import {CommentService} from "../../services/comment.service";
+import {ForumComment} from "../../models/ForumComment.model";
 
 @Component({
   selector: 'app-forum-post',
@@ -42,12 +45,15 @@ export class ForumPostComponent {
   posts: Post[] = [];
   loading = false;
   error = '';
+  newComment: string = '';
 
   constructor(
     private postService: PostService,
     private router: Router,
-    private formBuilder: FormBuilder
-  ) {}
+    private formBuilder: FormBuilder,
+  private commentService: CommentService
+
+) {}
   ngOnInit(): void {
     this.breadCrumbItems = [
       { label: 'Forum', active: false },
@@ -209,6 +215,29 @@ export class ForumPostComponent {
 
   showFullDescription = false;
 
+
+  showAllMedia(media: Media[]) {
+
+  }
+  addComment(postId: string): void {
+    if (!this.newComment.trim()) return;
+
+    this.commentService.addComment(postId, this.newComment, 10).subscribe({
+      next: (comment: ForumComment) => {
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+          if (!post.comments) {
+            post.comments = [];
+          }
+          post.comments.push(comment);
+        }
+        this.newComment = '';
+      },
+      error: (error) => {
+        console.error('Error adding comment:', error);
+      }
+    });
+  }
 
 
 }

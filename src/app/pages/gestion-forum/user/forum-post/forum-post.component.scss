@@ -110,10 +110,82 @@ ngx-dropzone:hover {
 }
 .emoji-picker-container {
   position: absolute;
-  left: 0; /* Align under the icon */
-  top: 100%; /* Position it below the icon */
+  left: auto; /* Align under the icon */
   transform: translateY(5px); /* Optional: adjust space below the icon */
   z-index: 1000;
+}
+
+ .media-container {
+   display: grid;
+   gap: 5px;
+ }
+.media-single { grid-template-columns: 1fr; }
+.media-double { grid-template-columns: 1fr 1fr; }
+.media-grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.media-grid-more { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.media-item img, .media-item video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.fixed-size {
+  height: 250px; /* Taille fixe pour uniformiser l'affichage */
+  object-fit: cover; /* S'assure que les images et vidéos conservent leur proportions sans déformation */
+}
+
+.show-more-overlay {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+ .media-container {
+   display: grid;
+   gap: 5px;
+ }
+.media-single { grid-template-columns: 1fr; }
+.media-double { grid-template-columns: 1fr 1fr; }
+.media-grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.media-grid-more { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.media-item img, .media-item video { width: 100%; height: auto; border-radius: 8px; }
+.show-more-overlay {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.comment-btn {
+  background-color: #1877f2; /* Facebook blue */
+  border-radius: 20px; /* Rounded button */
+  width: 40px; /* Circle button */
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease-in-out, transform 0.2s;
+  border: none;
+}
+
+.comment-btn i {
+  font-size: 16px;
+  color: white;
+}
+
+.comment-btn:hover {
+  background-color: #145dbf; /* Darker blue on hover */
+  transform: scale(1.1); /* Slight zoom */
+}
+
+.comment-btn:disabled {
+  background-color: #b0c4de; /* Light gray when disabled */
+  cursor: not-allowed;
+  transform: none;
 }
 
 
