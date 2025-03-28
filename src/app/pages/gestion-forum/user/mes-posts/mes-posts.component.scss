@@ -115,10 +115,10 @@ ngx-dropzone:hover {
   z-index: 1000;
 }
 
- .media-container {
-   display: grid;
-   gap: 5px;
- }
+.media-container {
+  display: grid;
+  gap: 5px;
+}
 .media-single { grid-template-columns: 1fr; }
 .media-double { grid-template-columns: 1fr 1fr; }
 .media-grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
@@ -142,10 +142,10 @@ ngx-dropzone:hover {
   border-radius: 5px;
 }
 
- .media-container {
-   display: grid;
-   gap: 5px;
- }
+.media-container {
+  display: grid;
+  gap: 5px;
+}
 .media-single { grid-template-columns: 1fr; }
 .media-double { grid-template-columns: 1fr 1fr; }
 .media-grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
@@ -271,197 +271,9 @@ video.img-fluid {
   margin-left: 4px;
   font-size: 14px;
 }
-.post-media {
-  margin-bottom: 15px;
-}
-
-.media-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-/* Single media layout */
-.media-single {
-  height: auto;
-}
-
-.media-single .media-item {
-  width: 100%;
-  height: auto;
-}
-
-/* Two media layout (side by side) */
-.media-double {
-  flex-direction: row;
-  height: 300px;
-}
-
-.media-double .media-item {
-  width: 50%;
-  height: 100%;
-}
-
-/* Three media layout */
-.media-grid-3 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 150px);
-  gap: 2px;
-}
-
-.media-grid-3 .main-media {
-  grid-column: 1;
-  grid-row: 1 / 3;
-  height: 100%;
-}
-
-/* Four media layout (2x2 grid) */
-.media-grid-4 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 200px);
-  gap: 2px;
-}
-
-/* More than four media layout */
-.media-grid-more {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: auto;
-  gap: 2px;
-}
-
-.media-grid-more .main-media {
-  grid-column: 1;
-  grid-row: 1 / 3;
-  height: 400px;
-}
-
-.media-grid-more .secondary-media-container {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(2, 200px);
-  gap: 2px;
-}
-
-/* General media item styling */
-.media-item {
-  position: relative;
-  overflow: hidden;
-}
-
-.media-item img, .media-item video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Styling for the +X more overlay */
-.has-overlay {
-  position: relative;
-}
-
-.more-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-
-.more-count {
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-}
-/* Media gallery in detail view */
-.media-detail-container {
-  position: relative;
-  width: 100%;
-  height: auto;
-  max-height: 500px;
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-
-.current-media {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.current-media img,
-.current-media video {
-  max-height: 500px;
-  object-fit: contain;
-  width: 100%;
-}
-
-/* Navigation buttons */
-.media-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
-.prev-btn {
-  left: 10px;
-}
-
-.next-btn {
-  right: 10px;
-}
-
-/* Media indicators */
-.media-indicators {
-  position: absolute;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-}
-
-.media-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.media-indicator.active {
-  background-color: #fff;
-  width: 10px;
-  height: 10px;
-}
 
 
 
 
-.clickable-content {
-  cursor: pointer;
 
-
-}
 

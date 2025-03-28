@@ -13,4 +13,6 @@ export class Post {
   media?: Media[];
   comments?: ForumComment[];
   reactions?: Reaction[];
+  newComment?: string; // Add this property
+
 }

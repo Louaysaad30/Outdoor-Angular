@@ -1,0 +1,881 @@
+<!--
+
+
+&lt;!&ndash;add post&ndash;&gt;
+<div class="post-container">
+  <div class="profile">
+    <img [src]="profileImage" alt="Profile Image" class="profile-pic" />
+    <input type="text" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+  </div>
+</div>
+
+&lt;!&ndash; Modal &ndash;&gt;
+<div class="modal fade"
+     [ngClass]="{ show: isModalOpen }"
+     [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+     tabindex="-1"
+     aria-modal="true"
+     role="dialog">
+
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header px-4 pt-4">
+        <h5 class="modal-title">Créer une publication</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="chat-input-section p-3 p-lg-4 border-top border-2">
+          <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
+            <div class="row g-0 align-items-center">
+              <div class="col-auto">
+                <div class="chat-input-links me-2">
+                  <div class="links-list-item">
+                    <button type="button" class="btn btn-link text-decoration-none emoji-btn" (click)="toggleEmojiPicker()" id="emoji-btn">
+                      <i class="bx bx-smile align-middle"></i>
+                    </button>
+                    &lt;!&ndash; Emoji picker &ndash;&gt;
+                    <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+                      <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)" title="Pick your emoji…"></emoji-mart>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col">
+                <div *ngIf="submitted1 && form?.['message']?.errors" class="chat-input-feedback">
+                  <span *ngIf="form?.['message']?.errors?.['required']">Please Enter a Message</span>
+                </div>
+                <textarea class="form-control"
+                          formControlName="message"
+                          [(ngModel)]="postContent"
+                          name="postContent"
+                          rows="3"
+                          (blur)="onBlur()"
+                          (focus)="onFocus()"
+                          id="chat-input"
+                          placeholder="Quoi de neuf, Iyed ?"
+                          autocomplete="off"></textarea>
+              </div>
+
+              <div class="col-auto">
+                <div class="chat-input-links ms-2"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="add-options mt-3 d-flex align-items-center">
+          <span class="options-label">Ajouter à votre publication</span>
+          <button class="btn btn-outline-secondary ml-3 custom-btn" (click)="addPhoto()">
+            <i class="bi bi-image-fill custom-icon"></i>
+            <span class="custom-text">Photo/Video</span>
+          </button>
+        </div>
+
+        <div *ngIf="showFileUpload" class="mt-3">
+          <label class="form-label">Images/Vidéos</label>
+          <ngx-dropzone (change)="onSelect($event)" [multiple]="true">
+            <ngx-dropzone-label>Déposez vos fichiers ici ou cliquez pour télécharger.</ngx-dropzone-label>
+          </ngx-dropzone>
+
+          <ul class="list-unstyled mb-0" *ngIf="uploadedFiles.length > 0">
+            <li *ngFor="let file of uploadedFiles; let i = index" class="mt-2">
+              <div class="border rounded">
+                <div class="d-flex p-2">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm bg-light rounded p-2">
+                      <img class="img-fluid rounded d-block" [src]="file.objectURL" alt="Dropzone-Image" />
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="pt-1">
+                      <h5 class="fs-md mb-1">{{ file.name }}</h5>
+                      <p class="fs-sm text-muted mb-0">{{ (file.size / 1024).toFixed(2) }} KB</p>
+                    </div>
+                  </div>
+                  <div class="flex-shrink-0 ms-3">
+                    <button (click)="removeFile(file)" class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer px-4 pb-4">
+        <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="publishPost()">
+          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+          Publier
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+&lt;!&ndash;end post&ndash;&gt;
+
+
+
+&lt;!&ndash; Start Breadcrumbs &ndash;&gt;
+
+<app-breadcrumbs title="Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+&lt;!&ndash; End Breadcrumbs &ndash;&gt;
+
+<div class="card">
+  <div class="row g-0">
+    <div class="col-xl-9 col-lg-8">
+      <div class="card-body border-end h-100">
+        <div class="row mb-4 pb-2 g-3">
+          <div class="col-auto">
+            <div class="avatar-sm">
+              <div class="avatar-title bg-success-subtle rounded">
+                <img src="assets/images/companies/img-3.png" alt="" class="avatar-xs">
+              </div>
+            </div>
+          </div>
+          <div class="col-md order-3 order-md-2">
+            <div>
+              <h5>#TBS24301901 - Forgetting to start a component name with a capital letter</h5>
+              <div class="hstack gap-2 gap-md-3 flex-wrap">
+                <div class="text-muted"><i class="ri-building-line align-bottom me-1"></i><span id="ticket-client">Themesbrand</span></div>
+                <div class="vr"></div>
+                <div class="text-muted">Create Date : <span class="fw-medium " id="create-date">20 Dec,
+                                        2023</span></div>
+                <div class="vr"></div>
+                <div class="text-muted">Due Date : <span class="fw-medium" id="due-date">29 Dec,
+                                        2023</span></div>
+                <div class="vr"></div>
+                <div class="badge rounded-pill bg-info fs-12" id="ticket-status">New</div>
+                <div class="badge rounded-pill bg-danger fs-12" id="ticket-priority">High</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-auto ms-auto order-2 order-md-3">
+            <a routerLink="/tickets/list" class="btn btn-primary btn-sm"> Add Ticket</a>
+          </div>
+        </div>
+<h6 class="fw-semibold text-uppercase mb-2">Ticket Descriptions</h6>
+          <p class="text-muted mb-4">
+            <span *ngIf="!showFullDescription">
+              It's used for building interactive user interfaces and web applications quickly and efficiently...
+              <a href="javascript:void(0);" (click)="showFullDescription = true">Read more</a>
+            </span>
+            <span *ngIf="showFullDescription">
+              It's used for building interactive user interfaces and web applications
+              quickly and efficiently with significantly less code than you would with vanilla JavaScript. In
+              React, you develop your applications by creating reusable components that you can think of as
+              independent Lego blocks. React is a JavaScript library developed by Facebook which, among other
+              things, was used to build Instagram.com. Its aim is to allow developers to easily create fast user
+              interfaces for websites and applications alike. The main concept of React. js is virtual DOM. If you
+              need a fast and responsive user interface, ReactJS is the better option. But if you need to handle
+              complex data analysis or number-crunching.
+            </span>
+          </p>
+
+        <h6 class="fw-semibold text-uppercase mb-4">Discussion with Themesbrand</h6>
+          <div class="d-flex mb-4">
+            <div class="flex-shrink-0">
+              <img src="assets/images/users/avatar-8.jpg" alt="" class="avatar-xs rounded-circle">
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6>Joseph Parker <small class="text-muted">20 Dec 2023 - 05:47AM</small></h6>
+              <p class="text-muted">I am getting message from customers that when they place order always
+                get error message .</p>
+              <a href="javascript: void(0);" class="badge text-muted bg-light"><i class="mdi mdi-reply"></i> Reply</a>
+              <div class="d-flex mt-4">
+                <div class="flex-shrink-0">
+                  <img src="assets/images/users/avatar-10.jpg" alt="" class="avatar-xs rounded-circle">
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6>Alexis Clarke <small class="text-muted">22 Dec 2023 - 02:32PM</small></h6>
+                  <p class="text-muted">Please be sure to check your Spam mailbox to see if your email
+                    filters have identified the email from Dell as spam.</p>
+                  <a href="javascript: void(0);" class="badge text-muted bg-light"><i class="mdi mdi-reply"></i> Reply</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <form action="javascript:void(0);" class="mt-3">
+          <div class="row g-3">
+            <div class="col-lg-12">
+              <label for="exampleFormControlTextarea1" class="form-label">Leave a Comments</label>
+              <textarea class="form-control bg-light border-light" id="exampleFormControlTextarea1" rows="3" placeholder="Enter comments"></textarea>
+            </div>
+            <div class="col-lg-12 text-end">
+              <a href="javascript:void(0);" class="btn btn-success">Post Comments</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>&lt;!&ndash;end col&ndash;&gt;
+  </div>&lt;!&ndash;end row&ndash;&gt;
+</div>
+
+
+-->
+
+<!--Modal detail post-->
+<div class="modal fade" [class.show]="isDetailModalOpen" [style.display]="isDetailModalOpen ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" *ngIf="selectedPost">{{ selectedPost.username }}'s Post</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeDetailModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedPost">
+        <div class="d-flex align-items-center mb-3">
+          <img [src]="'assets/images/users/avatar-1.jpg'" alt="User" class="rounded-circle me-2" width="40" height="40">
+          <div>
+            <h6 class="mb-0">{{ selectedPost.username }}</h6>
+            <p class="text-muted mb-0 small">{{ selectedPost.createdAt | date:'medium' }}</p>
+          </div>
+        </div>
+
+        <p class="mb-3">{{ selectedPost.content }}</p>
+
+        <!-- Media Gallery -->
+        <div *ngIf="selectedPost.hasMedia && selectedPost.media && selectedPost.media.length > 0" class="mb-3">
+          <div class="row g-2">
+            <div *ngFor="let media of selectedPost.media" class="col-12">
+              <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+              <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded w-100">
+                <source [src]="media.mediaUrl!" type="video/mp4">
+                Your browser does not support HTML video.
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <!-- Likes and Comments Count -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <span>
+              <i [class]="userReactions.get(selectedPost.id!) ?
+                  getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!).split(' ')[0] :
+                  'bi bi-hand-thumbs-up'"></i>
+              {{ getTotalReactionCount(selectedPost.id!) }} reactions
+            </span>
+          </div>
+          <div>
+            <span>{{ selectedPost.comments?.length || 0 }} comments</span>
+          </div>
+        </div>
+
+        <!-- Reaction and comment buttons -->
+        <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+          <div class="position-relative">
+            <!-- Main reaction button -->
+            <button class="btn btn-sm"
+                    [ngClass]="userReactions.get(selectedPost.id!) ?
+                              getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                              'text-primary'"
+                    (click)="toggleReactionBar(selectedPost.id!)"
+                    (mouseenter)="showReactionBar(selectedPost.id!)"
+                    (mouseleave)="hideReactionBarWithDelay(selectedPost.id!)">
+              <i [class]="userReactions.get(selectedPost.id!) ?
+                        getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!) :
+                        'bi bi-hand-thumbs-up text-primary'"></i>
+              <span>
+                {{ userReactions.get(selectedPost.id!) ?
+                userReactions.get(selectedPost.id!)!.reactionType!.charAt(0) + userReactions.get(selectedPost.id!)!.reactionType!.slice(1).toLowerCase() :
+                'Like' }}
+              </span>
+            </button>
+
+            <!-- Reaction bar that shows on hover/click -->
+            <div *ngIf="reactionBarVisible.get(selectedPost.id!)"
+                 class="reaction-bar"
+                 (mouseenter)="keepReactionBarVisible(selectedPost.id!)"
+                 (mouseleave)="hideReactionBar(selectedPost.id!)">
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.LIKE)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.LIKE)">
+                <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.LOVE)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.LOVE)">
+                <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.HAHA)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.HAHA)">
+                <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.WOW)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.WOW)">
+                <i class="bi bi-emoji-surprise-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.SAD)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.SAD)">
+                <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.ANGRY)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.ANGRY)">
+                <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-chat-dots-fill"></i> Comment
+          </button>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-share-fill"></i> Share
+          </button>
+        </div>
+
+        <hr>
+
+        <!-- Comment List -->
+        <div class="comments-section mb-3">
+          <h6>Comments</h6>
+          <div *ngIf="selectedPost.comments && selectedPost.comments.length > 0">
+            <div *ngFor="let comment of selectedPost.comments" class="d-flex mb-2">
+              <img [src]="'assets/images/users/avatar-2.jpg'" alt="User" class="rounded-circle me-2" width="32" height="32">
+              <div class="bg-light rounded p-2 flex-grow-1">
+                <h6 class="mb-0 fs-sm">{{ comment.username }}</h6>
+                <p class="mb-0">{{ comment.content }}</p>
+                <small class="text-muted">{{ comment.createdAt | date:'short' }}</small>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!selectedPost.comments || selectedPost.comments.length === 0" class="text-muted">
+            No comments yet. Be the first to comment!
+          </div>
+        </div>
+
+        <!-- Add Comment -->
+        <div class="d-flex">
+          <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="32" height="32">
+          <div class="flex-grow-1">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Write a comment..." [(ngModel)]="newDetailComment">
+              <button class="btn btn-primary" type="button" (click)="addDetailComment()" [disabled]="!newDetailComment.trim()">
+                <i class="bi bi-send"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row  ">
+  <!-- Left Sidebar - Navigation -->
+  <div class="card col-lg-3 d-none d-lg-block position-fixed" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; left: 20px;">
+    <div class="left-sidebar p-4">
+      <div class="user-profile d-flex align-items-center mb-3">
+        <img [src]="profileImage" alt="Profile Image" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+        <h6 class="mb-0 fw-bold">Iyed Mejri</h6>
+      </div>
+
+      <div class="navigation-menu">
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-people-fill fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Mes Posts</span>
+        </div>
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-bookmark-fill fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Enregistrements</span>
+        </div>
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-calendar-event fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Événements</span>
+        </div>
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-clock-history fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Souvenirs</span>
+        </div>
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-shop fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Marketplace</span>
+        </div>
+        <hr>
+        <h6 class="text-muted mb-2 small">Vos raccourcis</h6>
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-file-earmark-text fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Documents récents</span>
+        </div>
+        <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
+          <i class="bi bi-chat-square-dots fs-5 me-3 text-primary"></i>
+          <span class="fw-medium">Forums de discussion</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area - Forum Feed -->
+  <div class="col-lg-6 offset-lg-3 ">
+    <!--add post-->
+    <div class="card mb-2 shadow-sm">
+      <div class="card-body">
+        <div class="profile d-flex align-items-center">
+          <img [src]="profileImage" alt="Profile Image" class="profile-pic rounded-circle me-2" style="width: 40px; height: 40px;" />
+          <input type="text" class="form-control rounded-pill bg-light" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+        </div>
+        <div class="d-flex justify-content-around mt-3 pt-2 border-top">
+          <button class="btn btn-light d-flex align-items-center" (click)="openPostModal()">
+            <i class="bi bi-camera-video-fill text-danger me-2"></i> Vidéo en direct
+          </button>
+          <button class="btn btn-light d-flex align-items-center" (click)="addPhoto()">
+            <i class="bi bi-image text-success me-2"></i> Photo/Vidéo
+          </button>
+          <button class="btn btn-light d-flex align-items-center" (click)="openPostModal()">
+            <i class="bi bi-emoji-smile text-warning me-2"></i> Humeur
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade"
+         [ngClass]="{ show: isModalOpen }"
+         [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+         tabindex="-1"
+         aria-modal="true"
+         role="dialog">
+
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header px-4 pt-4">
+            <h5 class="modal-title">{{ isEditMode ? 'Modifier la publication' : 'Créer une publication' }}</h5>
+            <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <img [src]="profileImage" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+              <div>
+                <h6 class="mb-0 fw-semibold">Iyed Mejri</h6>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary rounded-pill dropdown-toggle" type="button" id="privacyDropdown" data-bs-toggle="dropdown">
+                    <i class="bi bi-globe"></i> Public
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-globe me-2"></i>Public</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-people me-2"></i>Amis</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-lock me-2"></i>Privé</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+<div class="chat-input-section">
+              <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
+                <div class="row g-0 align-items-center">
+                  <div class="col">
+                    <textarea
+                      class="form-control bg-light border-0"
+                      id="message"
+                      rows="3"
+                      placeholder="Que voulez-vous partager?"
+                      formControlName="message"
+                      [(ngModel)]="postContent"
+                      (focus)="onFocus()"
+                      (blur)="onBlur()"
+                      [ngClass]="{ 'is-invalid': submitted1 && form?.['message']?.errors }">
+                    </textarea>
+                    <div *ngIf="submitted1 && form?.['message']?.errors" class="invalid-feedback">
+                      <div *ngIf="form?.['message']?.errors?.['required']">Message est requis</div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="bg-light rounded p-3 mt-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <span>Ajouter à votre publication</span>
+                <div>
+                  <button class="btn btn-icon me-2" (click)="addPhoto()">
+                    <i class="bi bi-image-fill fs-5 text-success"></i>
+                  </button>
+                  <button class="btn btn-icon me-2">
+                    <i class="bi bi-person-plus-fill fs-5 text-primary"></i>
+                  </button>
+                  <button class="btn btn-icon me-2">
+                    <i class="bi bi-emoji-smile fs-5 text-warning"  (click)="toggleEmojiPicker()"></i>
+                  </button>
+                  <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+                    <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)"></emoji-mart>
+                  </div>
+                  <button class="btn btn-icon me-2">
+                    <i class="bi bi-geo-alt-fill fs-5 text-danger"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="showFileUpload" class="mt-3">
+              <ngx-dropzone (change)="onSelect($event)" [multiple]="true" class="border-primary">
+                <ngx-dropzone-label>
+                  <div class="text-center py-4">
+                    <i class="bi bi-cloud-arrow-up-fill fs-2 text-primary"></i>
+                    <p class="mb-0">Déposez vos fichiers ici ou cliquez pour télécharger</p>
+                  </div>
+                </ngx-dropzone-label>
+              </ngx-dropzone>
+
+              <div class="row g-2 mt-2" *ngIf="uploadedFiles.length > 0">
+                <div *ngFor="let file of uploadedFiles; let i = index" class="col-md-4">
+                  <div class="card position-relative">
+                    <img *ngIf="file.type.includes('image')" [src]="file.objectURL" class="card-img-top" alt="Uploaded Image">
+                    <video *ngIf="file.type.includes('video')" [src]="file.objectURL" class="w-100" controls></video>
+                    <div class="card-body p-2">
+                      <p class="card-text small text-truncate">{{ file.name }}</p>
+                    </div>
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2 bg-danger"
+                            (click)="file.isExisting ? removeExistingMedia(file) : removeFile(file)"></button>
+                  </div>
+                </div>
+              </div>            </div>
+          </div>
+
+          <div class="modal-footer px-4 pb-4">
+            <button type="button" class="btn btn-primary w-100 rounded-pill" [disabled]="isSubmitting" (click)="publishPost()">
+              <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+              {{ isEditMode ? 'Mettre à jour' : 'Publier' }}
+            </button>
+          </div>        </div>
+      </div>
+    </div>
+
+    <!-- Feed Posts -->
+    <!-- Loading state -->
+    <div *ngIf="loading" class="text-center my-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    <div *ngIf="error" class="alert alert-danger" role="alert">
+      {{ error }}
+    </div>
+
+    <!-- No posts message -->
+    <div *ngIf="!loading && posts.length === 0 && !error" class="card mb-4 shadow-sm">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-newspaper fs-1 text-muted mb-3"></i>
+        <h5>Aucune publication pour le moment</h5>
+        <p class="text-muted">Soyez le premier à partager quelque chose avec la communauté!</p>
+      </div>
+    </div>
+
+    <!-- Posts list -->
+    <div *ngFor="let post of posts" class="card mb-4 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <img src="assets/images/users/avatar-1.jpg" alt="" class="rounded-circle me-3" style="width: 48px; height: 48px;">
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fw-semibold">{{ post.username || 'Anonymous User' }}</h6>
+            <p class="text-muted small mb-0">{{ post.createdAt | date:'dd MMM yyyy - hh:mm a' }}</p>
+          </div>
+          <div dropdown class="dropdown">
+            <button dropdownToggle class="btn btn-subtle-secondary btn-sm dropdown" type="button">
+              <i class="ri-more-fill align-middle"></i>
+            </button>
+            <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item view-item-btn" href="javascript:void(0) ;"><i class="ri-eye-fill align-bottom me-2 text-muted"></i>View</a>
+              </li>
+              <li><a class="dropdown-item edit-item-btn" href="javascript:void(0);" (click)="editPost(post)" ><i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                Edit</a></li>
+              <li><a class="dropdown-item remove-item-btn" href="javascript:void(0);"  (click)="deletePost(post.id!)"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i>
+                Delete</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Post content with read more functionality -->
+        <p class="mb-3" (click)="openPostDetail(post)">{{ post.content }}</p>
+
+        <!-- Post media -->
+        <!-- Post media -->
+        <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media">
+          <div class="media-container" [ngClass]="{
+    'media-single': post.media.length === 1,
+    'media-double': post.media.length === 2,
+    'media-grid-4': post.media.length === 4,
+    'media-grid-more': post.media.length > 4
+  }">
+            <ng-container *ngFor="let media of post.media.slice(0, post.media.length > 4 ? 3 : post.media.length); let i = index">
+              <div class="media-item">
+                <img *ngIf="isImage(media.mediaUrl!)"
+                     [src]="media.mediaUrl!"
+                     alt="Post image"
+                     class="img-fluid rounded fixed-size">
+
+                <video *ngIf="isVideo(media.mediaUrl!)"
+                       controls
+                       class="img-fluid rounded fixed-size">
+                  <source [src]="media.mediaUrl!" type="video/mp4">
+                  Your browser does not support HTML video.
+                </video>
+              </div>
+            </ng-container>
+
+            <div *ngIf="post.media.length > 4" class="show-more-overlay">
+              <button class="btn btn-dark" (click)="showAllMedia(post.media)">+{{ post.media.length - 3 }}</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Interaction buttons -->
+        <!-- Interaction buttons -->
+        <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+          <div class="position-relative">
+            <!-- Main reaction button -->
+            <button class="btn btn-sm"
+                    [ngClass]="userReactions.get(post.id!) ?
+                    getReactionIcon(userReactions.get(post.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                    'text-primary'"
+                    (click)="toggleReactionBar(post.id!)"
+                    (mouseenter)="showReactionBar(post.id!)"
+                    (mouseleave)="hideReactionBarWithDelay(post.id!)">
+              <i [class]="userReactions.get(post.id!) ?
+              getReactionIcon(userReactions.get(post.id!)!.reactionType!) :
+              'bi bi-hand-thumbs-up text-primary'"></i>
+              <span>
+      {{ userReactions.get(post.id!) ?
+                userReactions.get(post.id!)!.reactionType!.charAt(0) + userReactions.get(post.id!)!.reactionType!.slice(1).toLowerCase() :
+                'Like' }}
+                {{ getTotalReactionCount(post.id!) > 0 ? '(' + getTotalReactionCount(post.id!) + ')' : '' }}
+    </span>
+            </button>
+
+            <!-- Reaction bar that shows on hover/click -->
+            <div *ngIf="reactionBarVisible.get(post.id!)"
+                 class="reaction-bar"
+                 (mouseenter)="keepReactionBarVisible(post.id!)"
+                 (mouseleave)="hideReactionBar(post.id!)">
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(post.id!, ReactionType.LIKE)}"
+                      (click)="reactToPost(post.id!, ReactionType.LIKE)">
+                <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(post.id!, ReactionType.LOVE)}"
+                      (click)="reactToPost(post.id!, ReactionType.LOVE)">
+                <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(post.id!, ReactionType.HAHA)}"
+                      (click)="reactToPost(post.id!, ReactionType.HAHA)">
+                <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(post.id!, ReactionType.WOW)}"
+                      (click)="reactToPost(post.id!, ReactionType.WOW)">
+                <i class="bi bi-emoji-surprise-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(post.id!, ReactionType.SAD)}"
+                      (click)="reactToPost(post.id!, ReactionType.SAD)">
+                <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(post.id!, ReactionType.ANGRY)}"
+                      (click)="reactToPost(post.id!, ReactionType.ANGRY)">
+                <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+              </button>
+            </div>
+          </div>
+          <button class="btn btn-sm text-primary" (click)="openPostDetail(post)">
+            <i class="bi bi-chat-dots me-1"></i>Comment {{ (post.comments || []).length ? '(' + (post.comments || []).length + ')' : '' }}
+          </button>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-share me-1"></i>Share
+          </button>
+        </div>          <!-- Comment Input -->
+        <div class="d-flex gap-2">
+          <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle" style="width: 38px; height: 38px;">
+          <div class="flex-grow-1">
+            <div class="input-group">
+              <input type="text"
+                     [(ngModel)]="post.newComment"
+                     class="form-control bg-light"
+                     placeholder="Écrivez un commentaire...">
+              <button class="btn btn-primary comment-btn"
+                      [disabled]="!post.newComment || !post.newComment.trim()"
+                      (click)="addComment(post.id!, post.newComment || ''); post.newComment = ''">
+                <i class="bi bi-send-fill"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- right Sidebar - Navigation -->
+
+  <div class="col-lg-3 d-none d-lg-block position-fixed" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; right: 20px;">
+    <!-- Contacts Section -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0 fw-bold">Contacts</h6>
+          <div>
+            <button class="btn btn-icon btn-sm">
+              <i class="bi bi-search"></i>
+            </button>
+            <button class="btn btn-icon btn-sm ms-1">
+              <i class="bi bi-three-dots"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Online Users List -->
+        <div class="contact-list">
+          <div class="d-flex align-items-center mb-2">
+            <div class="position-relative">
+              <img src="assets/images/users/avatar-2.jpg" alt="User" class="rounded-circle" width="36" height="36">
+              <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+            </div>
+            <div class="ms-2">
+              <h6 class="mb-0 fs-sm fw-medium">Ahmed Ben Ali</h6>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center mb-2">
+            <div class="position-relative">
+              <img src="assets/images/users/avatar-3.jpg" alt="User" class="rounded-circle" width="36" height="36">
+              <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+            </div>
+            <div class="ms-2">
+              <h6 class="mb-0 fs-sm fw-medium">Sophia Trabelsi</h6>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center mb-2">
+            <div class="position-relative">
+              <img src="assets/images/users/avatar-4.jpg" alt="User" class="rounded-circle" width="36" height="36">
+              <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+            </div>
+            <div class="ms-2">
+              <h6 class="mb-0 fs-sm fw-medium">Mohamed Karoui</h6>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center mb-2">
+            <div class="position-relative">
+              <img src="assets/images/users/avatar-5.jpg" alt="User" class="rounded-circle" width="36" height="36">
+              <span class="position-absolute bottom-0 end-0 bg-secondary rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+            </div>
+            <div class="ms-2">
+              <h6 class="mb-0 fs-sm fw-medium">Amina Sassi</h6>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center mb-2">
+            <div class="position-relative">
+              <img src="assets/images/users/avatar-6.jpg" alt="User" class="rounded-circle" width="36" height="36">
+              <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+            </div>
+            <div class="ms-2">
+              <h6 class="mb-0 fs-sm fw-medium">Karim Bensalem</h6>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Friend Suggestions -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">Suggestions d'amis</h6>
+
+        <div class="d-flex align-items-center mb-3">
+          <img src="assets/images/users/avatar-7.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fs-sm fw-medium">Leila Mansour</h6>
+            <p class="text-muted fs-xs mb-0">3 amis en commun</p>
+          </div>
+          <button class="btn btn-sm btn-primary">Suivre</button>
+        </div>
+
+        <div class="d-flex align-items-center mb-3">
+          <img src="assets/images/users/avatar-8.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fs-sm fw-medium">Youssef Hakim</h6>
+            <p class="text-muted fs-xs mb-0">7 amis en commun</p>
+          </div>
+          <button class="btn btn-sm btn-primary">Suivre</button>
+        </div>
+
+        <div class="d-flex align-items-center">
+          <img src="assets/images/users/avatar-9.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fs-sm fw-medium">Nadia Cherif</h6>
+            <p class="text-muted fs-xs mb-0">5 amis en commun</p>
+          </div>
+          <button class="btn btn-sm btn-primary">Suivre</button>
+        </div>
+
+        <a href="javascript:void(0);" class="d-block text-center text-primary mt-3 small">
+          Voir plus de suggestions
+        </a>
+      </div>
+    </div>
+
+    <!-- Group Suggestions -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">Groupes suggérés</h6>
+
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-primary rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+            <i class="bi bi-people-fill text-white"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fs-sm fw-medium">Développeurs Angular</h6>
+            <p class="text-muted fs-xs mb-0">12.4K membres</p>
+          </div>
+          <button class="btn btn-sm btn-light">Rejoindre</button>
+        </div>
+
+        <div class="d-flex align-items-center mb-3">
+          <div class="bg-success rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+            <i class="bi bi-people-fill text-white"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fs-sm fw-medium">Tunisie Tech</h6>
+            <p class="text-muted fs-xs mb-0">8.7K membres</p>
+          </div>
+          <button class="btn btn-sm btn-light">Rejoindre</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Birthdays Section -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="fs-4 text-primary me-2">
+            <i class="bi bi-gift-fill"></i>
+          </div>
+          <h6 class="fw-bold mb-0">Anniversaires</h6>
+        </div>
+
+        <p class="mb-0">
+          <a href="javascript:void(0);" class="fw-medium text-decoration-none">Ahmed Ben Ali</a> et
+          <a href="javascript:void(0);" class="fw-medium text-decoration-none">2 autres personnes</a>
+          fêtent leur anniversaire aujourd'hui.
+        </p>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+

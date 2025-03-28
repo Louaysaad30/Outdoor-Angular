@@ -217,8 +217,186 @@
 
 -->
 
+<!--Modal detail post-->
+<div class="modal fade" [class.show]="isDetailModalOpen" [style.display]="isDetailModalOpen ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" *ngIf="selectedPost">{{ selectedPost.username }}'s Post</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeDetailModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedPost">
+        <div class="d-flex align-items-center mb-3">
+          <img [src]="'assets/images/users/avatar-1.jpg'" alt="User" class="rounded-circle me-2" width="40" height="40">
+          <div>
+            <h6 class="mb-0">{{ selectedPost.username }}</h6>
+            <p class="text-muted mb-0 small">{{ selectedPost.createdAt | date:'medium' }}</p>
+          </div>
+        </div>
 
+        <p class="mb-3">{{ selectedPost.content }}</p>
 
+        <!-- Media Gallery -->
+<!-- Media Gallery with Navigation -->
+        <div *ngIf="selectedPost?.hasMedia && selectedPost?.media && (selectedPost?.media?.length || 0) > 0" class="mb-3 position-relative">
+          <div class="media-detail-container">
+            <!-- Current media display -->
+            <div class="current-media">
+              <ng-container *ngIf="selectedPost?.media && currentMediaIndex < (selectedPost?.media?.length || 0)">
+                <img *ngIf="isImage(selectedPost?.media?.[currentMediaIndex]?.mediaUrl || '')"
+                     [src]="selectedPost?.media?.[currentMediaIndex]?.mediaUrl || ''"
+                     alt="Post image"
+                     class="img-fluid rounded w-100">
+                <video *ngIf="isVideo(selectedPost?.media?.[currentMediaIndex]?.mediaUrl || '')"
+                       controls
+                       class="img-fluid rounded w-100">
+                  <source [src]="selectedPost?.media?.[currentMediaIndex]?.mediaUrl || ''" type="video/mp4">
+                  Your browser does not support HTML video.
+                </video>
+              </ng-container>
+            </div>
+
+            <!-- Navigation arrows - only shown when multiple media items -->
+            <button *ngIf="selectedPost?.media && (selectedPost?.media?.length || 0) > 1"
+                    class="btn btn-light btn-sm rounded-circle media-nav-btn prev-btn"
+                    (click)="prevMedia()">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <button *ngIf="selectedPost?.media && (selectedPost?.media?.length || 0) > 1"
+                    class="btn btn-light btn-sm rounded-circle media-nav-btn next-btn"
+                    (click)="nextMedia()">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <!-- Media indicators/dots - only shown when multiple media items -->
+            <div *ngIf="selectedPost?.media && (selectedPost?.media?.length || 0) > 1" class="media-indicators">
+              <span *ngFor="let _ of selectedPost?.media || []; let i = index"
+                    class="media-indicator"
+                    [class.active]="i === currentMediaIndex"
+                    (click)="goToMedia(i)"></span>
+            </div>
+          </div>
+        </div>
+        <!-- Likes and Comments Count -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <span>
+              <i [class]="userReactions.get(selectedPost.id!) ?
+                  getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!).split(' ')[0] :
+                  'bi bi-hand-thumbs-up'"></i>
+              {{ getTotalReactionCount(selectedPost.id!) }} reactions
+            </span>
+          </div>
+          <div>
+            <span>{{ selectedPost.comments?.length || 0 }} comments</span>
+          </div>
+        </div>
+
+        <!-- Reaction and comment buttons -->
+        <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+          <div class="position-relative">
+            <!-- Main reaction button -->
+            <button class="btn btn-sm"
+                    [ngClass]="userReactions.get(selectedPost.id!) ?
+                              getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                              'text-primary'"
+                    (click)="toggleReactionBar(selectedPost.id!)"
+                    (mouseenter)="showReactionBar(selectedPost.id!)"
+                    (mouseleave)="hideReactionBarWithDelay(selectedPost.id!)">
+              <i [class]="userReactions.get(selectedPost.id!) ?
+                        getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!) :
+                        'bi bi-hand-thumbs-up text-primary'"></i>
+              <span>
+                {{ userReactions.get(selectedPost.id!) ?
+                   userReactions.get(selectedPost.id!)!.reactionType!.charAt(0) + userReactions.get(selectedPost.id!)!.reactionType!.slice(1).toLowerCase() :
+                   'Like' }}
+              </span>
+            </button>
+
+            <!-- Reaction bar that shows on hover/click -->
+            <div *ngIf="reactionBarVisible.get(selectedPost.id!)"
+                 class="reaction-bar"
+                 (mouseenter)="keepReactionBarVisible(selectedPost.id!)"
+                 (mouseleave)="hideReactionBar(selectedPost.id!)">
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.LIKE)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.LIKE)">
+                <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.LOVE)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.LOVE)">
+                <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.HAHA)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.HAHA)">
+                <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.WOW)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.WOW)">
+                <i class="bi bi-emoji-surprise-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.SAD)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.SAD)">
+                <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.ANGRY)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.ANGRY)">
+                <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-chat-dots-fill"></i> Comment
+          </button>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-share-fill"></i> Share
+          </button>
+        </div>
+
+        <hr>
+
+        <!-- Comment List -->
+        <div class="comments-section mb-3">
+          <h6>Comments</h6>
+          <div *ngIf="selectedPost.comments && selectedPost.comments.length > 0">
+            <div *ngFor="let comment of selectedPost.comments" class="d-flex mb-2">
+              <img [src]="'assets/images/users/avatar-2.jpg'" alt="User" class="rounded-circle me-2" width="32" height="32">
+              <div class="bg-light rounded p-2 flex-grow-1">
+                <h6 class="mb-0 fs-sm">{{ comment.username }}</h6>
+                <p class="mb-0">{{ comment.content }}</p>
+                <small class="text-muted">{{ comment.createdAt | date:'short' }}</small>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!selectedPost.comments || selectedPost.comments.length === 0" class="text-muted">
+            No comments yet. Be the first to comment!
+          </div>
+        </div>
+
+        <!-- Add Comment -->
+        <div class="d-flex">
+          <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="32" height="32">
+          <div class="flex-grow-1">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Write a comment..." [(ngModel)]="newDetailComment">
+              <button class="btn btn-primary" type="button" (click)="addDetailComment()" [disabled]="!newDetailComment.trim()">
+                <i class="bi bi-send"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
   <div class="row  ">
     <!-- Left Sidebar - Navigation -->
@@ -232,7 +410,7 @@
         <div class="navigation-menu">
           <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
             <i class="bi bi-people-fill fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Amis</span>
+            <span class="fw-medium">Mes Posts</span>
           </div>
           <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
             <i class="bi bi-bookmark-fill fs-5 me-3 text-primary"></i>
@@ -447,64 +625,135 @@
           </div>
 
           <!-- Post content with read more functionality -->
-          <p class="mb-3">{{ post.content }}</p>
-
+<p class="mb-3 clickable-content" (click)="openPostDetail(post)">{{ post.content }}</p>
           <!-- Post media -->
           <!-- Post media -->
-          <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media">
+<div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media mb-3 clickable-content" (click)="openPostDetail(post)">
             <div class="media-container" [ngClass]="{
-    'media-single': post.media.length === 1,
-    'media-double': post.media.length === 2,
-    'media-grid-4': post.media.length === 4,
-    'media-grid-more': post.media.length > 4
-  }">
-              <ng-container *ngFor="let media of post.media.slice(0, post.media.length > 4 ? 3 : post.media.length); let i = index">
-                <div class="media-item">
-                  <img *ngIf="isImage(media.mediaUrl!)"
-                       [src]="media.mediaUrl!"
-                       alt="Post image"
-                       class="img-fluid rounded fixed-size">
+              'media-single': post.media.length === 1,
+              'media-double': post.media.length === 2,
+              'media-grid-3': post.media.length === 3,
+              'media-grid-4': post.media.length === 4,
+              'media-grid-more': post.media.length > 4
+            }">
+              <!-- First media item (always shown) -->
+              <div class="media-item main-media" *ngIf="post.media.length > 0">
+                <img *ngIf="isImage(post.media[0].mediaUrl!)"
+                     [src]="post.media[0].mediaUrl!"
+                     alt="Post image"
+                     class="img-fluid rounded">
+                <video *ngIf="isVideo(post.media[0].mediaUrl!)"
+                       controls
+                       class="img-fluid rounded">
+                  <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  Your browser does not support HTML video.
+                </video>
+              </div>
 
-                  <video *ngIf="isVideo(media.mediaUrl!)"
-                         controls
-                         class="img-fluid rounded fixed-size">
-                    <source [src]="media.mediaUrl!" type="video/mp4">
-                    Your browser does not support HTML video.
-                  </video>
-                </div>
-              </ng-container>
+              <!-- Other media items -->
+              <div class="secondary-media-container">
+                <ng-container *ngFor="let media of post.media.slice(1, 5); let i = index">
+                  <div class="media-item secondary-media" [ngClass]="{'has-overlay': i === 3 && post.media.length > 5}">
+                    <img *ngIf="isImage(media.mediaUrl!)"
+                         [src]="media.mediaUrl!"
+                         alt="Post image"
+                         class="img-fluid rounded">
+                    <video *ngIf="isVideo(media.mediaUrl!)"
+                           controls
+                           class="img-fluid rounded">
+                      <source [src]="media.mediaUrl!" type="video/mp4">
+                      Your browser does not support HTML video.
+                    </video>
 
-              <div *ngIf="post.media.length > 4" class="show-more-overlay">
-                <button class="btn btn-dark" (click)="showAllMedia(post.media)">+{{ post.media.length - 3 }}</button>
+                    <!-- Overlay for +X more -->
+                    <div *ngIf="i === 3 && post.media.length > 5" class="more-overlay" (click)="showAllMedia(post.media)">
+                      <div class="more-count">+{{ post.media.length - 4 }}</div>
+                    </div>
+                  </div>
+                </ng-container>
               </div>
             </div>
           </div>
 
-
           <!-- Interaction buttons -->
+<!-- Interaction buttons -->
           <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
-            <button class="btn btn-sm text-primary">
-              <i class="bi bi-hand-thumbs-up me-1"></i>Like {{ (post.reactions || []).length ? '(' + (post.reactions || []).length + ')' : '' }}
-            </button>
-            <button class="btn btn-sm text-primary">
+            <div class="position-relative">
+              <!-- Main reaction button -->
+              <button class="btn btn-sm"
+                      [ngClass]="userReactions.get(post.id!) ?
+                    getReactionIcon(userReactions.get(post.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                    'text-primary'"
+                      (click)="toggleReactionBar(post.id!)"
+                      (mouseenter)="showReactionBar(post.id!)"
+                      (mouseleave)="hideReactionBarWithDelay(post.id!)">
+                <i [class]="userReactions.get(post.id!) ?
+              getReactionIcon(userReactions.get(post.id!)!.reactionType!) :
+              'bi bi-hand-thumbs-up text-primary'"></i>
+                <span>
+      {{ userReactions.get(post.id!) ?
+                  userReactions.get(post.id!)!.reactionType!.charAt(0) + userReactions.get(post.id!)!.reactionType!.slice(1).toLowerCase() :
+                  'Like' }}
+                  {{ getTotalReactionCount(post.id!) > 0 ? '(' + getTotalReactionCount(post.id!) + ')' : '' }}
+    </span>
+              </button>
+
+              <!-- Reaction bar that shows on hover/click -->
+              <div *ngIf="reactionBarVisible.get(post.id!)"
+                   class="reaction-bar"
+                   (mouseenter)="keepReactionBarVisible(post.id!)"
+                   (mouseleave)="hideReactionBar(post.id!)">
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LIKE)}"
+                        (click)="reactToPost(post.id!, ReactionType.LIKE)">
+                  <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LOVE)}"
+                        (click)="reactToPost(post.id!, ReactionType.LOVE)">
+                  <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.HAHA)}"
+                        (click)="reactToPost(post.id!, ReactionType.HAHA)">
+                  <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.WOW)}"
+                        (click)="reactToPost(post.id!, ReactionType.WOW)">
+                  <i class="bi bi-emoji-surprise-fill text-warning reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.SAD)}"
+                        (click)="reactToPost(post.id!, ReactionType.SAD)">
+                  <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.ANGRY)}"
+                        (click)="reactToPost(post.id!, ReactionType.ANGRY)">
+                  <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm text-primary" (click)="openPostDetail(post)">
               <i class="bi bi-chat-dots me-1"></i>Comment {{ (post.comments || []).length ? '(' + (post.comments || []).length + ')' : '' }}
             </button>
-            <button class="btn btn-sm text-primary"><i class="bi bi-share me-1"></i>Share</button>
-          </div>
 
-
-          <!-- Comment Input -->
-          <div class="d-flex gap-2">
+            <button class="btn btn-sm text-primary">
+              <i class="bi bi-share me-1"></i>Share
+            </button>
+          </div>          <!-- Comment Input -->
+            <div class="d-flex gap-2">
             <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle" style="width: 38px; height: 38px;">
             <div class="flex-grow-1">
               <div class="input-group">
                 <input type="text"
-                       [(ngModel)]="newComment"
+                       [(ngModel)]="post.newComment"
                        class="form-control bg-light"
                        placeholder="Écrivez un commentaire...">
                 <button class="btn btn-primary comment-btn"
-                        [disabled]="!newComment.trim()"
-                        (click)="addComment(post.id!)">
+                        [disabled]="!post.newComment || !post.newComment.trim()"
+                        (click)="addComment(post.id!, post.newComment || ''); post.newComment = ''">
                   <i class="bi bi-send-fill"></i>
                 </button>
               </div>
@@ -673,5 +922,7 @@
         </div>
       </div>
     </div>
+
+
   </div>
 
