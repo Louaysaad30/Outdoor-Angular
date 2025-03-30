@@ -59,7 +59,7 @@
     "ng-apexcharts": "^1.8.0",
     "ng-otp-input": "^1.9.3",
     "ng2-search-filter": "^0.5.1",
-    "ngx-bootstrap": "11.0.2",
+    "ngx-bootstrap": "^11.0.2",
     "ngx-color-picker": "^15.0.0",
     "ngx-cookie-service": "^17.0.0",
     "ngx-countup": "^13.1.0",

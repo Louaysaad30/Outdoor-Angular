@@ -2451,16 +2451,11 @@ const dynamicLoadedChart: ChartOptions = {
   },
   colors: colors,
   states: {
-    normal: {
-        filter: {
-            type: "desaturate",
-        },
-    },
     active: {
         allowMultipleDataPointsSelection: true,
         filter: {
             type: "darken",
-            value: 1,
+           
         },
     },
   },
