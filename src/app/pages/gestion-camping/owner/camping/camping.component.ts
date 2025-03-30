@@ -22,11 +22,26 @@ import {AngularFireStorage} from "@angular/fire/compat/storage";
 import Swal from "sweetalert2";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {image} from "ngx-editor/schema/nodes";
+import * as L from 'leaflet';
+import {LeafletModule} from "@asymmetrik/ngx-leaflet";
+import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
+
 
 @Component({
   selector: 'app-camping',
   standalone: true,
-  imports: [CommonModule, SimplebarAngularModule, SharedModule, FormsModule, NgxSliderModule, PaginationModule, ReactiveFormsModule, DropzoneModule, ModalModule, BsDropdownModule],
+  imports: [CommonModule,
+    SimplebarAngularModule,
+    SharedModule,
+    FormsModule,
+    NgxSliderModule,
+    PaginationModule,
+    ReactiveFormsModule,
+    DropzoneModule,
+    ModalModule,
+    LeafletModule,
+
+    BsDropdownModule],
   templateUrl: './camping.component.html',
   styleUrl: './camping.component.scss'
 })
@@ -45,6 +60,8 @@ export class CampingComponent {
 
   centre: CentreCamping[] = [];
   imageUrl: string = '';
+  map: any;
+
 
 
 
@@ -74,10 +91,14 @@ export class CampingComponent {
   @ViewChild('editProperty', { static: false }) editProperty?: ModalDirective;
 
 
+
   deleteID: any;
   editData: any;
 
-  constructor(private formBuilder: UntypedFormBuilder, public store: Store, private centreCampingService: CentreCampingService,private storage: AngularFireStorage) {
+  constructor(private formBuilder: UntypedFormBuilder,
+              public store: Store,
+              private centreCampingService: CentreCampingService,
+              private reverseGeocodingService: ReverseGeocodingService) {
   }
 
   ngOnInit(): void {
@@ -88,6 +109,7 @@ export class CampingComponent {
       name: ['', Validators.required],
       longitude: ['', Validators.required],
       latitude: ['', Validators.required],
+      address: ['', Validators.required],
       capcite: ['', Validators.required],
       image: ['', Validators.required]
     });
@@ -96,6 +118,7 @@ export class CampingComponent {
       name: ['', Validators.required],
       longitude: ['', Validators.required],
       latitude: ['', Validators.required],
+      address: ['', Validators.required],
       capcite: ['', Validators.required],
       image: ['', Validators.required]
 
@@ -124,6 +147,77 @@ export class CampingComponent {
 
   }
 
+
+  ngAfterViewInit(): void {
+    if (this.addProperty) {
+      this.addProperty.onShown.subscribe(() => {
+        setTimeout(() => {
+          this.initializeMap('map');
+        }, 200);
+      });
+    }
+
+    if (this.editProperty) {
+      this.editProperty.onShown.subscribe(() => {
+        setTimeout(() => {
+          this.initializeMap('edit-map');
+        }, 200);
+      });
+    }
+  }
+
+  initializeMap(mapId: string): void {
+    // Check if the map element exists in the DOM
+    const mapElement = document.getElementById(mapId);
+    if (!mapElement) {
+      console.error(`Map element with id '${mapId}' not found in DOM`);
+      return;
+    }
+
+    // If a map already exists, remove it
+    if (this.map) {
+      this.map.remove();
+      this.map = null; // Clear the reference
+    }
+
+    // Initialize the map with the given mapId
+    try {
+      this.map = L.map(mapId).setView([34.0, 9.0], 7);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(this.map);
+
+      this.map.on('click', (e: any) => {
+        const { lat, lng } = e.latlng;
+        if (mapId === 'map') {
+          this.centreCampingForm.patchValue({ latitude: lat, longitude: lng });
+        } else if (mapId === 'edit-map') {
+          this.editCampingForm.patchValue({ latitude: lat, longitude: lng });
+        }
+        this.getAddress(lat, lng);
+      });
+
+      // Force update the dimensions
+      setTimeout(() => {
+        this.map.invalidateSize();
+      }, 300);
+    } catch (error) {
+      console.error(`Error initializing map with id '${mapId}':`, error);
+    }
+  }
+
+  getAddress(lat: number, lng: number): void {
+    this.reverseGeocodingService.reverseGeocode(lat, lng).subscribe(response => {
+      const address = response.results[0]?.formatted || 'Address not found';
+      this.centreCampingForm.patchValue({ address });
+      this.editCampingForm.patchValue({ address });
+
+    });
+  }
+
+
+
   getCentreCampingList(): void {
     this.centreCampingService.getAllCentreCamping().subscribe((data: CentreCamping[]) => {
       this.centre = data;
@@ -137,8 +231,6 @@ export class CampingComponent {
         console.log('Image uploaded successfully', response);
         this.imageUrl = response.fileUrl; // Store the image URL
         this.centreCampingForm.get('image')?.setValue(this.imageUrl);
-        this.editCampingForm.get('image')?.setValue(this.imageUrl);
-
 
         console.log('Image URL:', this.imageUrl);
 
@@ -240,6 +332,8 @@ export class CampingComponent {
 
   updateCentreCamping() {
     if (this.editCampingForm.valid) {
+      this.editCampingForm.patchValue({ image: this.imageUrl });
+
       const formData = this.editCampingForm.value;
 
       this.centreCampingService.updateCentreCamping(this.editId ,formData).subscribe({
