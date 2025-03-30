@@ -179,7 +179,6 @@ options = {
 
 
   // Edit Data
-// File: src/app/pages/gestion-event/admin/event-area-list/event-area-list.component.ts
 editList(index: number) {
   this.uploadedFiles = [];
   this.addProperty?.show();
