@@ -7,6 +7,8 @@ import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { DropzoneModule } from 'ngx-dropzone-wrapper';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { AddProductComponent } from './add-product/add-product.component';
+import { AddProductCodeComponent } from './add-product-code/add-product-code.component';
+import { AddPCategoryComponent } from './add-pcategory/add-pcategory.component';
 
 
 @NgModule({
@@ -18,7 +20,10 @@ import { AddProductComponent } from './add-product/add-product.component';
     CKEditorModule,
     NgSelectModule,
     DropzoneModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AddProductCodeComponent,
+    AddPCategoryComponent
+
 
   ]
 })

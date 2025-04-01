@@ -8,7 +8,7 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl ='http://localhost:9093/Produit';
+  private apiUrl = 'http://localhost:9093/Produit';
 
   constructor(private http: HttpClient) { }
 
@@ -39,11 +39,11 @@ export class ProductService {
 
   // Assign product to category
   assignProductToCategory(productId: number, categoryId: number): Observable<Product> {
-    return this.http.put<Product>(`${this.apiUrl}/affecterProduitCategorie/${productId}/${categoryId}`, {});
+    return this.http.put<Product>(`${this.apiUrl}/affecterProduitCategorie/${productId}/${categoryId}`, null);
   }
 
-  // Unassign product from category
-  unassignProductFromCategory(productId: number): Observable<Product> {
-    return this.http.put<Product>(`${this.apiUrl}/desaffecterProduitCategorie/${productId}`, {});
+  // Assign product to product code
+  assignProductToProductCode(productId: number, codeId: number): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/affecterProduitCodeProduit/${productId}/${codeId}`, {});
   }
 }
