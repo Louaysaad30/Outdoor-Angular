@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product';
@@ -31,13 +31,13 @@ export class AddProductComponent implements OnInit {
     private productCodeService: ProductCodeService
   ) {
     this.productForm = this.fb.group({
-      nomProduit: [''],
-      descriptionProduit: [''],
-      prixProduit: [''],
-      stockProduit: [''],
-      categorie: [''],
-      imageProduit: [''],
-      codeProduit: ['']
+      nomProduit: ['', [Validators.required]],
+      descriptionProduit: ['', [Validators.required, Validators.minLength(10)]],
+      prixProduit: ['', [Validators.required, Validators.min(0)]],
+      stockProduit: ['', [Validators.required, Validators.min(1)]],
+      categorie: ['', [Validators.required]],
+      codeProduit: ['', [Validators.required]],
+      imageProduit: [null] // Remove required validator from here
     });
   }
 
@@ -61,12 +61,54 @@ export class AddProductComponent implements OnInit {
   }
 
   onFileSelected(event: any): void {
-    if (event.target.files && event.target.files[0]) {
-      this.selectedFile = event.target.files[0];
+    const file = event.target.files[0];
+    if (file) {
+      // Update form control value
+      this.productForm.patchValue({
+        imageProduit: file
+      });
+
+      // Manually mark as touched and valid
+      const imageControl = this.productForm.get('imageProduit');
+      if (imageControl) {
+        imageControl.markAsTouched();
+        imageControl.setErrors(null);
+      }
+
+      this.selectedFile = file;
+    } else {
+      // If no file selected, mark as invalid
+      const imageControl = this.productForm.get('imageProduit');
+      if (imageControl) {
+        imageControl.setErrors({ 'required': true });
+      }
     }
   }
 
+  get formControls() {
+    return this.productForm.controls;
+  }
+
+  isImageSelected(): boolean {
+    return !!this.selectedFile;
+  }
+
   onSubmit(): void {
+    if (this.productForm.invalid || !this.isImageSelected()) {
+      this.markFormGroupTouched(this.productForm);
+
+      if (!this.isImageSelected()) {
+        this.showErrorMessage = true;
+        this.errorMessage = 'Please select an image';
+        setTimeout(() => this.showErrorMessage = false, 3000);
+      } else {
+        this.showErrorMessage = true;
+        this.errorMessage = 'Please fill all required fields correctly';
+        setTimeout(() => this.showErrorMessage = false, 3000);
+      }
+      return;
+    }
+
     if (this.productForm.valid) {
       const product = new Product();
       product.nomProduit = this.productForm.value.nomProduit;
@@ -132,6 +174,15 @@ export class AddProductComponent implements OnInit {
         }
       });
     }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 
   onCancel(): void {
