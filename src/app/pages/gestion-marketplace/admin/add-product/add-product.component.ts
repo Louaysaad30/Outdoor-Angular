@@ -164,7 +164,11 @@ export class AddProductComponent implements OnInit {
           console.log('All operations completed:', finalProduct);
           this.showSuccessMessage = true;
           this.productForm.reset();
-          setTimeout(() => this.showSuccessMessage = false, 3000);
+          // Navigate after a brief delay to show success message
+          setTimeout(() => {
+            this.showSuccessMessage = false;
+            this.router.navigate(['/marketplaceback/admin/productList']);
+          }, 1500);
         },
         error: (error) => {
           console.error('Operation failed:', error);

@@ -6,7 +6,7 @@ import { CodeProduit } from "./CodeProduit";
 
 
 export class Product {
-  idProduit?: number;
+  idProduit!: number;
   nomProduit!: string;
   descriptionProduit!: string;
   codeProduit!: CodeProduit ;
@@ -15,4 +15,5 @@ export class Product {
   stockProduit!: number;
   categorie!:PCategorie;
   ligneCommande!:LigneCommande[];
+  states?: boolean;
 }
