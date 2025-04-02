@@ -436,8 +436,8 @@ handleEventClick(clickInfo: EventClickArg) {
             formData.append('eventAreaId', eventAreaId);
           }
 
-          if (this.selectedFile) {
-            formData.append('image', this.selectedFile);
+          if (this.uploadedFile) {
+            formData.append('image', this.uploadedFile);
           }
 
           console.log('Sending event data:', formData);
