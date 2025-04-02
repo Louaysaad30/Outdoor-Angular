@@ -28,8 +28,8 @@ export class ProductService {
   }
 
   // Update product
-  updateProduct(product: Product): Observable<Product> {
-    return this.http.put<Product>(`${this.apiUrl}/update`, product);
+  updateProduct(id: number, productData: FormData): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/update/${id}`, productData);
   }
 
   // Delete product
@@ -45,5 +45,12 @@ export class ProductService {
   // Assign product to product code
   assignProductToProductCode(productId: number, codeId: number): Observable<Product> {
     return this.http.put<Product>(`${this.apiUrl}/affecterProduitCodeProduit/${productId}/${codeId}`, {});
+  }
+
+  // Upload image
+  uploadImage(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post(`${this.apiUrl}/upload`, formData);
   }
 }

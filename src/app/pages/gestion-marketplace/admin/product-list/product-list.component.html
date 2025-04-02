@@ -72,8 +72,9 @@
                                           <button class="btn btn-sm btn-danger" (click)="removeItem(product.idProduit)">
                                               <i class="bi bi-trash"></i>
                                           </button>
-                                          <button class="btn btn-sm btn-primary" (click)="editList(i)">
-                                              <i class="bi bi-pencil"></i>
+
+                                          <button class="btn btn-sm edit-item-btn" (click)="editList(i)">
+                                            <i class="ph-pencil align-middle me-1"></i>
                                           </button>
                                       </div>
                                   </td>
@@ -138,4 +139,70 @@
           </div>
       </div>
   </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" bsModal #showModal="bs-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header px-4 pt-4">
+                <h5 class="modal-title" id="exampleModalLabel">Add Product</h5>
+                <button type="button" class="btn-close" (click)="showModal.hide()"></button>
+            </div>
+
+            <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="tablelist-form">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label">Product Name</label>
+                        <input type="text" class="form-control" formControlName="nomProduit" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" formControlName="descriptionProduit" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Price</label>
+                                <input type="number" class="form-control" formControlName="prixProduit" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Stock</label>
+                                <input type="number" class="form-control" formControlName="stockProduit" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-control" formControlName="categorie">
+                            <option *ngFor="let cat of categories" [ngValue]="cat">{{cat.nomCategorie}}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Product Image</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <img *ngIf="currentImage"
+                                 [src]="currentImage.startsWith('data:') ? currentImage : imageBasePath + currentImage"
+                                 class="rounded"
+                                 style="height: 100px; width: 100px; object-fit: cover;">
+                            <input type="file"
+                                   class="form-control"
+                                   (change)="onFileSelected($event)"
+                                   accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" (click)="showModal.hide()">Close</button>
+                    <button type="submit" class="btn btn-primary" id="add-btn">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

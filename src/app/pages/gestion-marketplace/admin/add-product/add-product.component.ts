@@ -7,8 +7,9 @@ import { ProductCodeService } from '../../services/product-code.service';
 import { CodeProduit } from '../../models/CodeProduit';
 import { PCategorie } from '../../models/PCategorie';
 import { PCategoryService } from '../../services/pcategory.service';
-import { of, Observable, concat } from 'rxjs';
-import { switchMap, tap, last, catchError } from 'rxjs/operators';
+import { FileUploadService } from '../../services/cloudinary.service';
+import { of, Observable, concat, throwError } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-add-product',
@@ -22,13 +23,15 @@ export class AddProductComponent implements OnInit {
   showSuccessMessage: boolean = false;
   showErrorMessage: boolean = false;
   errorMessage: string = '';
+  isLoading: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
     private categoryService: PCategoryService,
     private router: Router,
-    private productCodeService: ProductCodeService
+    private productCodeService: ProductCodeService,
+    private fileUploadService: FileUploadService
   ) {
     this.productForm = this.fb.group({
       nomProduit: ['', [Validators.required]],
@@ -63,24 +66,32 @@ export class AddProductComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Update form control value
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.showErrorMessage = true;
+        this.errorMessage = 'Please select an image file';
+        setTimeout(() => this.showErrorMessage = false, 3000);
+        return;
+      }
+
+      // Validate file size (e.g., 5MB max)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        this.showErrorMessage = true;
+        this.errorMessage = 'File size must not exceed 5MB';
+        setTimeout(() => this.showErrorMessage = false, 3000);
+        return;
+      }
+
+      this.selectedFile = file;
+      // Update form control
       this.productForm.patchValue({
         imageProduit: file
       });
-
-      // Manually mark as touched and valid
       const imageControl = this.productForm.get('imageProduit');
       if (imageControl) {
         imageControl.markAsTouched();
         imageControl.setErrors(null);
-      }
-
-      this.selectedFile = file;
-    } else {
-      // If no file selected, mark as invalid
-      const imageControl = this.productForm.get('imageProduit');
-      if (imageControl) {
-        imageControl.setErrors({ 'required': true });
       }
     }
   }
@@ -96,75 +107,53 @@ export class AddProductComponent implements OnInit {
   onSubmit(): void {
     if (this.productForm.invalid || !this.isImageSelected()) {
       this.markFormGroupTouched(this.productForm);
-
-      if (!this.isImageSelected()) {
-        this.showErrorMessage = true;
-        this.errorMessage = 'Please select an image';
-        setTimeout(() => this.showErrorMessage = false, 3000);
-      } else {
-        this.showErrorMessage = true;
-        this.errorMessage = 'Please fill all required fields correctly';
-        setTimeout(() => this.showErrorMessage = false, 3000);
-      }
+      this.showErrorMessage = true;
+      this.errorMessage = !this.isImageSelected() ?
+        'Please select an image' : 'Please fill all required fields correctly';
+      setTimeout(() => this.showErrorMessage = false, 3000);
       return;
     }
 
-    if (this.productForm.valid) {
-      const product = new Product();
-      product.nomProduit = this.productForm.value.nomProduit;
-      product.descriptionProduit = this.productForm.value.descriptionProduit;
-      product.prixProduit = Number(this.productForm.value.prixProduit);
-      product.stockProduit = Number(this.productForm.value.stockProduit);
-      product.imageProduit = this.selectedFile?.name || '';
+    if (this.productForm.valid && this.selectedFile) {
+      // Show loading state
+      this.isLoading = true;
 
-      this.productService.addProduct(product).pipe(
-        switchMap(addedProduct => {
-          console.log('Product added successfully:', addedProduct);
-
-          const assignments: Observable<Product>[] = [];
-
-          // Add category assignment if selected
-          if (this.productForm.value.categorie) {
-            assignments.push(
-              this.productService.assignProductToCategory(
-                addedProduct.idProduit!,
-                this.productForm.value.categorie.idCategorie
-              ).pipe(
-                tap(result => console.log('Category assigned:', result))
-              )
-            );
+      this.fileUploadService.uploadFile(this.selectedFile).pipe(
+        tap(imageUrl => {
+          console.log('Received URL from server:', imageUrl);
+        }),
+        catchError(error => {
+          console.error('Upload error:', error);
+          this.showErrorMessage = true;
+          this.errorMessage = error.message || 'Failed to upload image';
+          this.isLoading = false;
+          setTimeout(() => this.showErrorMessage = false, 3000);
+          return throwError(() => error);
+        }),
+        switchMap(imageUrl => {
+          if (!imageUrl) {
+            throw new Error('No image URL received');
           }
 
-          // Add code assignment if selected
-          if (this.productForm.value.codeProduit) {
-            assignments.push(
-              this.productService.assignProductToProductCode(
-                addedProduct.idProduit!,
-                this.productForm.value.codeProduit.idCodeProduit
-              ).pipe(
-                tap(result => console.log('Product code assigned:', result))
-              )
-            );
-          }
+          const product: Partial<Product> = {
+            nomProduit: this.productForm.value.nomProduit,
+            descriptionProduit: this.productForm.value.descriptionProduit,
+            prixProduit: Number(this.productForm.value.prixProduit),
+            stockProduit: Number(this.productForm.value.stockProduit),
+            imageProduit: imageUrl,
+            categorie: this.productForm.value.categorie,
+            codeProduit: this.productForm.value.codeProduit
+          };
 
-          // Execute all assignments sequentially
-          return assignments.length > 0
-            ? concat(...assignments).pipe(
-                last(), // Take only the last result
-                catchError(error => {
-                  console.error('Assignment failed:', error);
-                  // Return the original product if assignments fail
-                  return of(addedProduct);
-                })
-              )
-            : of(addedProduct);
+          return this.productService.addProduct(product as Product);
         })
       ).subscribe({
         next: (finalProduct) => {
-          console.log('All operations completed:', finalProduct);
+          console.log('Product created successfully:', finalProduct);
           this.showSuccessMessage = true;
+          this.isLoading = false;
           this.productForm.reset();
-          // Navigate after a brief delay to show success message
+          this.selectedFile = null;
           setTimeout(() => {
             this.showSuccessMessage = false;
             this.router.navigate(['/marketplaceback/admin/productList']);
@@ -173,7 +162,8 @@ export class AddProductComponent implements OnInit {
         error: (error) => {
           console.error('Operation failed:', error);
           this.showErrorMessage = true;
-          this.errorMessage = 'Failed to complete product setup. Please try again.';
+          this.errorMessage = error.message || 'Failed to complete product setup';
+          this.isLoading = false;
           setTimeout(() => this.showErrorMessage = false, 3000);
         }
       });

@@ -7,13 +7,15 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { Router } from '@angular/router';
 import { PCategorie } from '../../models/PCategorie';
 import { PCategoryService } from '../../services/pcategory.service';
-
+import { image } from 'ngx-editor/schema/nodes';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html'
 })
 export class ProductListComponent implements OnInit {
+  @ViewChild('showModal', { static: false }) showModal?: ModalDirective;
+
   @ViewChild('deleteRecordModal') deleteRecordModal?: ModalDirective;
 
   productForm: FormGroup;
@@ -26,6 +28,12 @@ export class ProductListComponent implements OnInit {
   uploadedFiles: any[] = [];
   categories: PCategorie[] = [];
   selectedCategory: string = '';
+  currentImage: string | null = null;
+  selectedFile: File | null = null;
+  currentProduct?: Product;
+
+  // Add property for image URL
+  imageBasePath = 'http://localhost:9093/uploads/';
 
   // Dropzone config
   dropzoneConfig = {
@@ -42,10 +50,11 @@ export class ProductListComponent implements OnInit {
     private pCategoryService: PCategoryService
   ) {
     this.productForm = this.fb.group({
-      title: ['', [Validators.required]],
-      category: ['', [Validators.required]],
-      stock: ['', [Validators.required, Validators.min(1)]],
-      price: ['', [Validators.required, Validators.min(0)]]
+      nomProduit: ['', Validators.required],
+      descriptionProduit: ['', [Validators.required, Validators.minLength(10)]],
+      prixProduit: [0, [Validators.required, Validators.min(0)]],
+      stockProduit: [0, [Validators.required, Validators.min(1)]],
+      categorie: [null, Validators.required]
     });
   }
 
@@ -138,29 +147,75 @@ export class ProductListComponent implements OnInit {
     this.masterSelected = selectedCount === this.products.length;
   }
 
+  editList(index: number): void {
+    const product = this.products[index];
+    if (product) {
+      this.currentProduct = product;
+      this.showModal?.show();
+      const modaltitle = document.querySelector('.modal-title') as HTMLElement;
+      if (modaltitle) modaltitle.innerHTML = 'Edit Product';
+      const modalbtn = document.getElementById('add-btn') as HTMLElement;
+      if (modalbtn) modalbtn.innerHTML = 'Update';
+      this.currentImage = product.imageProduit;
+      this.productForm.patchValue({
+        nomProduit: product.nomProduit,
+        descriptionProduit: product.descriptionProduit,
+        prixProduit: product.prixProduit,
+        stockProduit: product.stockProduit,
+        categorie: product.categorie,
+        imageProduit: product.imageProduit
+      });
+    }
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.currentImage = reader.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   saveProduct(): void {
-    if (this.productForm.valid) {
-      const productData = this.productForm.value;
-      this.productService.addProduct(productData).subscribe({
+    if (this.productForm.valid && this.currentProduct) {
+      const formData = new FormData();
+      const formValue = this.productForm.value;
+
+      // Append basic product data
+      formData.append('nomProduit', formValue.nomProduit);
+      formData.append('descriptionProduit', formValue.descriptionProduit);
+      formData.append('prixProduit', formValue.prixProduit);
+      formData.append('stockProduit', formValue.stockProduit);
+      formData.append('categorie', JSON.stringify(formValue.categorie || this.currentProduct.categorie));
+
+      // Append image if selected
+      if (this.selectedFile) {
+        formData.append('image', this.selectedFile);
+      }
+
+      this.productService.updateProduct(this.currentProduct.idProduit, formData).subscribe({
         next: (response) => {
+          console.log('Product updated successfully:', response);
+          this.showModal?.hide();
           this.loadProducts();
-          this.productForm.reset();
+          this.resetForm();
         },
         error: (error) => {
-          console.error('Error adding product:', error);
+          console.error('Error updating product:', error);
         }
       });
     }
   }
 
-  editList(index: number): void {
-    const product = this.products[index];
-    this.productForm.patchValue({
-      title: product.nomProduit,
-      category: product.categorie?.nomCategorie,
-      stock: product.stockProduit,
-      price: product.prixProduit
-    });
+  private resetForm(): void {
+    this.productForm.reset();
+    this.currentProduct = undefined;
+    this.selectedFile = null;
+    this.currentImage = null;
   }
 
   removeItem(id: number): void {

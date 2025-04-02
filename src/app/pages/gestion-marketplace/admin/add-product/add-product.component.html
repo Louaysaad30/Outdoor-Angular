@@ -77,23 +77,29 @@
             </div>
 
             <div class="form-group">
-              <label for="imageProduit">Image</label>
+              <label for="imageProduit">Product Image</label>
               <input
                 type="file"
                 id="imageProduit"
                 (change)="onFileSelected($event)"
                 class="form-control"
                 accept="image/*"
-                [ngClass]="{'is-invalid': !isImageSelected() && (formControls['imageProduit'].touched || showErrorMessage)}">
-              <div *ngIf="!isImageSelected() && (formControls['imageProduit'].touched || showErrorMessage)" class="invalid-feedback">
+                [ngClass]="{'is-invalid': !isImageSelected() && formControls['imageProduit'].touched}"
+              >
+              <div class="invalid-feedback" *ngIf="!isImageSelected() && formControls['imageProduit'].touched">
                 Please select an image
               </div>
+              <small class="form-text text-muted">
+                Maximum file size: 5MB. Supported formats: JPG, PNG, GIF
+              </small>
               <div *ngIf="selectedFile" class="mt-2">
                 <small class="text-success">Selected file: {{selectedFile.name}}</small>
               </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Add Product</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+              {{ isLoading ? 'Adding Product...' : 'Add Product' }}
+            </button>
           </form>
 
           <div *ngIf="showSuccessMessage" class="alert alert-success mt-3">
