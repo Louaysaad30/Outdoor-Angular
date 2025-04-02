@@ -66,10 +66,16 @@
 
             <div class="form-group">
               <label for="codeProduit">Product Code</label>
-              <select id="codeProduit" formControlName="codeProduit" class="form-control"
-                      [ngClass]="{'is-invalid': formControls['codeProduit'].touched && formControls['codeProduit'].invalid}">
-                <option value="">Select Product Code</option>
-                <option *ngFor="let code of productCodes" [ngValue]="code">{{code.code}}</option>
+              <select
+                id="codeProduit"
+                formControlName="codeProduit"
+                class="form-control"
+                [ngClass]="{'is-invalid': formControls['codeProduit'].touched && formControls['codeProduit'].invalid}"
+              >
+              <option value="">Select Product Code</option>
+                <option *ngFor="let code of productCodes" [ngValue]="code">
+                  {{code.code}}
+                </option>
               </select>
               <div *ngIf="formControls['codeProduit'].touched && formControls['codeProduit'].invalid" class="invalid-feedback">
                 <div *ngIf="formControls['codeProduit'].errors?.['required']">Product code is required</div>

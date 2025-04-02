@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ProductService } from '../../services/product.service';
-import { Product } from '../../models/product';
-import { ProductCodeService } from '../../services/product-code.service';
+import { concat, Observable, of, throwError } from 'rxjs';
+import { catchError, last, switchMap, tap } from 'rxjs/operators';
 import { CodeProduit } from '../../models/CodeProduit';
+import { ProductService } from '../../services/product.service';
 import { PCategorie } from '../../models/PCategorie';
 import { PCategoryService } from '../../services/pcategory.service';
 import { FileUploadService } from '../../services/cloudinary.service';
-import { of, Observable, concat, throwError } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { ProductCodeService } from '../../services/product-code.service';
+import { Product } from '../../models/product';
 
 @Component({
   selector: 'app-add-product',
@@ -29,8 +29,8 @@ export class AddProductComponent implements OnInit {
     private fb: FormBuilder,
     private productService: ProductService,
     private categoryService: PCategoryService,
+    private productCodeService: ProductCodeService, // Add this
     private router: Router,
-    private productCodeService: ProductCodeService,
     private fileUploadService: FileUploadService
   ) {
     this.productForm = this.fb.group({
@@ -115,7 +115,6 @@ export class AddProductComponent implements OnInit {
     }
 
     if (this.productForm.valid && this.selectedFile) {
-      // Show loading state
       this.isLoading = true;
 
       this.fileUploadService.uploadFile(this.selectedFile).pipe(
@@ -135,21 +134,62 @@ export class AddProductComponent implements OnInit {
             throw new Error('No image URL received');
           }
 
+          // First create the product
           const product: Partial<Product> = {
             nomProduit: this.productForm.value.nomProduit,
             descriptionProduit: this.productForm.value.descriptionProduit,
             prixProduit: Number(this.productForm.value.prixProduit),
             stockProduit: Number(this.productForm.value.stockProduit),
             imageProduit: imageUrl,
-            categorie: this.productForm.value.categorie,
-            codeProduit: this.productForm.value.codeProduit
+            categorie: this.productForm.value.categorie
           };
 
           return this.productService.addProduct(product as Product);
+        }),
+        switchMap(createdProduct => {
+          if (!createdProduct || !createdProduct.idProduit) {
+            throw new Error('Product creation failed');
+          }
+
+          const tasks: Observable<Product>[] = [];
+
+          // Assign category if selected
+          if (this.productForm.value.categorie) {
+            tasks.push(
+              this.productService.assignProductToCategory(
+                createdProduct.idProduit,
+                this.productForm.value.categorie.idCategorie
+              )
+            );
+          }
+
+          // Assign product code if selected
+          const selectedCode = this.productForm.value.codeProduit;
+          if (selectedCode && selectedCode.idCodeProduit) {
+            console.log('Assigning product code:', selectedCode);
+            tasks.push(
+              this.productService.assignProductToProductCode(
+                createdProduct.idProduit,
+                selectedCode.idCodeProduit
+              )
+            );
+          }
+
+          // If we have assignments to make, execute them in sequence
+          return tasks.length > 0 ?
+            concat(...tasks).pipe(
+              tap(result => console.log('Assignment result:', result)),
+              catchError(error => {
+                console.error('Assignment error:', error);
+                return throwError(() => new Error('Failed to assign category or product code'));
+              }),
+              last()
+            ) :
+            of(createdProduct);
         })
       ).subscribe({
         next: (finalProduct) => {
-          console.log('Product created successfully:', finalProduct);
+          console.log('Product created and assigned successfully:', finalProduct);
           this.showSuccessMessage = true;
           this.isLoading = false;
           this.productForm.reset();

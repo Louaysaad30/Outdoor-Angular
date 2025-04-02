@@ -8,6 +8,8 @@ import { Router } from '@angular/router';
 import { PCategorie } from '../../models/PCategorie';
 import { PCategoryService } from '../../services/pcategory.service';
 import { image } from 'ngx-editor/schema/nodes';
+import { FileUploadService } from '../../services/cloudinary.service';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-list',
@@ -31,6 +33,7 @@ export class ProductListComponent implements OnInit {
   currentImage: string | null = null;
   selectedFile: File | null = null;
   currentProduct?: Product;
+  isFormValid: boolean = false;
 
   // Add property for image URL
   imageBasePath = 'http://localhost:9093/uploads/';
@@ -47,14 +50,16 @@ export class ProductListComponent implements OnInit {
     private fb: FormBuilder,
     private productService: ProductService,
     private router: Router,
-    private pCategoryService: PCategoryService
+    private pCategoryService: PCategoryService,
+    private fileUploadService: FileUploadService
   ) {
     this.productForm = this.fb.group({
-      nomProduit: ['', Validators.required],
+      nomProduit: ['', [Validators.required]],
       descriptionProduit: ['', [Validators.required, Validators.minLength(10)]],
-      prixProduit: [0, [Validators.required, Validators.min(0)]],
-      stockProduit: [0, [Validators.required, Validators.min(1)]],
-      categorie: [null, Validators.required]
+      prixProduit: ['', [Validators.required, Validators.min(0)]],
+      stockProduit: ['', [Validators.required, Validators.min(1)]],
+      categorie: [null],
+      imageProduit: [null]
     });
   }
 
@@ -151,19 +156,17 @@ export class ProductListComponent implements OnInit {
     const product = this.products[index];
     if (product) {
       this.currentProduct = product;
-      this.showModal?.show();
-      const modaltitle = document.querySelector('.modal-title') as HTMLElement;
-      if (modaltitle) modaltitle.innerHTML = 'Edit Product';
-      const modalbtn = document.getElementById('add-btn') as HTMLElement;
-      if (modalbtn) modalbtn.innerHTML = 'Update';
       this.currentImage = product.imageProduit;
+      this.showModal?.show();
+
+      console.log('Editing product:', product);
+
       this.productForm.patchValue({
         nomProduit: product.nomProduit,
         descriptionProduit: product.descriptionProduit,
         prixProduit: product.prixProduit,
         stockProduit: product.stockProduit,
-        categorie: product.categorie,
-        imageProduit: product.imageProduit
+        categorie: product.categorie
       });
     }
   }
@@ -181,25 +184,43 @@ export class ProductListComponent implements OnInit {
   }
 
   saveProduct(): void {
-    if (this.productForm.valid && this.currentProduct) {
-      const formData = new FormData();
-      const formValue = this.productForm.value;
+    if (!this.currentProduct) {
+      console.log('No product selected for update');
+      return;
+    }
 
-      // Append basic product data
-      formData.append('nomProduit', formValue.nomProduit);
-      formData.append('descriptionProduit', formValue.descriptionProduit);
-      formData.append('prixProduit', formValue.prixProduit);
-      formData.append('stockProduit', formValue.stockProduit);
-      formData.append('categorie', JSON.stringify(formValue.categorie || this.currentProduct.categorie));
+    // Get form values
+    const formValues = this.productForm.value;
 
-      // Append image if selected
-      if (this.selectedFile) {
-        formData.append('image', this.selectedFile);
-      }
+    // Check required fields only
+    if (!formValues.nomProduit || !formValues.descriptionProduit ||
+        !formValues.prixProduit || !formValues.stockProduit) {
+      console.error('Required fields are missing');
+      return;
+    }
 
-      this.productService.updateProduct(this.currentProduct.idProduit, formData).subscribe({
+    const updateData = {
+      idProduit: this.currentProduct.idProduit,
+      nomProduit: formValues.nomProduit,
+      descriptionProduit: formValues.descriptionProduit,
+      prixProduit: formValues.prixProduit,
+      stockProduit: formValues.stockProduit,
+      categorie: formValues.categorie || this.currentProduct.categorie,
+      imageProduit: this.currentProduct.imageProduit
+    };
+
+    console.log('Updating product with data:', updateData);
+
+    if (this.selectedFile) {
+      this.fileUploadService.uploadFile(this.selectedFile).pipe(
+        switchMap(imageUrl => {
+          console.log('New image uploaded:', imageUrl);
+          updateData.imageProduit = imageUrl;
+          return this.productService.updateProduct(this.currentProduct!.idProduit, updateData);
+        })
+      ).subscribe({
         next: (response) => {
-          console.log('Product updated successfully:', response);
+          console.log('Product updated with new image:', response);
           this.showModal?.hide();
           this.loadProducts();
           this.resetForm();
@@ -208,11 +229,26 @@ export class ProductListComponent implements OnInit {
           console.error('Error updating product:', error);
         }
       });
+    } else {
+      this.productService.updateProduct(this.currentProduct.idProduit, updateData)
+        .subscribe({
+          next: (response) => {
+            console.log('Product updated successfully:', response);
+            this.showModal?.hide();
+            this.loadProducts();
+            this.resetForm();
+          },
+          error: (error) => {
+            console.error('Error updating product:', error);
+          }
+        });
     }
   }
 
   private resetForm(): void {
     this.productForm.reset();
+    this.productForm.markAsPristine();
+    this.productForm.markAsUntouched();
     this.currentProduct = undefined;
     this.selectedFile = null;
     this.currentImage = null;

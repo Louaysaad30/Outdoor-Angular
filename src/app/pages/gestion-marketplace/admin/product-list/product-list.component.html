@@ -63,7 +63,16 @@
                           </thead>
                           <tbody>
                               <tr *ngFor="let product of products; let i = index">
-                                  <td>{{product.nomProduit}}</td>
+                                  <td class="products">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs bg-light rounded p-1 me-2">
+                                            <img src="{{product.imageProduit}}" alt="" class="img-fluid d-block">
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0"><a routerLink="/ecommerce/product-details" class="text-reset products">{{product.nomProduit}}</a></h6>
+                                        </div>
+                                    </div>
+                                </td>
                                   <td>{{product.categorie?.nomCategorie || 'Uncategorized'}}</td>
                                   <td>{{product.prixProduit | currency}}</td>
                                   <td>{{product.stockProduit}}</td>
@@ -152,27 +161,55 @@
 
             <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="tablelist-form">
                 <div class="modal-body p-4">
+                    <!-- Product Name -->
                     <div class="mb-3">
                         <label class="form-label">Product Name</label>
-                        <input type="text" class="form-control" formControlName="nomProduit" required>
+                        <input type="text"
+                               class="form-control"
+                               formControlName="nomProduit"
+                               [ngClass]="{'is-invalid': productForm.get('nomProduit')?.touched && productForm.get('nomProduit')?.invalid}">
+                        <div class="invalid-feedback" *ngIf="productForm.get('nomProduit')?.touched && productForm.get('nomProduit')?.invalid">
+                            Product name is required
+                        </div>
                     </div>
 
+                    <!-- Description -->
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" formControlName="descriptionProduit" required></textarea>
+                        <textarea class="form-control"
+                                  formControlName="descriptionProduit"
+                                  [ngClass]="{'is-invalid': productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid}">
+                        </textarea>
+                        <div class="invalid-feedback" *ngIf="productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid">
+                            <span *ngIf="productForm.get('descriptionProduit')?.errors?.['required']">Description is required</span>
+                            <span *ngIf="productForm.get('descriptionProduit')?.errors?.['minlength']">Description must be at least 10 characters</span>
+                        </div>
                     </div>
+
+
+
 
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label">Price</label>
-                                <input type="number" class="form-control" formControlName="prixProduit" required>
+                                <input type="number" class="form-control" formControlName="prixProduit"
+                                       [ngClass]="{'is-invalid': productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid}">
+                                <div class="invalid-feedback" *ngIf="productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid">
+                                    <span *ngIf="productForm.get('prixProduit')?.errors?.['required']">Price is required</span>
+                                    <span *ngIf="productForm.get('prixProduit')?.errors?.['min']">Price must be greater than 0</span>
+                                </div>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label">Stock</label>
-                                <input type="number" class="form-control" formControlName="stockProduit" required>
+                                <input type="number" class="form-control" formControlName="stockProduit"
+                                       [ngClass]="{'is-invalid': productForm.get('stockProduit')?.touched && productForm.get('stockProduit')?.invalid}">
+                                <div class="invalid-feedback" *ngIf="productForm.get('stockProduit')?.touched && productForm.get('stockProduit')?.invalid">
+                                    <span *ngIf="productForm.get('stockProduit')?.errors?.['required']">Stock is required</span>
+                                    <span *ngIf="productForm.get('stockProduit')?.errors?.['min']">Stock must be at least 1</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -180,6 +217,7 @@
                     <div class="mb-3">
                         <label class="form-label">Category</label>
                         <select class="form-control" formControlName="categorie">
+                            <option [ngValue]="null">Select Category</option>
                             <option *ngFor="let cat of categories" [ngValue]="cat">{{cat.nomCategorie}}</option>
                         </select>
                     </div>
@@ -188,7 +226,7 @@
                         <label class="form-label">Product Image</label>
                         <div class="d-flex align-items-center gap-2">
                             <img *ngIf="currentImage"
-                                 [src]="currentImage.startsWith('data:') ? currentImage : imageBasePath + currentImage"
+                                 [src]="currentImage"
                                  class="rounded"
                                  style="height: 100px; width: 100px; object-fit: cover;">
                             <input type="file"
@@ -196,11 +234,17 @@
                                    (change)="onFileSelected($event)"
                                    accept="image/*">
                         </div>
+                        <small class="text-muted mt-2">
+                            Current image will be kept if no new image is selected
+                        </small>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" (click)="showModal.hide()">Close</button>
-                    <button type="submit" class="btn btn-primary" id="add-btn">Update</button>
+                    <button type="submit" class="btn btn-primary">
+                        Update
+                    </button>
                 </div>
             </form>
         </div>
