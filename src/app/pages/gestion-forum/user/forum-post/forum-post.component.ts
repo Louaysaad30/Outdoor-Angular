@@ -13,7 +13,6 @@ import {Media} from "../../models/media.model";
 import {CommentService} from "../../services/comment.service";
 import {ForumComment} from "../../models/ForumComment.model";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {ForumDetailComponent} from "../forumDetail/forumDetail.component";
 import {co} from "@fullcalendar/core/internal-common";
 import {ReactionService} from "../../services/reaction.service";
 import {ReactionType} from "../../models/reaction-type.enum";
@@ -146,7 +145,7 @@ console.log('Reactions:', reactions);
       case ReactionType.LIKE: return 'bi bi-hand-thumbs-up-fill text-primary';
       case ReactionType.LOVE: return 'bi bi-heart-fill text-danger';
       case ReactionType.HAHA: return 'bi bi-emoji-laughing-fill text-warning';
-      case ReactionType.WOW: return 'bi bi-emoji-surprise-fill text-warning';
+      case ReactionType.WOW: return 'bi bi-emoji-dizzy-fill text-warning' ;
       case ReactionType.SAD: return 'bi bi-emoji-frown-fill text-info';
       case ReactionType.ANGRY: return 'bi bi-emoji-angry-fill text-danger';
       default: return 'bi bi-hand-thumbs-up text-muted';
@@ -409,7 +408,7 @@ reactToPost(postId: string, reactionType: ReactionType) {
       const post: Post = {
         content: this.postContent,
         hasMedia: this.uploadedFiles.length > 0,
-        userId: 10, // Using the static ID as in your Spring Boot entity
+        userId: 20, // Using the static ID as in your Spring Boot entity
         username: 'test_user',
         email: 'test_user@example.com'
       };

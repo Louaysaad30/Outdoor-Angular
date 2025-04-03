@@ -410,7 +410,7 @@
         <div class="navigation-menu">
           <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
             <i class="bi bi-people-fill fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Mes Posts</span>
+            <span class="fw-medium clickable-content" [routerLink]="['/forumfront/user/mesPost']">Mes Posts</span>
           </div>
           <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
             <i class="bi bi-bookmark-fill fs-5 me-3 text-primary"></i>
@@ -628,52 +628,90 @@
 <p class="mb-3 clickable-content" (click)="openPostDetail(post)">{{ post.content }}</p>
           <!-- Post media -->
           <!-- Post media -->
-<div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media mb-3 clickable-content" (click)="openPostDetail(post)">
+          <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media mb-3 clickable-content" (click)="openPostDetail(post)">
             <div class="media-container" [ngClass]="{
-              'media-single': post.media.length === 1,
-              'media-double': post.media.length === 2,
-              'media-grid-3': post.media.length === 3,
-              'media-grid-4': post.media.length === 4,
-              'media-grid-more': post.media.length > 4
-            }">
-              <!-- First media item (always shown) -->
-              <div class="media-item main-media" *ngIf="post.media.length > 0">
-                <img *ngIf="isImage(post.media[0].mediaUrl!)"
-                     [src]="post.media[0].mediaUrl!"
-                     alt="Post image"
-                     class="img-fluid rounded">
-                <video *ngIf="isVideo(post.media[0].mediaUrl!)"
-                       controls
-                       class="img-fluid rounded">
-                  <source [src]="post.media[0].mediaUrl!" type="video/mp4">
-                  Your browser does not support HTML video.
-                </video>
-              </div>
+    'media-single': post.media.length === 1,
+    'media-double': post.media.length === 2,
+    'media-grid-3': post.media.length === 3,
+    'media-grid-4 equal-size': post.media.length === 4,
+    'media-grid-more': post.media.length > 4
+  }">
+              <!-- For single photo -->
+              <ng-container *ngIf="post.media.length === 1">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
 
-              <!-- Other media items -->
-              <div class="secondary-media-container">
-                <ng-container *ngFor="let media of post.media.slice(1, 5); let i = index">
-                  <div class="media-item secondary-media" [ngClass]="{'has-overlay': i === 3 && post.media.length > 5}">
-                    <img *ngIf="isImage(media.mediaUrl!)"
-                         [src]="media.mediaUrl!"
-                         alt="Post image"
-                         class="img-fluid rounded">
-                    <video *ngIf="isVideo(media.mediaUrl!)"
-                           controls
-                           class="img-fluid rounded">
+              <!-- For double photo layout -->
+              <ng-container *ngIf="post.media.length === 2">
+                <div *ngFor="let media of post.media; let i = index" class="media-item">
+                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For triple photo layout -->
+              <ng-container *ngIf="post.media.length === 3">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+                <div class="secondary-media-container">
+                  <div *ngFor="let media of post.media.slice(1); let i = index" class="media-item secondary-media">
+                    <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                    <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
                       <source [src]="media.mediaUrl!" type="video/mp4">
-                      Your browser does not support HTML video.
                     </video>
-
-                    <!-- Overlay for +X more -->
-                    <div *ngIf="i === 3 && post.media.length > 5" class="more-overlay" (click)="showAllMedia(post.media)">
-                      <div class="more-count">+{{ post.media.length - 4 }}</div>
-                    </div>
                   </div>
-                </ng-container>
-              </div>
+                </div>
+              </ng-container>
+
+              <!-- For 4 photos in 2x2 grid -->
+              <ng-container *ngIf="post.media.length === 4">
+                <div *ngFor="let media of post.media; let i = index"
+                     class="media-item"
+                     [ngClass]="{'main-media': i === 0, 'secondary-media': i > 0}">
+                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For 5+ photos -->
+              <ng-container *ngIf="post.media.length > 4">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+
+                <div class="secondary-media-container">
+                  <ng-container *ngFor="let media of post.media.slice(1, 4); let i = index">
+                    <div class="media-item secondary-media" [ngClass]="{'has-overlay': i === 2}">
+                      <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                      <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                        <source [src]="media.mediaUrl!" type="video/mp4">
+                      </video>
+
+                      <div *ngIf="i === 2" class="more-overlay" (click)="showAllMedia(post.media); $event.stopPropagation()">
+                        <div class="more-count">+{{ post.media.length - 4 }}</div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
+              </ng-container>
             </div>
-          </div>
+          </div>                  <!-- Interaction buttons -->
 
           <!-- Interaction buttons -->
 <!-- Interaction buttons -->
@@ -721,7 +759,7 @@
                 <button class="reaction-button"
                         [ngClass]="{'active': hasReacted(post.id!, ReactionType.WOW)}"
                         (click)="reactToPost(post.id!, ReactionType.WOW)">
-                  <i class="bi bi-emoji-surprise-fill text-warning reaction-icon"></i>
+                  <i class="bi bi-emoji-dizzy-fill text-warning reaction-icon"></i>
                 </button>
                 <button class="reaction-button"
                         [ngClass]="{'active': hasReacted(post.id!, ReactionType.SAD)}"
@@ -742,7 +780,8 @@
             <button class="btn btn-sm text-primary">
               <i class="bi bi-share me-1"></i>Share
             </button>
-          </div>          <!-- Comment Input -->
+          </div>
+          <!-- Comment Input -->
             <div class="d-flex gap-2">
             <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle" style="width: 38px; height: 38px;">
             <div class="flex-grow-1">

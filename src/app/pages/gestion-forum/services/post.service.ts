@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
               import { Post } from '../models/post.model';
               import { Observable, throwError } from 'rxjs';
               import { catchError, map } from 'rxjs/operators';
+import {Media} from "../models/media.model";
 
               @Injectable({
                 providedIn: 'root'
@@ -16,7 +17,7 @@ import { Injectable } from '@angular/core';
                 createPost(post: Post, mediaFiles?: File[]): Observable<Post> {
                   const formData = new FormData();
                   formData.append('content', post.content || '');
-                  formData.append('userId', post.userId?.toString() || '10');
+                  formData.append('userId', post.userId?.toString() || '');
 
                   if (mediaFiles && mediaFiles.length > 0) {
                     mediaFiles.forEach(file => {
@@ -103,4 +104,25 @@ import { Injectable } from '@angular/core';
                     })
                   );
                 }
+                 getUserMedia(userId: number): Observable<Media[]> {
+                  return this.http.get<Media[]>(`${this.apiUrl}/${userId}/media`).pipe(
+                    catchError(error => {
+                      console.error('Error fetching user media:', error);
+                      return throwError(() => new Error('Failed to load media'));
+                    })
+                  );
+                }
+                getPostById(postId: string): Observable<Post> {
+                  return this.http.get<Post>(`${this.apiUrl}/${postId}`).pipe(
+                    map((post: Post) => ({
+                      ...post,
+                      createdAt: post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString()
+                    })),
+                    catchError(error => {
+                      console.error('Error fetching post:', error);
+                      return throwError(() => new Error('Failed to load post details.'));
+                    })
+                  );
+                }
+
               }

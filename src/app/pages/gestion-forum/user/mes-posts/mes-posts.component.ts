@@ -14,6 +14,9 @@ import { ReactionType } from '../../models/reaction-type.enum';
 import { Reaction } from '../../models/reaction.model';
 import { Media } from "../../models/media.model";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {TabsModule} from "ngx-bootstrap/tabs";
+;
+
 
 @Component({
   selector: 'app-mes-posts',
@@ -26,7 +29,8 @@ import {BsDropdownModule} from "ngx-bootstrap/dropdown";
     NgxDropzoneModule,
     PickerComponent,
     ReactiveFormsModule,
-    BsDropdownModule
+    BsDropdownModule,
+    TabsModule
   ],
   templateUrl: './mes-posts.component.html',
   styleUrl: './mes-posts.component.scss'
@@ -65,6 +69,13 @@ export class MesPostsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserPosts();
+    this.loadUserMedia();
+
+  }
+  onTabSelect(event: any): void {
+    if (event.heading === 'Media') {
+      this.loadUserMedia();
+    }
   }
 
   loadUserPosts(): void {
@@ -258,14 +269,7 @@ export class MesPostsComponent implements OnInit {
     });
   }
 
-  // Helper methods
-  isImage(url: string): boolean {
-    return url.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null;
-  }
 
-  isVideo(url: string): boolean {
-    return url.match(/\.(mp4|webm|ogg|mov|avi)$/) !== null;
-  }
 
   openPostDetail(post: Post): void {
     this.selectedPost = {...post};
@@ -571,4 +575,157 @@ closePostModal() {
   this.submitted1 = false;
   this.mediaToDelete = [];
 }
+
+// Media management
+mediaItems: Media[] = [];
+mediaPage = 1;
+mediaPageSize = 12;
+hasMoreMedia = false;
+
+// Call this in ngOnInit or in a specific method when the media tab is selected
+loadUserMedia(): void {
+  this.loading = true;
+  this.postService.getUserMedia(this.USER_ID).subscribe({
+    next: (mediaList) => {
+      this.mediaItems = mediaList;
+      this.loading = false;
+    },
+    error: (error) => {
+      console.error('Error fetching media', error);
+      this.loading = false;
+    }
+  });
+}
+hasAnyMedia(): boolean {
+  return this.mediaItems && this.mediaItems.length > 0;
+}
+
+getAllMedia(): Media[] {
+  return this.mediaItems;
+}
+
+  getOnlyImages(): Media[] {
+    return this.mediaItems.filter(media => this.isImage(media.mediaUrl!)
+    && media.post&& media.post.id);
+  }
+
+getOnlyVideos(): Media[] {
+  // Logging for debugging
+  console.log('All media items:', this.mediaItems.length);
+
+  const videos = this.mediaItems.filter(media =>
+    this.isVideo(media.mediaUrl!) &&
+    media.post &&
+    media.post.id
+  );
+
+  console.log('Filtered videos:', videos.length);
+  return videos;
+}  isImage(url: string): boolean {
+    return url.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null;
+  }
+
+  isVideo(url: string): boolean {
+    return url.match(/\.(mp4|webm|ogg|mov|avi)$/) !== null;
+  }
+
+
+
+  loadMoreMedia(): void {
+  this.mediaPage++;
+  this.loadUserMedia();
+}
+
+openMediaPreview(media: Media): void {
+  // Implement a modal or lightbox view for the selected media
+  console.log('Open preview for media', media);
+}
+
+goToPost(postId: string | undefined): void {
+  console.log('goToPost called with ID:', postId);
+
+  if (!postId) {
+    console.error('No post ID available for this media');
+    return;
+  }
+
+  // Add loading state
+  this.loading = true;
+
+  this.postService.getPostById(postId).subscribe({
+    next: (post) => {
+      console.log('Post fetched successfully:', post);
+      this.loading = false;
+      if (post) {
+        this.selectedPost = {...post};
+        this.isDetailModalOpen = true;
+      } else {
+        console.error('Post data is empty');
+      }
+    },
+    error: (error) => {
+      this.loading = false;
+      console.error('Error fetching post details:', error);
+    }
+  });
+}
+
+  currentMediaIndex: number = 0;
+
+  nextMedia(): void {
+    if (this.selectedPost?.media && this.currentMediaIndex < this.selectedPost.media.length - 1) {
+      this.currentMediaIndex++;
+    }
+  }
+
+  prevMedia(): void {
+    if (this.currentMediaIndex > 0) {
+      this.currentMediaIndex--;
+    }
+  }
+  goToMedia(index: number): void {
+    if (this.selectedPost?.media && index >= 0 && index < this.selectedPost.media.length) {
+      this.currentMediaIndex = index;
+    }
+  }
+
+  // In your component class
+  displayedImageCount = 6; // Initially show 6 images
+
+  // Method to load more images
+  loadMoreImages(): void {
+    if (this.displayedImageCount < this.getOnlyImages().length) {
+      this.displayedImageCount += this.getOnlyImages().length;
+    }
+  }
+
+  // Add this to ngOnInit or wherever you reset your view
+  resetImageCount(): void {
+    this.displayedImageCount = 6;
+  }
+
+
+  // Track which dropdown is currently open
+  activeCommentDropdown: string | null = null;
+
+  // Toggle dropdown visibility
+  toggleCommentDropdown(commentId: string): void {
+    if (this.activeCommentDropdown === commentId) {
+      this.activeCommentDropdown = null;
+    } else {
+      this.activeCommentDropdown = commentId;
+    }
+  }
+
+  // Implement these methods
+  editComment(comment: any): void {
+    // Handle edit comment logic
+    this.activeCommentDropdown = null;
+  }
+
+  deleteComment(commentId: string): void {
+    // Handle delete comment logic
+    this.activeCommentDropdown = null;
+  }
+
 }
