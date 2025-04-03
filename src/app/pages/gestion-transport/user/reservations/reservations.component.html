@@ -1,0 +1,44 @@
+<div class="container">
+    <h2>Mes Réservations</h2>
+    
+    <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="reservations.length > 0; else noData">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Véhicule</th>
+                    <th>Prix Total</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Lieu</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let res of reservations">
+                    <td>{{ res.vehicule?.marque }} - {{ res.vehicule?.modele }}</td>
+                    <td>{{ res.prixTotal }} DT</td>
+                    <td>{{ res.debutLocation }}</td>
+                    <td>{{ res.finLocation }}</td>
+                    <td>{{ res.pickupLocation }}</td>
+                    <td>
+                        <span [ngClass]="{
+                            'badge bg-warning': res.statut === 'EN_ATTENTE',
+                            'badge bg-success': res.statut === 'APPROUVÉE',
+                            'badge bg-danger': res.statut === 'REJETÉE'
+                        }">
+                            {{ res.statut }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <ng-template #noData>
+        <p>Aucune réservation trouvée.</p>
+    </ng-template>
+</div>

@@ -3,6 +3,7 @@ import { VehiculeService } from '../../../services/vehicule.service';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime } from 'rxjs/operators'; 
 import { Vehicule } from '../../../models/vehicule.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-vehicule-list',
@@ -21,7 +22,7 @@ export class VehiculeListComponent implements OnInit {
   minVal: number = 0;
   isLoading: boolean = true;
 
-  constructor(private vehiculeService: VehiculeService, private route: ActivatedRoute) {}
+  constructor(private vehiculeService: VehiculeService, private route: ActivatedRoute , private router: Router) {}
 
   ngOnInit(): void {
     this.getVehicules();
@@ -76,10 +77,6 @@ export class VehiculeListComponent implements OnInit {
     this.filteredVehicules = this.vehicules.slice(pageIndex * 12, (pageIndex + 1) * 12);
   }
 
-  // Handle vehicule reservation action
-  reserveVehicule(vehicule: Vehicule) {
-    console.log(`Reserved: ${vehicule.modele}`);
-  }
 
   // Clear all filters
   clearAllFilters() {
@@ -88,6 +85,10 @@ export class VehiculeListComponent implements OnInit {
     this.minVal = 0;
     this.maxVal = 100;
     this.filterByPrice();
+  }
+
+  goToDetail(id: number): void {
+    this.router.navigate(['/transportfront/user/detail-vehicule/${id}']);
   }
 
   // Handle price slider changes

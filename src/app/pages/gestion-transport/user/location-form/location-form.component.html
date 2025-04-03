@@ -1,0 +1,60 @@
+<div class="container mt-4">
+  <h2 class="text-center">Réservation de Véhicule</h2>
+  <form [formGroup]="reservationForm" (ngSubmit)="onSubmit()">
+
+    <!-- Nom complet -->
+    <div class="mb-3">
+      <label for="fullName" class="form-label">Nom Complet</label>
+      <input type="text" id="fullName" class="form-control" formControlName="fullName" required>
+    </div>
+
+    <!-- Téléphone -->
+    <div class="mb-3">
+      <label for="phone" class="form-label">Téléphone</label>
+      <input type="text" id="phone" class="form-control" formControlName="phone" required>
+    </div>
+
+    <!-- Véhicule -->
+    <div class="mb-3">
+      <label for="vehicule" class="form-label">Véhicule</label>
+      <select id="vehicule" class="form-control" formControlName="vehicule" required>
+        <option *ngFor="let vehicule of vehicules" [value]="vehicule.id">
+          {{ vehicule.marque }} - {{ vehicule.modele }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Date début location -->
+    <div class="mb-3">
+      <label for="debutLocation" class="form-label">Début Location</label>
+      <input type="datetime-local" id="debutLocation" class="form-control" formControlName="debutLocation" required>
+    </div>
+
+    <!-- Date fin location -->
+    <div class="mb-3">
+      <label for="finLocation" class="form-label">Fin Location</label>
+      <input type="datetime-local" id="finLocation" class="form-control" formControlName="finLocation" required>
+    </div>
+
+        <!-- Lieu de prise en charge -->
+<div class="mb-3">
+  <label class="form-label">Lieu de prise en charge</label>
+  <input type="text" class="form-control" formControlName="pickupLocation" readonly>
+  <div #pickupMap id="pickupMap" class="leaflet-map" style="height: 300px;"></div>
+</div>
+
+
+    <!-- Message de véhicule indisponible -->
+    <!-- <div *ngIf="vehicleUnavailable" class="alert alert-danger">
+      Ce véhicule n'est pas disponible pour la période sélectionnée.
+    </div> -->
+
+    <!-- Statut (Masqué, toujours "EN_ATTENTE") -->
+    <input type="hidden" formControlName="statut" value="EN_ATTENTE">
+
+    <!-- Bouton de soumission -->
+    <button type="submit" class="btn btn-primary w-100" [disabled]="!reservationForm.valid || vehicleUnavailable">
+      Réserver
+    </button>
+  </form>
+</div>
