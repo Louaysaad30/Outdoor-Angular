@@ -44,6 +44,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
     ticketTypes = Object.values(TicketType);
     events: Event[] = [];
     event: Event | undefined;
+    selectedTicketType: string = '';
+
 
     // Form handling
     ticketForm!: UntypedFormGroup;
@@ -88,7 +90,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
       });
     }
 
-loadTickets(): void {
+    loadTickets(): void {
       document.getElementById('elmLoader')?.classList.remove('d-none');
 
       this.ticketService.getAllTickets().subscribe({
@@ -129,6 +131,9 @@ loadTickets(): void {
             return ticket;
           });
 
+          this.selectedTicketType = '';
+          this.term = '';
+
           this.displayedTickets = this.allTickets.slice(0, this.itemsPerPage);
           document.getElementById('elmLoader')?.classList.add('d-none');
           this.updateNoResultDisplay();
@@ -139,6 +144,7 @@ loadTickets(): void {
         }
       });
     }
+
     toggleViewMode(mode: string): void {
       this.viewMode = mode;
     }
@@ -152,6 +158,7 @@ loadTickets(): void {
         this.displayedTickets = this.allTickets.slice(0, this.itemsPerPage);
       }
       this.updateNoResultDisplay();
+      this.filterTickets();
     }
 
     getEventName(event: any): string {
@@ -175,6 +182,7 @@ loadTickets(): void {
       this.isEditing = false;
       this.selectedTicketId = null;
       this.ticketModal?.show();
+      this.ticketForm.reset();
     }
 
     editTicket(ticket: Ticket): void {
@@ -290,5 +298,47 @@ loadTickets(): void {
         const result = valA < valB ? -1 : valA > valB ? 1 : 0;
         return this.sortDirection === 'asc' ? result : -result;
       });
+    }
+
+pageChanged(event: PageChangedEvent): void {
+  const startItem = (event.page - 1) * this.itemsPerPage;
+  const endItem = event.page * this.itemsPerPage;
+
+  // Apply filters to get the current working dataset
+  let filtered = this.allTickets;
+  if (this.selectedTicketType) {
+    filtered = filtered.filter(ticket => ticket.type === this.selectedTicketType);
+  }
+  if (this.term) {
+    filtered = filtered.filter(ticket =>
+      (ticket.event?.title?.toLowerCase().includes(this.term.toLowerCase())) ||
+      ticket.type.toLowerCase().includes(this.term.toLowerCase())
+    );
+  }
+
+  // Use the filtered dataset for pagination
+  this.displayedTickets = filtered.slice(startItem, endItem);
+}
+
+    filterTickets(): void {
+      let filtered = this.allTickets;
+
+      // Apply type filter if selected
+      if (this.selectedTicketType) {
+        filtered = filtered.filter(ticket => ticket.type === this.selectedTicketType);
+      }
+
+      // Apply search term filter if present
+      if (this.term) {
+        filtered = filtered.filter(ticket =>
+          (ticket.event?.title?.toLowerCase().includes(this.term.toLowerCase())) ||
+          ticket.type.toLowerCase().includes(this.term.toLowerCase())
+        );
+      }
+
+      // Update displayedTickets with filtered results
+      this.currentPage = 1; // Reset to first page when filtering
+      this.displayedTickets = filtered.slice(0, this.itemsPerPage);
+      this.updateNoResultDisplay();
     }
   }

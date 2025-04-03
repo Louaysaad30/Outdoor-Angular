@@ -15,7 +15,7 @@
           </div><!--end col-->
           <div class="col-lg-2">
             <div>
-              <select class="form-select" id="ticket-type-filter">
+              <select class="form-select" id="ticket-type-filter" [(ngModel)]="selectedTicketType" (change)="filterTickets()">
                 <option value="">All Types</option>
                 <option *ngFor="let type of ticketTypes" [value]="type">{{ type }}</option>
               </select>
@@ -202,12 +202,23 @@
 </div>
 
 <!-- Pagination -->
+<!-- Pagination -->
 <div class="row align-items-center mt-4" id="pagination-element">
   <div class="col-sm">
     <div class="text-muted text-center text-sm-start">
       Showing <span class="fw-semibold">{{ displayedTickets.length }}</span> of <span class="fw-semibold">{{ allTickets.length }}</span> Results
     </div>
   </div><!--end col-->
+  <div class="col-sm-auto">
+    <pagination
+      [totalItems]="allTickets.length"
+      [itemsPerPage]="itemsPerPage"
+      [(ngModel)]="currentPage"
+      (pageChanged)="pageChanged($event)"
+      [maxSize]="5"
+      class="pagination-sm justify-content-end">
+    </pagination>
+  </div>
 </div>
 
 <!-- Ticket Modal -->

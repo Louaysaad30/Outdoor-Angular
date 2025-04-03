@@ -1,0 +1,12 @@
+/* Add to your component's scss file */
+.ribbon-box .ribbon {
+  position: absolute;
+  left: -5px;
+  top: 15px;
+  padding: 5px 10px;
+  z-index: 1;
+}
+
+.ribbon-box .ribbon.round-shape {
+  border-radius: 0 30px 30px 0;
+}

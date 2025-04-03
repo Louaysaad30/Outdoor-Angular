@@ -1,0 +1,79 @@
+<!-- Header section -->
+<div class="row justify-content-center mt-5">
+  <div class="col-xl-4">
+    <div class="text-center mb-4 pb-2">
+      <h4 class="fw-semibold fs-4xl">{{ event?.title }} Tickets</h4>
+      <p class="text-muted mb-4 fs-base">Choose the ticket type that suits your needs</p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading spinner -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary avatar-md" role="status">
+    <span class="visually-hidden">Loading tickets...</span>
+  </div>
+</div>
+
+<!-- No tickets message -->
+<div *ngIf="!loading && tickets.length === 0" class="text-center py-5">
+  <div class="avatar-sm mx-auto mb-4">
+    <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+      <i class="bi bi-ticket-perforated"></i>
+    </div>
+  </div>
+  <h5>No Tickets Available</h5>
+  <p class="text-muted">There are currently no tickets available for this event.</p>
+</div>
+
+<!-- Tickets list -->
+<div class="row">
+  <div class="col-xxl-4 col-lg-6" *ngFor="let ticket of tickets">
+    <!-- Add proper classes for left ribbon -->
+    <div class="card overflow-hidden ribbon-box border shadow-none">
+      <!-- Make sure the ribbon has proper positioning -->
+      <div class="ribbon ribbon-{{getColorClass(ticket.type)}} round-shape">{{ ticket.type }}</div>
+      <div class="row g-0">
+        <div class="col-lg-5">
+          <div class="card-body bg-{{getColorClass(ticket.type)}}-subtle h-100 d-flex flex-column">
+            <div>
+              <br>
+              <br>
+              <br>
+              <h4>{{ event?.title }}</h4>
+            </div>
+
+            <div class="pt-3 mt-auto">
+              <h2 class="text-{{getColorClass(ticket.type)}} mb-0">${{ ticket.price }}
+                <span class="fs-xs fw-normal text-{{getColorClass(ticket.type)}} opacity-75"> /Ticket</span>
+              </h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card-body h-100">
+            <ul class="list-unstyled vstack gap-3 mb-4">
+              <li>
+                <i class="bi bi-check2-square text-{{getColorClass(ticket.type)}} me-1"></i>
+                Available: <span class="fw-semibold">{{ ticket.availableTickets }}</span>
+              </li>
+              <li>
+                <i class="bi bi-check2-square text-{{getColorClass(ticket.type)}} me-1"></i>
+                Limit per order: <span class="fw-semibold">{{ ticket.purchaseLimit }}</span>
+              </li>
+              <li *ngIf="ticket.discountCode">
+                <i class="bi bi-check2-square text-{{getColorClass(ticket.type)}} me-1"></i>
+                Discount code: <span class="fw-semibold">{{ ticket.discountCode }}</span>
+              </li>
+              <li *ngIf="!ticket.discountCode">
+                <i class="bi bi-x-square text-{{getColorClass(ticket.type)}} me-1"></i>
+                No discount available
+              </li>
+            </ul>
+            <button type="button" class="btn btn-{{getColorClass(ticket.type)}} w-100">Buy Now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
