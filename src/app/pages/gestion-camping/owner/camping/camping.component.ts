@@ -59,6 +59,9 @@ export class CampingComponent {
   editCampingForm!: UntypedFormGroup;
 
   centre: CentreCamping[] = [];
+  centrelist: CentreCamping[] = [];
+  filteredCentreList: CentreCamping[] = [];
+
   imageUrl: string = '';
   map: any;
 
@@ -131,8 +134,8 @@ export class CampingComponent {
      * BreadCrumb
      */
     this.breadCrumbItems = [
-      { label: 'Real Estate', active: true },
-      { label: 'Listing Grid', active: true }
+      { label: 'Centre Camping', active: true },
+      { label: 'List', active: true }
     ];
     setTimeout(() => {
       this.store.dispatch(fetchlistingGridData());
@@ -165,7 +168,6 @@ export class CampingComponent {
       });
     }
   }
-
   initializeMap(mapId: string): void {
     // Check if the map element exists in the DOM
     const mapElement = document.getElementById(mapId);
@@ -185,7 +187,7 @@ export class CampingComponent {
       this.map = L.map(mapId).setView([34.0, 9.0], 7);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(this.map);
 
       this.map.on('click', (e: any) => {
@@ -206,7 +208,6 @@ export class CampingComponent {
       console.error(`Error initializing map with id '${mapId}':`, error);
     }
   }
-
   getAddress(lat: number, lng: number): void {
     this.reverseGeocodingService.reverseGeocode(lat, lng).subscribe(response => {
       const address = response.results[0]?.formatted || 'Address not found';
@@ -220,7 +221,10 @@ export class CampingComponent {
 
   getCentreCampingList(): void {
     this.centreCampingService.getAllCentreCamping().subscribe((data: CentreCamping[]) => {
-      this.centre = data;
+      this.centrelist = data;
+      this.filteredCentreList = data; // Initialize filtered list
+      this.centre = this.centrelist.slice(0, 4); // Show first 4 items initially
+
     });
   }
 
@@ -461,13 +465,20 @@ export class CampingComponent {
 
 
 
-  // Page Changed
-  pageChanged(event: PageChangedEvent): void {
-    const startItem = (event.page - 1) * event.itemsPerPage;
-    const endItem = event.page * event.itemsPerPage;
-    this.products = this.productslist.slice(startItem, endItem);
+  onSearch(event: any): void {
+    const searchTerm = event.target.value?.toLowerCase() || '';
+    this.filteredCentreList = this.centrelist.filter(centre =>
+      (centre?.name?.toLowerCase() || '').includes(searchTerm) ||
+      (centre?.address?.toLowerCase() || '').includes(searchTerm)
+    );
+    this.centre = this.filteredCentreList.slice(0, 4); // Update displayed items
   }
 
+  pageChanged(event: PageChangedEvent): void {
+    const startItem = (event.page - 1) * event.itemsPerPage;
+    const endItem = Math.min(event.page * event.itemsPerPage, this.filteredCentreList.length);
+    this.centre = this.filteredCentreList.slice(startItem, endItem);
+  }
   // no result
   updateNoResultDisplay() {
     const noResultElement = document.getElementById('noresult') as HTMLElement;

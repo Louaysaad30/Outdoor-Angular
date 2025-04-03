@@ -10,4 +10,7 @@ export interface CentreCamping {
   logements?: any[];
   materiels?: any[];
   reservations?: any[];
+  idOwner: number;
+  prixJr: number;
+  verified: boolean;
 }

@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ReverseGeocodingService {
-  private apiKey = 'aa692e485492445abaa9864b6f0ef108 '; // Replace with your OpenCage API key
+  private apiKey = '75d72cf0d1b84438a3278fe992b6c444 '; // Replace with your OpenCage API key
 
   constructor(private http: HttpClient) {}
 

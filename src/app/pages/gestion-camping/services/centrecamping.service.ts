@@ -39,4 +39,16 @@ export class CentreCampingService {
     return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
   }
 
+  getVerifiedCentreCamping(): Observable<CentreCamping[]> {
+    return this.http.get<CentreCamping[]>(`${this.apiUrl}/verified`);
+  }
+
+  getCentreCampingByOwner(idOwner: number): Observable<CentreCamping[]> {
+    return this.http.get<CentreCamping[]>(`${this.apiUrl}/my/${idOwner}`);
+  }
+
+  verifyCentreCamping(id: number): Observable<CentreCamping> {
+    return this.http.put<CentreCamping>(`${this.apiUrl}/verify/${id}`, {});
+  }
+
 }
