@@ -1,0 +1,98 @@
+<div class="row justify-content-center">
+    <div class="col-xxl-10">
+        <div class="card">
+            <div class="row g-0 product-list">
+                <div class="col-xxl-9">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <h5 class="card-title flex-grow-1 mb-0">Shopping Cart</h5>
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-danger-subtle text-danger">{{cartData?.length}} Items</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table align-middle table-nowrap table-borderless mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (item of cartData; track item.idLigneCommande) {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img [src]="item.produit.imageProduit"
+                                                         [alt]="item.produit.nomProduit"
+                                                         class="avatar-sm">
+                                                    <div class="ms-3">
+                                                        <h5 class="mb-1">{{item.produit.nomProduit}}</h5>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>${{item.produit.prixProduit}}</td>
+                                            <td>
+                                                <div class="input-step">
+                                                    <button type="button" class="minus"
+                                                            (click)="calculateQty('0', item.quantite, $index)">–</button>
+                                                    <input type="number" [value]="item.quantite" readonly>
+                                                    <button type="button" class="plus"
+                                                            (click)="calculateQty('1', item.quantite, $index)">+</button>
+                                                </div>
+                                            </td>
+                                            <td>${{item.produit.prixProduit * item.quantite}}</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xxl-3">
+                    <div class="border-start-xxl border-top-xxl-0 border-top h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body mt-2">
+                            <div class="table-responsive table-card">
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-semibold" colspan="2">Sub Total :</td>
+                                            <td class="fw-semibold text-end cart-subtotal">${{subtotal}}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="2">Shipping Charge :</td>
+                                            <td class="text-end cart-shipping">${{shippingRate}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">Estimated Tax (18%): </td>
+                                            <td class="text-end cart-tax">${{tax}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th colspan="2">Total (USD) :</th>
+                                            <td class="text-end">
+                                                <span class="fw-semibold cart-total">
+                                                    ${{totalprice}}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="text-end mt-4">
+                                <a routerLink="/ecommerce/products-grid" class="btn btn-secondary me-1">Continue Shopping</a>
+                                <a routerLink="/ecommerce/checkout" class="btn btn-primary">Checkout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

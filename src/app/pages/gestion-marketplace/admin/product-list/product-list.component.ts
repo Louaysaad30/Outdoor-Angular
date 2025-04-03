@@ -71,7 +71,7 @@ export class ProductListComponent implements OnInit {
   loadProducts(): void {
     this.productService.getAllProducts().subscribe({
       next: (data) => {
-        console.log('Loaded products:', data); // Debug log
+      //  console.log('Loaded products:', data); // Debug log
         this.products = data;
         this.allproducts = data;
       },
@@ -96,7 +96,7 @@ export class ProductListComponent implements OnInit {
     if (this.term) {
       const searchTerm = this.term.toLowerCase();
       this.products = this.allproducts.filter(product => {
-        console.log('Product being filtered:', product); // Debug log
+       // console.log('Product being filtered:', product); // Debug log
         return (
           product.nomProduit.toLowerCase().includes(searchTerm) ||
           product.categorie.nomCategorie.toLowerCase().includes(searchTerm) ||
@@ -128,7 +128,7 @@ export class ProductListComponent implements OnInit {
   }
 
   private getSortValue(item: Product, column: string): string {
-    console.log('Sorting item:', item); // Debug log
+   // console.log('Sorting item:', item); // Debug log
     switch (column) {
       case 'nomProduit':
         return item.nomProduit;
@@ -159,7 +159,7 @@ export class ProductListComponent implements OnInit {
       this.currentImage = product.imageProduit;
       this.showModal?.show();
 
-      console.log('Editing product:', product);
+    //  console.log('Editing product:', product);
 
       this.productForm.patchValue({
         nomProduit: product.nomProduit,
@@ -185,7 +185,7 @@ export class ProductListComponent implements OnInit {
 
   saveProduct(): void {
     if (!this.currentProduct) {
-      console.log('No product selected for update');
+    //  console.log('No product selected for update');
       return;
     }
 
@@ -209,7 +209,7 @@ export class ProductListComponent implements OnInit {
       imageProduit: this.currentProduct.imageProduit
     };
 
-    console.log('Updating product with data:', updateData);
+    //console.log('Updating product with data:', updateData);
 
     if (this.selectedFile) {
       this.fileUploadService.uploadFile(this.selectedFile).pipe(
@@ -220,7 +220,7 @@ export class ProductListComponent implements OnInit {
         })
       ).subscribe({
         next: (response) => {
-          console.log('Product updated with new image:', response);
+        //  console.log('Product updated with new image:', response);
           this.showModal?.hide();
           this.loadProducts();
           this.resetForm();
@@ -233,7 +233,7 @@ export class ProductListComponent implements OnInit {
       this.productService.updateProduct(this.currentProduct.idProduit, updateData)
         .subscribe({
           next: (response) => {
-            console.log('Product updated successfully:', response);
+         //   console.log('Product updated successfully:', response);
             this.showModal?.hide();
             this.loadProducts();
             this.resetForm();
