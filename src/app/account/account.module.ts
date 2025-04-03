@@ -21,7 +21,7 @@ import { RegisterComponent } from './register/register.component';
     AccountRoutingModule,
     AuthModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule 
   ]
 })
 export class AccountModule { }
