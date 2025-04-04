@@ -1,16 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { LigneCommande } from '../../models/LigneCommande';
 import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { ProductService } from '../../services/product.service';
 import { PanierService } from '../../services/panier.service';
-import { of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { of, EMPTY } from 'rxjs';
+import { map, switchMap, tap, catchError } from 'rxjs/operators';
+import { Product } from '../../models/product';
+import { ModalDirective } from 'ngx-bootstrap/modal';
+import { UpdateQuantiteDTO } from '../../models/DTO/UpdateQuantiteDTO';
 
 @Component({
   selector: 'app-cart',
   templateUrl: './cart.component.html',
 })
 export class CartComponent implements OnInit {
+  @ViewChild('deleteRecordModal') deleteRecordModal?: ModalDirective;
+  private itemToDeleteId?: number;
+
   cartData: LigneCommande[] = [];
   subtotal: number = 0;
   shippingRate: number = 65;
@@ -39,22 +45,26 @@ export class CartComponent implements OnInit {
         return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).pipe(
           tap(lignes => {
             console.log('Raw lignes:', lignes);
-            // Log each ligne's details for debugging
             lignes.forEach(ligne => console.log('Ligne details:', ligne));
           }),
           switchMap(lignes => this.productService.getAllProducts().pipe(
             map(products => {
               console.log('Products loaded:', products);
 
-              // Map prix to potential product IDs
-              const priceToProductMap = new Map(
-                products.map(p => [p.prixProduit, p])
-              );
-
               return lignes.map(ligne => {
-                // Try to find product by matching prix
-                const product = priceToProductMap.get(ligne.prix);
-                console.log(`Matching product for ligne ${ligne.idLigneCommande} with prix ${ligne.prix}:`, product);
+                // First try exact price match
+                let product = products.find(p => p.prixProduit === ligne.prix);
+
+                if (!product) {
+                  // If no exact match, try finding closest price match
+                  product = products.reduce<Product | undefined>((closest, current) => {
+                    const currentDiff = Math.abs(current.prixProduit - ligne.prix);
+                    const closestDiff = closest ? Math.abs(closest.prixProduit - ligne.prix) : Infinity;
+                    return currentDiff < closestDiff ? current : closest;
+                  }, undefined);
+                }
+
+                console.log(`Found product for ligne ${ligne.idLigneCommande}:`, product);
 
                 if (!product) {
                   console.warn(`No product found for ligne ${ligne.idLigneCommande}`);
@@ -91,41 +101,72 @@ export class CartComponent implements OnInit {
     });
   }
 
-  calculateQty(action: string, currentQty: number, index: number): void {
-    const ligne = this.cartData[index];
-    if (!ligne) return;
+  calculateQty(type: string, currentQty: number, index: number): void {
+    let newQty = currentQty;
 
-    let newQuantity = currentQty;
-    if (action === '0' && currentQty > 1) {
-      newQuantity = currentQty - 1;
-    } else if (action === '1' && currentQty < 100) {
-      newQuantity = currentQty + 1;
+    if (type === '0' && currentQty > 1) {
+      newQty = currentQty - 1;
+    } else if (type === '1') {
+      newQty = currentQty + 1;
     }
 
-    if (newQuantity !== currentQty) {
-      const updatedLigne = {
-        ...ligne,
-        quantite: newQuantity
+    if (newQty !== currentQty && this.cartData[index]) {
+      const ligne = this.cartData[index];
+
+      // Créer un DTO simple avec uniquement l'ID et la nouvelle quantité
+      const updateDto: UpdateQuantiteDTO = {
+        idLigneCommande: ligne.idLigneCommande!,
+        quantite: newQty
       };
 
-      this.ligneCommandeService.updateLigneCommande(updatedLigne).subscribe({
-        next: (response) => {
-          this.cartData[index].quantite = newQuantity;
-          this.calculateTotals();
-        },
-        error: (error) => console.error('Error updating quantity:', error)
-      });
+      // Attendre la confirmation du serveur avant de mettre à jour l'UI
+      this.ligneCommandeService.updateLigneCommande(updateDto).pipe(
+        tap(updatedLigne => {
+          if (updatedLigne && updatedLigne.quantite) {
+            this.cartData[index].quantite = updatedLigne.quantite;
+            this.calculateTotals();
+          }
+        }),
+        catchError(error => {
+          console.error('Error updating quantity:', error);
+          return EMPTY;
+        })
+      ).subscribe();
     }
   }
 
-  private calculateTotals(): void {
-    this.subtotal = this.cartData.reduce((sum, item) => {
-      if (!item.produit) return sum;
-      return sum + (item.quantite * item.produit.prixProduit);
-    }, 0);
+  deleteLigneCommande(id: number | undefined): void {
+    if (!id) {
+      console.error('Cannot delete ligne commande: ID is undefined');
+      return;
+    }
+    this.itemToDeleteId = id;
+    this.deleteRecordModal?.show();
+  }
 
-    this.tax = this.subtotal * 0.18;
-    this.totalprice = this.subtotal + this.shippingRate + this.tax;
+  confirmDelete(): void {
+    if (!this.itemToDeleteId) return;
+
+    this.ligneCommandeService.deleteLigneCommande(this.itemToDeleteId).pipe(
+      tap(() => {
+        this.cartData = this.cartData.filter(item => item.idLigneCommande !== this.itemToDeleteId);
+        this.calculateTotals();
+        this.deleteRecordModal?.hide();
+        this.itemToDeleteId = undefined;
+      }),
+      catchError(error => {
+        console.error('Error deleting item:', error);
+        alert('Failed to remove item from cart. Please try again.');
+        return EMPTY;
+      })
+    ).subscribe();
+  }
+
+  private calculateTotals(): void {
+    this.subtotal = this.cartData.reduce((sum, item) =>
+      sum + (item.produit.prixProduit * item.quantite), 0);
+    this.tax = this.subtotal * 0.18; // 18% tax
+    this.totalprice = this.subtotal + this.tax + this.shippingRate;
 
     console.log('Totals calculated:', {
       subtotal: this.subtotal,

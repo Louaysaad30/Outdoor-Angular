@@ -13,9 +13,10 @@ import { PaginationModule } from 'ngx-bootstrap/pagination';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { AccordionModule } from 'ngx-bootstrap/accordion';
 import { NgxSliderModule } from '@angular-slider/ngx-slider';
+import { CartComponent } from './cart/cart.component';
 
 @NgModule({
-  declarations: [MarketPlaceComponent],
+  declarations: [MarketPlaceComponent,CartComponent],
   imports: [
     CommonModule,
     UserRoutingModule,
