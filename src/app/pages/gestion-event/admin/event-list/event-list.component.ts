@@ -16,6 +16,7 @@ import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
       import {EventAreaService} from "../../services/event-area.service";
 import { Status, Event as CustomEvent } from '../../models/event.model';
 import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
+import {NlpService} from "../../services/nlp.service";
       @Component({
         selector: 'app-event-list',
         standalone: true,
@@ -43,11 +44,13 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
         eventAreas: any[] = [];
         statuses = Object.values(Status);
         uploadedFile: File | null = null;
+        isProcessingText = false;
+        improvedText: string | null = null;
 
         @ViewChild('eventModal', { static: false }) eventModal?: ModalDirective;
         @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
 
-        constructor(private formBuilder: UntypedFormBuilder, private eventService: EventService , private eventAreaService: EventAreaService, private reverseGeocodingService: ReverseGeocodingService) { }
+        constructor(private formBuilder: UntypedFormBuilder, private eventService: EventService , private eventAreaService: EventAreaService, private reverseGeocodingService: ReverseGeocodingService , private nlpService: NlpService ) { }
 
 
         ngOnInit(): void {
@@ -424,6 +427,7 @@ handleEventClick(clickInfo: EventClickArg) {
          */
         saveEvent(): void {
         if (this.formData.valid) {
+          this.improvedText = null;
           const formData = new FormData();
           formData.append('title', this.formData.get('title')?.value);
           formData.append('description', this.formData.get('description')?.value);
@@ -502,6 +506,7 @@ onFileSelected(event: any): void {
          */
 editEventSave() {
   if (this.formData.valid && this.editEvent.id) {
+    this.improvedText = null;
     const eventData = {
       title: this.formData.get('title')?.value,
       description: this.formData.get('description')?.value,
@@ -576,6 +581,39 @@ formatDate(date: Date): string {
                 );
               }
             });
+          }
+        }
+
+
+
+        /**
+         * Improve text using NLP service
+         */
+
+
+        previewImprovedText(): void {
+          const description = this.formData.get('description')?.value;
+          if (!description) return;
+
+          this.isProcessingText = true;
+          this.improvedText = null;
+
+          this.nlpService.previewImprovement(description).subscribe({
+            next: (response) => {
+              this.improvedText = response.improvedText;
+              this.isProcessingText = false;
+            },
+            error: (error) => {
+              console.error('Error improving text:', error);
+              this.isProcessingText = false;
+            }
+          });
+        }
+
+        applyImprovedText(): void {
+          if (this.improvedText) {
+            this.formData.patchValue({ description: this.improvedText });
+            this.improvedText = null;
           }
         }
 
