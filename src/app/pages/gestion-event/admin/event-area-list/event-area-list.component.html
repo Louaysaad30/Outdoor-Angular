@@ -1,5 +1,5 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs title="Listing Map" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<app-breadcrumbs title="Event Areas" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
 <!-- End Breadcrumbs -->
 
 <div class="row">
@@ -36,15 +36,21 @@
     <div class="row g-0">
       <div class="col-xl-5">
         <div class="card-header">
-          <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
-            <b>249</b> items in
-            <span class="badge bg-danger-subtle text-danger">Villa</span>
-            <div class="vr"></div>
-            <a href="javascript:void(0);" class="badge border text-reset">$2000-$3000</a>
-            <div class="vr"></div>
-            <a href="javascript:void(0);" class="badge border text-reset">4 Bedroom</a>
-          </div>
-        </div>
+  <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
+    <b>{{ allEventAreas.length }}</b> event areas
+    <div class="vr"></div>
+    <span class="badge bg-primary-subtle text-primary" *ngIf="term">
+      <i class="bi bi-search me-1"></i>{{ term }}
+    </span>
+    <span class="badge bg-success-subtle text-success">
+      <i class="bi bi-building me-1"></i>{{ eventAreas.length }} shown
+    </span>
+    <div class="vr"></div>
+    <a href="javascript:void(0);" class="badge border text-reset">
+      <i class="bi bi-people me-1"></i>Total Capacity: {{ calculateTotalCapacity() }}
+    </a>
+  </div>
+</div>
 
         @for (data of eventAreas; track $index) {
           <div class="card-body border-bottom">
@@ -80,11 +86,6 @@
                         {{data.capacity}} People Capacity</p>
                     </li>
 
-                    <li>
-                      <p class="text-muted mb-0"><i class="bi bi-columns align-baseline text-primary me-1"></i>
-                        {{data.description}} sqft
-                      </p>
-                    </li>
                   </ul>
                   <div class="border-top border-dashed mt-auto pt-3 d-flex align-items-center justify-content-between gap-3">
                   <!--<h5 class="mb-0">${{data.name}}</h5>-->
@@ -135,7 +136,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="addPropertyLabel">Add Property</h5>
-        <button type="button" class="btn-close" (click)="addProperty.hide()"></button>
+        <button type="button" class="btn-close" (click)="openAddPropertyModal()"></button>
       </div>
 
       <form (ngSubmit)="saveProperty()" [formGroup]="propertyForm" class="tablelist-form" novalidate autocomplete="off">
@@ -197,8 +198,9 @@
         <div class="modal-footer">
           <div class="hstack gap-2 justify-content-end">
             <button type="button" class="btn btn-ghost-danger" (click)="addProperty.hide()"><i class="bi bi-x-lg align-baseline me-1"></i> Close</button>
-            <button type="submit" class="btn btn-primary" id="add-btn">Add event area</button>
-          </div>
+            <button type="submit" class="btn btn-primary" id="add-btn">
+              {{ isEditMode ? 'Update event area' : 'Add event area' }}
+            </button>          </div>
         </div>
       </form>
     </div>

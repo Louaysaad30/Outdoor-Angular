@@ -64,7 +64,7 @@ export class EventTicketsFrontOfficeComponent implements OnInit {
 
   getColorClass(ticketType: TicketType): string {
     switch (ticketType) {
-      case TicketType.VIP: return 'primary';
+      case TicketType.VIP: return 'danger';
       case TicketType.PREMIUM: return 'success';
       case TicketType.REGULAR: return 'secondary';
       case TicketType.STUDENT: return 'info';

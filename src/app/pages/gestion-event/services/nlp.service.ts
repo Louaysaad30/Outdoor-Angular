@@ -18,6 +18,12 @@ export class NlpService {
   }
 
   /**
+   * Extract keywords from event area description
+   */
+  extractEventAreaKeywords(eventAreaId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/event-area/${eventAreaId}/extract-keywords`, {});
+  }
+  /**
    * Preview text improvement without saving
    */
   previewImprovement(text: string): Observable<any> {

@@ -341,4 +341,15 @@ pageChanged(event: PageChangedEvent): void {
       this.displayedTickets = filtered.slice(0, this.itemsPerPage);
       this.updateNoResultDisplay();
     }
+
+
+    getColorClass(ticketType: TicketType): string {
+      switch (ticketType) {
+        case TicketType.VIP: return 'danger';
+        case TicketType.PREMIUM: return 'success';
+        case TicketType.REGULAR: return 'secondary';
+        case TicketType.STUDENT: return 'info';
+        default: return 'secondary';
+      }
+    }
   }

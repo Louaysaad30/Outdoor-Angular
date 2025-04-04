@@ -13,11 +13,11 @@
               <div class="ribbon ribbon-danger fw-medium rounded-end mt-2"> For Sale</div>
               <div dropdown class="dropdown position-absolute top-0 end-0 m-3">
                 <button dropdownToggle class="btn bg-white avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-share"></i>
+                  <i class="bi bi-three-dots-vertical"></i>
                 </button>
                 <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal"><i class="bi bi-pencil-square me-1 align-baseline"></i> Edit</a></li>
-                  <li><a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal"><i class="bi bi-trash3 me-1 align-baseline"></i> Delete</a></li>
+                  <li><a class="dropdown-item" href="javascript:void(0);" (click)="editEventArea()"><i class="bi bi-pencil-square me-1 align-baseline"></i> Edit</a></li>
+                  <li><a class="dropdown-item" href="javascript:void(0);" (click)="removeItem()"><i class="bi bi-trash3 me-1 align-baseline"></i> Delete</a></li>
                 </ul>
               </div>
               <img [src]="eventArea?.areaImg" alt="Event Area Image" class="img-fluid rounded mb-3" style="height: 450px ;width: 890px">
@@ -44,98 +44,44 @@
             </div>
           </div>
           <p class="text-muted">{{ eventArea?.description }}</p>
-
         </div>
 
-        <div class="mb-3">
-          <h6 class="card-title mb-3">Event Area Overview</h6>
-          <div class="row g-3">
-            <div class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-dark-subtle text-dark fs-lg rounded">
-                      <i class="bi bi-tag"></i>
-                    </div>
-                  </div>
-                  <p class="fs-md mb-0">$7000 - $8000</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-warning-subtle text-warning fs-lg rounded">
-                      <i class="bi bi-house"></i>
-                    </div>
-                  </div>
-                  <p class="fs-md mb-0">4 Bedroom</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-danger-subtle text-danger fs-lg rounded">
-                      <i class="ph ph-bathtub"></i>
-                    </div>
-                  </div>
-                  <p class="fs-md mb-0">3 Bathroom</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-info-subtle text-info fs-lg rounded">
-                      <i class="bi bi-p-circle"></i>
-                    </div>
-                  </div>
-                  <p class="fs-md mb-0">Parking Available</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-success-subtle text-success fs-lg rounded">
-                      <i class="bi bi-columns"></i>
-                    </div>
-                  </div>
-                  <p class="fs-md mb-0">1324 SQFT</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-secondary-subtle text-secondary fs-lg rounded">
-                      <i class="bi bi-map"></i>
-                    </div>
-                  </div>
-                  <p class="fs-md mb-0">United Kingdom</p>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-sm-6">
+      <!-- Keywords Section -->
+          <div class="mb-3 mt-4">
+        <h6 class="card-title mb-3">Event Area Keywords</h6>
+        <div class="row g-3">
+          <!-- Loading indicator -->
+          <div *ngIf="isExtractingKeywords" class="col-12 text-center">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span class="ms-2">Extracting keywords...</span>
+          </div>
+
+          <!-- Display keywords -->
+          <ng-container *ngIf="!isExtractingKeywords && extractedKeywords.length > 0">
+            <div *ngFor="let keyword of extractedKeywords" class="col-xl-3 col-sm-6">
               <div class="p-3 border border-dashed rounded">
                 <div class="d-flex align-items-center gap-2">
                   <div class="avatar-xs flex-shrink-0">
                     <div class="avatar-title bg-primary-subtle text-primary fs-lg rounded">
-                      <i class="bi bi-buildings"></i>
+                      <i class="bi bi-hash"></i>
                     </div>
                   </div>
-                  <p class="fs-md mb-0">Residency</p>
+                  <p class="fs-md mb-0">{{ keyword }}</p>
                 </div>
               </div>
             </div>
+          </ng-container>
+
+          <!-- No keywords message -->
+          <div *ngIf="!isExtractingKeywords && extractedKeywords.length === 0" class="col-12">
+            <div class="alert alert-info mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              No keywords available for this event area.
+            </div>
           </div>
         </div>
+      </div>
+
       </div>
     </div>
 
@@ -450,3 +396,95 @@
   </div>
 </div>
 <!-- end email chat detail -->
+
+<!-- Edit Modal -->
+<div bsModal #addProperty="bs-modal" class="modal fade" tabindex="-1" aria-labelledby="addPropertyLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addPropertyLabel">Edit Event Area</h5>
+        <button type="button" class="btn-close" (click)="addProperty.hide()"></button>
+      </div>
+
+      <form (ngSubmit)="saveProperty()" [formGroup]="propertyForm" class="tablelist-form" novalidate autocomplete="off">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Event Area Image</label>
+            <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+            <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
+              <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="EVENT-AREA-title-input" class="form-label">EVENT AREA NAME<span class="text-danger">*</span></label>
+            <input type="text" id="EVENT-AREA-title-input" class="form-control" formControlName="title" placeholder="Enter EVENT AREA NAME" required>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <label for="Atitude-input" class="form-label">Latitude<span class="text-danger">*</span></label>
+                <input type="number" id="Atitude-input" formControlName="Atitude" class="form-control" placeholder="Latitude" required>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <label for="Longitude-input" class="form-label">Longitude<span class="text-danger">*</span></label>
+                <input type="number" id="Longitude-input" formControlName="Longitude" class="form-control" placeholder="Longitude" required>
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <label for="Property-price-input" class="form-label">Capacity<span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text">#</span>
+                  <input type="number" class="form-control" formControlName="price" id="Property-price-input" placeholder="Enter capacity" required>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div class="mb-3">
+                <label for="addressLine" class="form-label">Description<span class="text-danger">*</span></label>
+                <textarea class="form-control" id="addressLine" formControlName="location" rows="3" placeholder="Enter Description" required></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="hstack gap-2 justify-content-end">
+            <button type="button" class="btn btn-ghost-danger" (click)="addProperty.hide()"><i class="bi bi-x-lg align-baseline me-1"></i> Close</button>
+            <button type="submit" class="btn btn-primary">Update event area</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div bsModal #deleteRecordModal="bs-modal" id="deleteRecordModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" (click)="deleteRecordModal.hide()"></button>
+      </div>
+      <div class="modal-body p-md-5">
+        <div class="text-center">
+          <div class="text-danger">
+            <i class="bi bi-trash display-5"></i>
+          </div>
+          <div class="mt-4">
+            <h4 class="mb-2">Are you sure?</h4>
+            <p class="text-muted mx-3 mb-0">Are you sure you want to delete this event area?</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 pt-2 mb-2">
+          <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Cancel</button>
+          <button type="button" class="btn w-sm btn-danger btn-hover" (click)="confirmDelete()">Yes, Delete It!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
