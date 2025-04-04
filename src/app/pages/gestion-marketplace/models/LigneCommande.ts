@@ -4,10 +4,11 @@ import { Panier } from "./Panier";
 
 export class LigneCommande {
     idLigneCommande?: number;
+    id?: number;              // Backend sometimes uses 'id' instead of 'idLigneCommande'
     quantite!: number;
     prix!: number;
-    produit!: Product;
-    commande?: Commande;
-    panier!: Panier;
-    idProduit?: number; // Add this field for direct product reference
+    produit!: Product;        // Reference to the full Product object
+    commande?: Commande;      // Optional commande reference
+    panier!: Panier;          // Required panier reference
+    idProduit?: number;       // Direct reference to product ID
 }

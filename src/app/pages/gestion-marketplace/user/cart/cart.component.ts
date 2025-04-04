@@ -32,51 +32,49 @@ export class CartComponent implements OnInit {
     this.panierService.getPanierByUser(this.userId).pipe(
       tap(panier => console.log('Panier received:', panier)),
       switchMap(panier => {
-        if (!panier || !panier.idPanier) {
+        if (!panier?.idPanier) {
           return of([] as LigneCommande[]);
         }
 
         return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).pipe(
           tap(lignes => {
             console.log('Raw lignes:', lignes);
-            lignes.forEach(ligne => console.log('Ligne structure:', JSON.stringify(ligne, null, 2)));
+            // Log each ligne's details for debugging
+            lignes.forEach(ligne => console.log('Ligne details:', ligne));
           }),
-          switchMap(lignes =>
-            // Get all products first
-            this.productService.getAllProducts().pipe(
-              tap(products => console.log('Available products:', products)),
-              map(products => {
-                return lignes
-                  .map(ligne => {
-                    // Match products based on the ligne commande ID and product mapping
-                    const productMapping = {
-                      21: 69, // ligne ID -> product ID
-                      22: 71,
-                      23: 72
-                    };
-                    const targetProductId = ligne.idLigneCommande !== undefined ? productMapping[ligne.idLigneCommande as keyof typeof productMapping] : undefined;
-                    console.log(`Mapping ligne ${ligne.idLigneCommande} to product ${targetProductId}`);
+          switchMap(lignes => this.productService.getAllProducts().pipe(
+            map(products => {
+              console.log('Products loaded:', products);
 
-                    const product = products.find(p => p.idProduit === targetProductId);
-                    console.log('Found product:', product);
+              // Map prix to potential product IDs
+              const priceToProductMap = new Map(
+                products.map(p => [p.prixProduit, p])
+              );
 
-                    if (!product) {
-                      console.log(`No product found for ligne ${ligne.idLigneCommande}`);
-                      return null;
-                    }
+              return lignes.map(ligne => {
+                // Try to find product by matching prix
+                const product = priceToProductMap.get(ligne.prix);
+                console.log(`Matching product for ligne ${ligne.idLigneCommande} with prix ${ligne.prix}:`, product);
 
-                    return {
-                      idLigneCommande: ligne.idLigneCommande,
-                      quantite: ligne.quantite,
-                      prix: ligne.prix,
-                      produit: product,
-                      panier: panier
-                    } as LigneCommande;
-                  })
-                  .filter((ligne): ligne is LigneCommande => ligne !== null);
-              })
-            )
-          )
+                if (!product) {
+                  console.warn(`No product found for ligne ${ligne.idLigneCommande}`);
+                  return null;
+                }
+
+                const mappedLigne = new LigneCommande();
+                mappedLigne.idLigneCommande = ligne.idLigneCommande;
+                mappedLigne.quantite = ligne.quantite;
+                mappedLigne.prix = ligne.prix;
+                mappedLigne.produit = product;
+                mappedLigne.panier = panier;
+                mappedLigne.idProduit = product.idProduit;
+
+                console.log('Mapped ligne with product:', mappedLigne);
+                return mappedLigne;
+              }).filter((ligne): ligne is LigneCommande => ligne !== null);
+            })
+          )),
+          tap(mappedLignes => console.log('Final mapped lignes:', mappedLignes))
         );
       })
     ).subscribe({
@@ -88,6 +86,7 @@ export class CartComponent implements OnInit {
       error: (error) => {
         console.error('Error loading cart:', error);
         this.cartData = [];
+        this.calculateTotals();
       }
     });
   }
@@ -120,15 +119,19 @@ export class CartComponent implements OnInit {
   }
 
   private calculateTotals(): void {
-    this.subtotal = this.cartData.reduce((sum, item) =>
-      sum + (item.quantite * item.produit.prixProduit), 0);
+    this.subtotal = this.cartData.reduce((sum, item) => {
+      if (!item.produit) return sum;
+      return sum + (item.quantite * item.produit.prixProduit);
+    }, 0);
+
     this.tax = this.subtotal * 0.18;
     this.totalprice = this.subtotal + this.shippingRate + this.tax;
+
     console.log('Totals calculated:', {
       subtotal: this.subtotal,
       tax: this.tax,
       total: this.totalprice
-    }); // Debug log
+    });
   }
 
   updateCartTotals(): void {

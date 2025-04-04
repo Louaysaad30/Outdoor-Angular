@@ -1,3 +1,5 @@
+
+
 <div class="row">
     <div class="col-xxl-3">
         <div class="card">
@@ -11,6 +13,8 @@
                 </div>
             </div>
 
+
+
             <div class="card-body">
                 <!-- Search Box -->
                 <div class="search-box mb-3">
@@ -20,10 +24,7 @@
                 </div>
 
                 <!-- Shopping Cart Info -->
-                <div class="shopping-cart-info mb-3 d-flex align-items-center justify-content-between">
-                    <h6 class="mb-0">Shopping Cart</h6>
-                    <span class="badge bg-primary rounded-pill">{{cartItemCount}} items</span>
-                </div>
+
 
                 <!-- Filters -->
                 <accordion class="accordion accordion-flush">
@@ -76,6 +77,26 @@
         </div>
     </div>
 
+    <div class="col-xxl-3">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0">Shopping Cart</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary rounded-pill">{{cartItemCount}} items</span>
+                        <button type="button"
+                                class="btn btn-sm btn-primary"
+                                (click)="navigateToCart()"
+                                >
+                            <i class="ri-shopping-cart-line me-1"></i>
+                            <span>View Cart</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Products Grid -->
     <div class="col-xxl-9">
         <!-- Loading Spinner -->
@@ -107,12 +128,15 @@
                                 <h6 class="fs-md text-truncate">{{product.nomProduit}}</h6>
                                 <p class="text-muted">{{product.categorie?.nomCategorie}}</p>
                                 <div class="mt-3 hstack gap-2">
-                                    <button class="btn btn-primary w-100"
+                                    <button class="btn btn-primary"
                                             [disabled]="product.stockProduit === 0"
                                             (click)="buyProduct(product)">
-                                        Buy
+                                        <i class="ri-shopping-cart-plus-line me-1"></i>Add to Cart
                                     </button>
-                                    <button class="btn btn-secondary w-100">Overview</button>
+                                    <button class="btn btn-secondary"
+                                            [routerLink]="['/products', product.idProduit]">
+                                        Overview
+                                    </button>
                                 </div>
                             </div>
                         </div>

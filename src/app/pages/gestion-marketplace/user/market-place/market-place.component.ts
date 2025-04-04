@@ -5,6 +5,7 @@ import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { PanierService } from '../../services/panier.service';
 import { Options } from 'ng5-slider';
 import { ModalDirective } from 'ngx-bootstrap/modal';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-market-place',
@@ -41,7 +42,8 @@ export class MarketPlaceComponent implements OnInit {
     private productService: ProductService,
     private categoryService: PCategoryService,
     private ligneCommandeService: LignedecommandeService,
-    private panierService: PanierService
+    private panierService: PanierService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -75,17 +77,32 @@ export class MarketPlaceComponent implements OnInit {
   loadCartCount(): void {
     this.panierService.getPanierByUser(this.userId).subscribe({
       next: (panier) => {
-        if (panier && panier.lignesCommande) {
-          // Sum up all quantities instead of counting items
-          this.cartItemCount = panier.lignesCommande.reduce(
-            (total, ligne) => total + ligne.quantite, 0
-          );
+        console.log('Panier received:', panier);
+
+        if (panier && panier.idPanier) {
+          this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).subscribe({
+            next: (lignes) => {
+              console.log('Lignes received:', lignes);
+
+              // Calculate total items in cart
+              this.cartItemCount = lignes.reduce((total, ligne) => {
+                return total + (ligne.quantite || 0);
+              }, 0);
+
+              console.log('Cart count calculated:', this.cartItemCount);
+            },
+            error: (error) => {
+              console.error('Error loading ligne commandes:', error);
+              this.cartItemCount = 0;
+            }
+          });
         } else {
+          console.log('No valid panier found');
           this.cartItemCount = 0;
         }
       },
       error: (error) => {
-        console.error('Error loading cart count:', error);
+        console.error('Error loading panier:', error);
         this.cartItemCount = 0;
       }
     });
@@ -130,18 +147,40 @@ export class MarketPlaceComponent implements OnInit {
   }
 
   buyProduct(product: any): void {
+    if (!product || !product.idProduit) {
+      console.error('Invalid product');
+      return;
+    }
+
     this.panierService.ajouterProduitAuPanier(this.userId, product.idProduit, 1).subscribe({
       next: (response) => {
+        console.log('Add to cart response:', response);
         if (response) {
-          // Force reload cart count after successful purchase
+          // Update cart count
           this.loadCartCount();
-          // Optional: Show success message
-          console.log('Product added successfully');
+          // Show success message or notification here if needed
         }
       },
       error: (error) => {
         console.error('Error adding to cart:', error);
+        // Show error message or notification here if needed
       }
     });
+  }
+
+  navigateToCart(): void {
+    if (this.cartItemCount > 0) {
+      this.router.navigate(['/marketplacefront/user/cart'])
+        .then(() => console.log('Navigation successful'))
+        .catch(error => {
+          console.error('Navigation error:', error);
+          // Only use fallback if needed
+          if (error.toString().includes('Navigation canceled')) {
+            window.location.href = '/marketplacefront/user/cart';
+          }
+        });
+    } else {
+      console.log('Cart is empty');
+    }
   }
 }
