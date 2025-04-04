@@ -15,6 +15,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
       import { icon, latLng, marker, tileLayer } from "leaflet";
       import { LeafletModule } from "@asymmetrik/ngx-leaflet";
 import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
+import {NlpService} from "../../services/nlp.service";
 
       @Component({
         selector: 'app-event-details-front-office',
@@ -48,6 +49,10 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
         event: Event | null = null;
         eventArea: EventArea | null = null;
 
+        // Extracted keywords
+        extractedKeywords: string[] = [];
+        isExtractingKeywords: boolean = false;
+
         // Map configuration
         options = {
           layers: [
@@ -70,7 +75,8 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
           private route: ActivatedRoute,
           private eventService: EventService,
           private eventAreaService: EventAreaService ,
-          private reverseGeocodingService: ReverseGeocodingService
+          private reverseGeocodingService: ReverseGeocodingService ,
+          private nlpService: NlpService
         ) {}
 
         ngOnInit(): void {
@@ -112,6 +118,7 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
               } else {
                 this.loading = false;
               }
+              this.extractKeywords();
             },
             error: (error) => {
               console.error('Error loading event:', error);
@@ -170,5 +177,28 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
 
         changeTab(tab: string): void {
           this.currentTab = tab;
+        }
+
+        extractKeywords(): void {
+          if (!this.event?.description || this.isExtractingKeywords) return;
+
+          this.isExtractingKeywords = true;
+          this.extractedKeywords = [];
+
+          if (this.event?.id) {
+            this.nlpService.extractKeywords(this.event.id).subscribe({
+              next: (updatedEvent) => {
+                // The API returns the updated event object with keywords
+                if (updatedEvent && updatedEvent.keywords) {
+                  this.extractedKeywords = updatedEvent.keywords;
+                }
+                this.isExtractingKeywords = false;
+              },
+              error: (error) => {
+                console.error('Error extracting keywords:', error);
+                this.isExtractingKeywords = false;
+              }
+            });
+          }
         }
       }
