@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { AuthServiceService } from '../account/auth/services/auth-service.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-authlayout',
@@ -6,9 +8,14 @@ import { Component } from '@angular/core';
   styleUrls: ['./authlayout.component.scss']
 })
 export class AuthlayoutComponent {
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/auth/signin']); // Redirect to login
+  
+}
   theme: any;
 
-  constructor() { }
+  constructor(private authService: AuthServiceService, private router: Router) {}
 
   ngOnInit(): void {
     this.theme = document.documentElement.getAttribute('data-theme')

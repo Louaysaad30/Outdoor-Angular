@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 import {  FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RegistrationRequest } from '../models/RegistrationRequest';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthServiceService } from '../services/auth-service.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-signup',
@@ -11,15 +14,16 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 // Signup Component
 export class SignupComponent {
-onFileSelected($event: Event) {
-throw new Error('Method not implemented.');
-}
+
   // set the currenr year
   year: number = new Date().getFullYear();
   fieldTextType!: boolean;
+  emailError: string | null = null;
   registrationForm: FormGroup;  
   register!:RegistrationRequest;
-  constructor() {
+
+  constructor(private authService: AuthServiceService, private router: Router) 
+  {
     this.registrationForm = new FormGroup({
       nom: new FormControl('', [Validators.required]),
       prenom: new FormControl('', [Validators.required]),
@@ -51,19 +55,44 @@ throw new Error('Method not implemented.');
       return null;
     };
   }
+
   onSubmit() {
     if (this.registrationForm.valid) {
-      const formData: RegistrationRequest = this.registrationForm.value;
-      this.register = formData;
-      console.log('Registration Data:', this.register);
+      this.register=this.registrationForm.value;
+      this.emailError = null; // Reset l'erreur avant de soumettre
+      this.authService.register(this.register).subscribe(
+        () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Registration successful',
+            text: 'You have been successfully registered.',
+          });
+          this.router.navigate(['/auth/signin']);
+        },
+        (error) => {
+          console.error('Registration failed', error);
+  
+          // Vérifier si la réponse contient un message d'erreur JSON
+          if (error) {
+            if (error.includes('Email')) {
+              this.emailError = error; // Stocker l'erreur pour affichage dans l'HTML
+            }
+          }
+  
+          Swal.fire({
+            icon: 'error',
+            title: 'Registration failed',
+            text: this.emailError || 'Something went wrong. Please try again.',
+          });
+        }
+      );
     } else {
       this.registrationForm.markAllAsTouched();
     }
   }
-
-  /**
- * Password Hide/Show
- */
+    /**
+   * Password Hide/Show
+   */
   toggleFieldTextType() {
     this.fieldTextType = !this.fieldTextType;
   }

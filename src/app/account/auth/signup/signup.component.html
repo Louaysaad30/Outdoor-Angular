@@ -90,6 +90,9 @@
                                             <p class="alert alert-danger" *ngIf="registrationForm.controls['email'].hasError('email') && registrationForm.controls['email'].touched">
                                               Please enter a valid email
                                             </p>
+                                            <p *ngIf="emailError" class="text-danger">
+                                              {{ emailError }}
+                                            </p>
                                           </div>
                                         </div>
                                       
