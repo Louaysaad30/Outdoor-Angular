@@ -97,14 +97,43 @@
           }
           <div class="row event-form">
             <div class="col-12">
-              <div class="mb-3">
-                <label class="form-label">Event Image</label>
-                <input type="file" class="form-control" accept="image/*" (change)="onFileSelected($event)">
-                <div *ngIf="formData.get('imageUrl')?.value" class="mt-2 text-center">
-                  <img [src]="formData.get('imageUrl')?.value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
-                </div>
-              </div>
-            </div>
+  <div class="mb-3">
+    <label class="form-label">Event Image</label>
+
+    <!-- Image source selection -->
+    <div class="btn-group mb-3 w-100" role="group">
+      <input type="radio" class="btn-check" name="imageSource" id="upload-option"
+             [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
+      <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
+
+      <input type="radio" class="btn-check" name="imageSource" id="generate-option"
+             [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
+      <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
+    </div>
+
+    <!-- Upload image option -->
+    <div *ngIf="imageSource === 'upload'">
+      <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+    </div>
+
+    <!-- Generate image option -->
+    <div *ngIf="imageSource === 'generate'" class="mb-3">
+      <button type="button" [disabled]="!formData.get('description')?.value || isGeneratingImage"
+              class="btn btn-primary w-100" (click)="generateImageFromDescription()">
+        <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
+        {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
+      </button>
+      <small class="form-text text-muted">
+        Image will be generated based on your description text.
+      </small>
+    </div>
+
+    <!-- Image preview -->
+    <div *ngIf="formData.get('imageUrl')?.value" class="mt-2">
+      <img [src]="formData.get('imageUrl')?.value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+    </div>
+  </div>
+</div>
 
             <div class="col-12">
               <div class="mb-3">

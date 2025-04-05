@@ -5,7 +5,7 @@ import {FlatpickrModule} from "angularx-flatpickr";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
 import {PageChangedEvent, PaginationModule} from "ngx-bootstrap/pagination";
-import {ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators} from "@angular/forms";
 import {RouterLink} from "@angular/router";
 import {SharedModule} from "../../../../shared/shared.module";
 import {UiSwitchModule} from "ngx-ui-switch";
@@ -18,6 +18,7 @@ import {icon, latLng, marker, tileLayer} from "leaflet";
 import {EventAreaService} from "../../services/event-area.service";
 import {EventArea} from "../../models/event-area.model";
 import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
+import {NlpService} from "../../services/nlp.service";
 
 @Component({
   selector: 'app-event-area-list',
@@ -32,7 +33,8 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
     ReactiveFormsModule,
     RouterLink,
     SharedModule,
-    UiSwitchModule
+    UiSwitchModule,
+    FormsModule
   ],
   templateUrl: './event-area-list.component.html',
   styleUrl: './event-area-list.component.scss'
@@ -60,12 +62,15 @@ export class EventAreaListComponent implements OnInit{
 
   isEditMode = false;
 
+  imageSource: 'upload' | 'generate' = 'upload';
+  isGeneratingImage = false;
+  generatedImageBlob: Blob | null = null;
 
   @ViewChild('addProperty', { static: false }) addProperty?: ModalDirective;
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
   deleteID: any;
 
-  constructor(private formBuilder: UntypedFormBuilder, public store: Store , private eventAreaService : EventAreaService,    private reverseGeocodingService: ReverseGeocodingService) {
+  constructor(private formBuilder: UntypedFormBuilder, public store: Store , private eventAreaService : EventAreaService, private reverseGeocodingService: ReverseGeocodingService , private nlpService: NlpService) {
   }
 
   ngOnInit(): void {
@@ -200,7 +205,7 @@ editList(index: number) {
   }
 
 
-  saveProperty() {
+saveProperty() {
     if (this.propertyForm.valid) {
       if (this.propertyForm.get('id')?.value) {
         // Update existing event area
@@ -243,37 +248,74 @@ editList(index: number) {
           events: []
         };
 
-        // Check if any files were uploaded
-        if (!this.uploadedFile) {
-          console.error('No image file selected');
-          return;
-        }
-        // We now know the file exists, so it's safe to use it
-        const imageFile = this.uploadedFile;
-
-        console.log('Creating event area with payload:', newEventArea);
-        this.eventAreaService.createEventAreaWithImage(newEventArea as EventArea, this.uploadedFile).subscribe(
-          (response: EventArea) => {
-            this.reverseGeocodingService.reverseGeocode(response.latitude, response.longitude)
-              .subscribe((address: string) => {
-                response.address = address;
-                this.allEventAreas.push(response);
-                this.refreshPagination();
-                this.propertyForm.reset();
-                this.uploadedFile = null;
-                this.addProperty?.hide();
-              });
-          },
-          error => {
-            console.error('Error creating event area:', error);
+        // Handle image based on selected source
+        if (this.imageSource === 'upload') {
+          // Check if any files were uploaded
+          if (!this.uploadedFile) {
+            console.error('No image file selected');
+            return;
           }
-        );
+
+          console.log('Creating event area with uploaded image:', newEventArea);
+          this.eventAreaService.createEventAreaWithImage(newEventArea as EventArea, this.uploadedFile).subscribe(
+            this.handleEventAreaCreationSuccess.bind(this),
+            error => {
+              console.error('Error creating event area:', error);
+            }
+          );
+        } else if (this.imageSource === 'generate') {
+          // Generate image from description
+          if (!newEventArea.description) {
+            console.error('Description is required to generate an image');
+            return;
+          }
+
+          console.log('Generating image from description...');
+          this.isGeneratingImage = true;
+
+          this.nlpService.generateImage(newEventArea.description).subscribe(
+            (imageBlob: Blob) => {
+              this.isGeneratingImage = false;
+
+              // Convert generated image to File object
+              const fileName = `generated_${Date.now()}.jpg`;
+              const generatedFile = new File([imageBlob], fileName, { type: 'image/jpeg' });
+              this.uploadedFile = generatedFile;
+
+              console.log('Creating event area with generated image:', newEventArea);
+              this.eventAreaService.createEventAreaWithImage(newEventArea as EventArea, generatedFile).subscribe(
+                this.handleEventAreaCreationSuccess.bind(this),
+                error => {
+                  console.error('Error creating event area:', error);
+                }
+              );
+            },
+            error => {
+              this.isGeneratingImage = false;
+              console.error('Error generating image:', error);
+            }
+          );
+        } else {
+          console.error('Invalid image source selected');
+        }
       }
     } else {
       console.log('Form is invalid:', this.propertyForm.errors, this.propertyForm.controls);
     }
   }
 
+  // Helper method to avoid code duplication
+  private handleEventAreaCreationSuccess(response: EventArea) {
+    this.reverseGeocodingService.reverseGeocode(response.latitude, response.longitude)
+      .subscribe((address: string) => {
+        response.address = address;
+        this.allEventAreas.push(response);
+        this.refreshPagination();
+        this.propertyForm.reset();
+        this.uploadedFile = null;
+        this.addProperty?.hide();
+      });
+  }
 
   resetPropertyForm(): void {
     this.propertyForm.reset();
@@ -339,6 +381,37 @@ openAddPropertyModal(): void {
 
   calculateTotalCapacity(): number {
     return this.allEventAreas.reduce((total, area) => total + (area.capacity || 0), 0);
+  }
+
+
+generateImageFromDescription(): void {
+    const description = this.propertyForm.get('location')?.value;
+    if (!description) {
+      // Show error or alert that description is required
+      return;
+    }
+
+    this.isGeneratingImage = true;
+    this.nlpService.generateImage(description).subscribe({
+      next: (imageBlob: Blob) => {
+        this.generatedImageBlob = imageBlob;
+
+        // Convert blob to File immediately
+        const fileName = `generated_${Date.now()}.jpg`;
+        const generatedFile = new File([imageBlob], fileName, { type: 'image/jpeg' });
+        this.uploadedFile = generatedFile; // Set uploadedFile for later use in saveProperty
+
+        // Create a URL for the blob to display in the UI
+        const imageUrl = URL.createObjectURL(imageBlob);
+        this.propertyForm.patchValue({ img: imageUrl });
+        this.isGeneratingImage = false;
+      },
+      error: (error) => {
+        console.error('Error generating image:', error);
+        this.isGeneratingImage = false;
+        // Show error message to user
+      }
+    });
   }
 
 }

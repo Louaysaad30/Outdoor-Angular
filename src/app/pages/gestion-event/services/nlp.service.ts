@@ -29,4 +29,12 @@ export class NlpService {
   previewImprovement(text: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/preview-improvement`, { text });
   }
+
+  /**
+   * Generate an image based on the provided text
+   */
+  generateImage(text: string): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/generate-image`, { text },
+      { responseType: 'blob' });
+  }
 }

@@ -11,7 +11,7 @@ import {EventArea} from "../../models/event-area.model";
 import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
 import {NlpService} from "../../services/nlp.service";
 import {CommonModule} from "@angular/common";
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ModalDirective, ModalModule} from 'ngx-bootstrap/modal';
 import { Router } from '@angular/router';
 const customIcon = L.icon({
@@ -32,7 +32,8 @@ const customIcon = L.icon({
         SlickCarouselModule,
         CommonModule,
         ReactiveFormsModule,
-        ModalModule
+        ModalModule,
+        FormsModule
     ],
   templateUrl: './event-area-details.component.html',
   styleUrl: './event-area-details.component.scss'
@@ -49,6 +50,10 @@ export class EventAreaDetailsComponent {
   // Extracted keywords
   extractedKeywords: string[] = [];
   isExtractingKeywords: boolean = false;
+
+  imageSource: string = 'upload';
+  isGeneratingImage: boolean = false;
+  generatedImageBlob: Blob | null = null;
 
   @ViewChild('addProperty', { static: false }) addProperty?: ModalDirective;
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
@@ -143,6 +148,9 @@ export class EventAreaDetailsComponent {
         areaImg: this.eventArea.areaImg,
         events: this.eventArea.events || []
       };
+
+      // Only pass the file if we're in upload mode and a file was selected
+      const fileToUpload = this.imageSource === 'upload' ? this.uploadedFile : undefined;
 
       this.eventAreaService.updateEventArea(this.eventArea.id, updatedEventArea, this.uploadedFile || undefined).subscribe({
         next: (response) => {
@@ -244,4 +252,34 @@ export class EventAreaDetailsComponent {
     }
   }
 
+
+generateImageFromDescription(): void {
+    const description = this.propertyForm.get('location')?.value;
+    if (!description) {
+      return;
+    }
+
+    this.isGeneratingImage = true;
+    this.nlpService.generateImage(description).subscribe({
+      next: (imageBlob: Blob) => {
+        this.generatedImageBlob = imageBlob;
+
+        // Create a URL for the blob to display in the UI
+        const imageUrl = URL.createObjectURL(imageBlob);
+        this.propertyForm.patchValue({ img: imageUrl });
+
+        // Create a File object from the blob for upload
+        const fileName = `generated_${Date.now()}.jpg`;
+        this.uploadedFile = new File([imageBlob], fileName, { type: 'image/jpeg' });
+
+        this.isGeneratingImage = false;
+      },
+      error: (error) => {
+        console.error('Error generating image:', error);
+        this.isGeneratingImage = false;
+      }
+    });
+  }
+
 }
+

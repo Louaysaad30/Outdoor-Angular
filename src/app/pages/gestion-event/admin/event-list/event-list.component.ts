@@ -4,7 +4,7 @@ import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
       import { FlatpickrModule } from 'angularx-flatpickr';
       import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
       import { ModalDirective, ModalModule } from 'ngx-bootstrap/modal';
-      import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+      import {FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
       import { CalendarOptions, EventApi, EventClickArg, EventInput } from '@fullcalendar/core';
       import { createEventId, defaultevent } from '../../../apps/calendar/data';
       import dayGridPlugin from '@fullcalendar/daygrid';
@@ -27,7 +27,8 @@ import {NlpService} from "../../services/nlp.service";
           FullCalendarModule,
           ModalModule,
           ReactiveFormsModule,
-          CommonModule
+          CommonModule,
+          FormsModule
         ],
         templateUrl: './event-list.component.html',
         styleUrl: './event-list.component.scss'
@@ -46,6 +47,10 @@ import {NlpService} from "../../services/nlp.service";
         uploadedFile: File | null = null;
         isProcessingText = false;
         improvedText: string | null = null;
+
+        imageSource: 'upload' | 'generate' = 'upload';
+        isGeneratingImage = false;
+        generatedImageBlob: Blob | null = null;
 
         @ViewChild('eventModal', { static: false }) eventModal?: ModalDirective;
         @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
@@ -381,6 +386,7 @@ handleEventClick(clickInfo: EventClickArg) {
          * Close event modal
          */
         closeEventModal() {
+
           this.formData = this.formBuilder.group({
             title: '',
             category: '',
@@ -390,6 +396,10 @@ handleEventClick(clickInfo: EventClickArg) {
             start: '',
             end: ''
           });
+          const safeElement = document.querySelector('body') as HTMLElement;
+          if (safeElement) safeElement.focus();
+
+          this.formData.reset();
           this.eventModal?.hide();
         }
 
@@ -476,18 +486,19 @@ handleEventClick(clickInfo: EventClickArg) {
 
 
         selectedFile: File | null = null;
-onFileSelected(event: any): void {
-  if (event.target.files && event.target.files.length > 0) {
-    this.uploadedFile = event.target.files[0];
+onFileSelected(event: Event): void {
+  const inputElement = event.target as HTMLInputElement;
+  if (inputElement.files && inputElement.files.length > 0) {
+    this.uploadedFile = inputElement.files[0];
     const reader = new FileReader();
-    reader.onload = (e: any) => {
-      this.formData.patchValue({ imageUrl: e.target.result });
+    reader.onload = () => {
+      this.formData.patchValue({ imageUrl: reader.result });
     };
-    if (this.uploadedFile) {
-      reader.readAsDataURL(this.uploadedFile);
-    }
+    reader.readAsDataURL(this.uploadedFile);
   }
 }
+
+
         resetForm() {
                         this.formData.reset({
                           title: '',
@@ -619,4 +630,32 @@ formatDate(date: Date): string {
 
 
 
+
+        generateImageFromDescription(): void {
+          const description = this.formData.get('description')?.value;
+          if (!description) {
+            return;
+          }
+
+          this.isGeneratingImage = true;
+          this.nlpService.generateImage(description).subscribe({
+            next: (imageBlob: Blob) => {
+              this.generatedImageBlob = imageBlob;
+
+              // Create a URL for the blob to display in the UI
+              const imageUrl = URL.createObjectURL(imageBlob);
+              this.formData.patchValue({ imageUrl: imageUrl });
+
+              // Create a File object from the blob for upload
+              const fileName = `generated_${Date.now()}.jpg`;
+              this.uploadedFile = new File([imageBlob], fileName, { type: 'image/jpeg' });
+
+              this.isGeneratingImage = false;
+            },
+            error: (error) => {
+              console.error('Error generating image:', error);
+              this.isGeneratingImage = false;
+            }
+          });
+        }
       }

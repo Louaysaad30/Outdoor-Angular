@@ -408,13 +408,42 @@
 
       <form (ngSubmit)="saveProperty()" [formGroup]="propertyForm" class="tablelist-form" novalidate autocomplete="off">
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Event Area Image</label>
-            <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
-            <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
-              <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
-            </div>
-          </div>
+<div class="mb-3">
+  <label class="form-label">Event Area Image</label>
+
+  <!-- Image source selection -->
+  <div class="btn-group mb-3 w-100" role="group">
+    <input type="radio" class="btn-check" name="imageSource" id="upload-option"
+           [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
+    <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
+
+    <input type="radio" class="btn-check" name="imageSource" id="generate-option"
+           [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
+    <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
+  </div>
+
+  <!-- Upload image option -->
+  <div *ngIf="imageSource === 'upload'">
+    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+  </div>
+
+  <!-- Generate image option -->
+  <div *ngIf="imageSource === 'generate'" class="mb-3">
+    <button type="button" [disabled]="!propertyForm.controls['location'].value || isGeneratingImage"
+            class="btn btn-primary w-100" (click)="generateImageFromDescription()">
+      <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
+      {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
+    </button>
+    <small class="form-text text-muted">
+      Image will be generated based on your description text.
+    </small>
+  </div>
+
+  <!-- Image preview -->
+  <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
+    <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+  </div>
+</div>
 
           <div class="mb-3">
             <label for="EVENT-AREA-title-input" class="form-label">EVENT AREA NAME<span class="text-danger">*</span></label>
