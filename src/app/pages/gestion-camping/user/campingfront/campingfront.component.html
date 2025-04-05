@@ -1,5 +1,5 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs title="Listing Grid" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<app-breadcrumbs title="List Centre Camping" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
 <!-- End Breadcrumbs -->
 
 <div class="row">
@@ -227,7 +227,7 @@
       <div class="card-body">
         <div class="row align-items-center gy-3">
           <div class="col-3">
-            <h6 class="card-title mb-0">Property <span class="badge bg-secondary-subtle text-secondary align-baseline ms-1">241</span></h6>
+            <h6 class="card-title mb-0">Centre Camping <span class="badge bg-secondary-subtle text-secondary align-baseline ms-1">{{centrelist.length}}</span></h6>
           </div><!--end col-->
           <div class="col-auto ms-auto">
             <button class="btn btn-primary myButton" (click)="showFilter()"><i class="bi bi-funnel align-baseline me-1"></i> Filter</button>
@@ -257,9 +257,9 @@
   Not Verified
 </span>
               <a routerLink="/real-estate/property-overview">
-                <h6 class="fs-lg text-capitalize text-truncate">louay</h6>
+                <h6 class="fs-lg text-capitalize text-truncate">{{ data.name }}</h6>
               </a>
-              <p class="text-muted"><i class="bi bi-geo-alt align-baseline me-1"></i> {{data.latitude}}</p>
+              <p class="text-muted"><i class="bi bi-geo-alt align-baseline me-1"></i> {{data.address}}</p>
               <ul class="d-flex align-items-center gap-2 flex-wrap list-unstyled">
                 <li>
                   <p class="text-muted mb-0"><i class="bi bi-house align-baseline text-primary me-1"></i>
@@ -275,13 +275,15 @@
                 </li>
               </ul>
               <div class="border-top border-dashed mt-3 pt-3 d-flex align-items-center justify-content-between gap-3">
-                <h5 class="mb-0">${{data.capcite}}</h5> <a routerLink="/real-estate/property-overview" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>
+                <h5 class="mb-0">TND {{data.prixJr}}</h5>
+                <a routerLink="/real-estate/property-overview" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>
               </div>
             </div>
           </div>
         </div>
       }
-    </div><!--end row-->
+    </div>
+    <!--end row-->
 
     <div id="elmLoader">
       <div class="spinner-border text-primary avatar-sm" role="status">

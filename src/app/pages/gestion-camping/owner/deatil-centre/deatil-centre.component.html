@@ -1,0 +1,445 @@
+<app-breadcrumbs title="Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xxl-9">
+    <div class="card">
+      <div class="card-body">
+        <div class="row align-items-center justify-content-center g-3">
+          <div class="col-xl-4 col-md-6">
+            <div class="text-center rounded-3 overflow-hidden position-relative">
+              <img [src]="centre?.image"
+                   alt="Centre de camping"
+                   class="w-100 object-fit-cover border"
+                   style="height: 250px;">
+            </div>
+          </div>
+          <div class="col-xl-8 col-md-7">
+            <div>
+              <div class="mb-3">
+                <h6 class="card-title">{{ centre?.name }}</h6>
+              </div>
+              <div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-nowrap table-borderless mb-0">
+                    <tbody>
+                    <tr>
+                      <th>Address :</th>
+                      <td>{{ centre?.address }}</td>
+                    </tr>
+                    <tr>
+                      <th>Capacite :</th>
+                      <td>{{ centre?.capcite }}</td>
+                    </tr>
+                    <tr>
+                      <th>Prix de jour :</th>
+                      <td>{{ centre?.prixJr }} TND</td>
+                    </tr>
+                    <tr>
+                      <th>Website:</th>
+                      <td>https://Themesbrand.com/</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ul class="list-unstyled hstack gap-2 mb-0 mt-4">
+                  <li>
+                    <a href="javascript:void(0);" class="avatar-xs d-inline-block">
+                      <div class="avatar-title rounded bg-primary-subtle text-primary">
+                        <i class="bi bi-facebook"></i>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="javascript:void(0);" class="avatar-xs d-inline-block">
+                      <div class="avatar-title bg-success-subtle text-success rounded">
+                        <i class="bi bi-whatsapp"></i>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-3">
+          <h6 class="card-title mb-3">Property Overview</h6>
+          <div class="row g-3">
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-dark-subtle text-dark fs-lg rounded">
+                      <i class="bi bi-tag"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">$7000 - $8000</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-warning-subtle text-warning fs-lg rounded">
+                      <i class="bi bi-house"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">{{ logments.length }} Bedroom</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-danger-subtle text-danger fs-lg rounded">
+                      <i class="ph ph-bathtub"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">3 Bathroom</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-info-subtle text-info fs-lg rounded">
+                      <i class="bi bi-p-circle"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">Parking Available</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-success-subtle text-success fs-lg rounded">
+                      <i class="bi bi-columns"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">1324 SQFT</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-secondary-subtle text-secondary fs-lg rounded">
+                      <i class="bi bi-map"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">United Kingdom</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-primary-subtle text-primary fs-lg rounded">
+                      <i class="bi bi-buildings"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">Residency</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row justify-content-between align-items-center mb-4">
+      <div class="col-lg-12">
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <!-- Nav tabs -->
+            <ul class="nav nav-pills nav-secondary mb-3" role="tablist">
+              <li class="nav-item ">
+                <a [class.active]="currentTab === 'property'" class="nav-link active" data-bs-toggle="tab" href="javascript:void(0);" (click)="changeTab('property')" role="tab">Property</a>
+              </li>
+              <li class="nav-item ">
+                <a [class.active]="currentTab === 'agents'" class="nav-link" data-bs-toggle="tab" href="javascript:void(0);" (click)="changeTab('agents')" role="tab">Agents</a>
+              </li>
+            </ul>
+          </div>
+          <div class="flex-shrink-0">
+            <div dropdown class="dropdown">
+              <button dropdownToggle class="btn btn-light btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="javascript:void(0);" (click)="addLogement.show()">Add Logement</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Another action</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Something else here</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Tab panes -->
+        <div class="tab-content text-muted">
+          <div [hidden]="currentTab !== 'property'" class="tab-pane show active mt-2" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
+            <div class="row">
+              @for (data of logments; track $index) {
+                <div class="col-lg-12 col-md-6">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="row gy-3">
+                        <div class="col-xxl-2 col-lg-3">
+                          <div class="position-relative">
+                            <img src="{{data.image}}" alt="" class="img-fluid rounded h-100">
+                            <div class="position-absolute bottom-0 start-0 m-2">
+                                                <span class="badge bg-white fs-xxs" [ngClass]="{
+  'bg-danger-subtle text-danger': data.type === 'CHAMBRE_A_1' || data.type === 'CHAMBRE_A_2',
+  'bg-success-subtle text-success': data.type === 'CHAMBRE_A_3' || data.type === 'CHAMBRE_A_4',
+  'bg-info-subtle text-info': data.type === 'BANGALO_A_5' || data.type === 'BANGALO_A_10'
+}"><i class="bi bi-house-door align-baseline me-1"></i>
+                                                  {{data.type}}</span>
+                            </div>
+                          </div>
+                        </div><!--end col-->
+                        <div class="col-xxl-7 col-lg-6">
+                          <div class="d-flex flex-column h-100">
+                            <div>
+                              <h6 class="fs-lg text-capitalize text-truncate"><a href="javascript:void(0);" class="text-reset">{{data.type}}</a></h6>
+                            </div>
+                            <ul class="d-flex align-items-center gap-2 flex-wrap list-unstyled">
+                              <li>
+                                <p class="text-muted mb-0"><i class="bi bi-house align-baseline text-primary me-1"></i>
+                                  {{data.quantity}} Bedroom</p>
+                              </li>
+
+                            </ul>
+                          </div>
+                        </div><!--end col-->
+                        <div class="col-lg-3">
+                          <div class="d-flex flex-lg-column justify-content-between justify-content-lg-start text-lg-end gap-3 h-100">
+                            <h5 class="mb-0">{{data.price}} TND</h5>
+                          </div>
+                        </div>
+                      </div><!--end row-->
+                    </div>
+                  </div>
+                </div><!--end col-->
+              }
+            </div><!--end row-->
+
+            <div class="row align-items-center justify-content-between text-center text-sm-start mb-3">
+              <div class="col-sm">
+                <div class="text-muted">
+                  <!-- Showing <span class="fw-semibold">{{service.endIndex}}</span> of <span class="fw-semibold">{{service.totalRecords}}</span> Results -->
+                </div>
+              </div><!--end col-->
+              <div class="col-sm-auto  mt-3 mt-sm-0">
+                <!-- <pagination class="pagination-wrap hstack gap-2" [totalItems]="(total | async)!" [(ngModel)]="service.page" [itemsPerPage]="service.pageSize"></pagination> -->
+              </div><!--end col-->
+            </div><!--end row-->
+          </div>
+
+
+        </div>
+
+        <!-- Tab panes -->
+      </div>
+
+    </div>
+  </div><!--end col-->
+
+  <div class="col-xxl-3">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title mb-0">Request Exploration</h4>
+          </div>
+          <div class="card-body">
+            <div>
+              <input type="text" class="form-control mb-3" placeholder="Enter name" id="firstNameinput">
+              <input type="email" class="form-control mb-3" placeholder="Enter email" id="emailinput">
+              <input type="tel" class="form-control mb-3" placeholder="+(245) 451 45123" id="phonenumberInput">
+              <textarea class="form-control mb-3" placeholder="Message" id="exampleFormControlTextarea1" rows="3"></textarea>
+              <button class="btn btn-primary btn-sm float-end">Submit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header d-flex align-items-center">
+            <h4 class="card-title flex-grow-1 mb-0">Fliters</h4>
+            <div class="flex-shrink-0">
+              <button class="btn btn-subtle-secondary btn-icon btn-sm"><i class="bi bi-funnel fs-md"></i></button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <p class="text-muted fw-medium text-uppercase mb-3">Location</p>
+              <select class="form-select" id="select-location">
+                <option selected>Select Location</option>
+                <option value="Australia">Australia</option>
+                <option value="Belgium">Belgium</option>
+                <option value="Brazil">Brazil</option>
+                <option value="China">China</option>
+                <option value="Denmark">Denmark</option>
+                <option value="Greenland">Greenland</option>
+                <option value="Jersey">Jersey</option>
+                <option value="Mexico">Mexico</option>
+                <option value="Saudi Arabia">Saudi Arabia</option>
+                <option value="Serbia">Serbia</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="United States">United States</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <p class="text-muted fw-medium text-uppercase mb-3">Property Type</p>
+              <div class="d-flex flex-wrap gap-2">
+                <div>
+                  <input type="radio" class="btn-check" name="propertyType" value="Villa" id="propertyType1" checked>
+                  <label class="btn btn-ghost-primary fs-lg avatar-xs p-0 d-flex justify-content-center align-items-center" for="propertyType1" placement="top" tooltip="Villa">
+                    <i class="bi bi-house"></i>
+                  </label>
+                </div>
+                <div>
+                  <input type="radio" class="btn-check" name="propertyType" value="Apartment" id="propertyType3">
+                  <label class="btn btn-ghost-primary fs-lg avatar-xs p-0 d-flex justify-content-center align-items-center" for="propertyType3" placement="top" tooltip="Apartment">
+                    <i class="bi bi-building"></i>
+                  </label>
+                </div>
+
+                <div>
+                  <input type="radio" class="btn-check" name="propertyType" value="Residency" id="propertyType4">
+                  <label class="btn btn-ghost-primary fs-lg avatar-xs p-0 d-flex justify-content-center align-items-center" for="propertyType4" placement="top" tooltip="Residency">
+                    <i class="bi bi-buildings"></i>
+                  </label>
+                </div>
+
+                <div>
+                  <input type="radio" class="btn-check" name="propertyType" value="all" id="propertyType5">
+                  <label class="btn btn-ghost-primary fs-lg avatar-xs p-0 d-flex justify-content-center align-items-center" for="propertyType5" placement="top" tooltip="all"><i class="bi bi-hospital"></i></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <p class="text-muted fw-medium text-uppercase mb-3">Bedroom</p>
+              <div class="row gy-3" id="bedroom-filter">
+                <div class="col-lg-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="all" id="allselectBedroom">
+                    <label class="form-check-label" for="allselectBedroom">
+                      Select All
+                    </label>
+                  </div>
+                </div><!--end col-->
+                <div class="col-lg-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="2" id="twoBedroom" checked>
+                    <label class="form-check-label" for="twoBedroom">
+                      2 Bedroom
+                    </label>
+                  </div>
+                </div><!--end col-->
+                <div class="col-lg-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="3" id="threeBedroom">
+                    <label class="form-check-label" for="threeBedroom">
+                      3 Bedroom
+                    </label>
+                  </div>
+                </div><!--end col-->
+                <div class="col-lg-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="4" id="fourBedroom">
+                    <label class="form-check-label" for="fourBedroom">
+                      4 Bedroom
+                    </label>
+                  </div>
+                </div><!--end col-->
+                <div class="col-lg-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="5" id="fiveBedroom" checked>
+                    <label class="form-check-label" for="fiveBedroom">
+                      5 Bedroom
+                    </label>
+                  </div>
+                </div><!--end col-->
+              </div><!--end row-->
+            </div><!--end -->
+
+            <div class="mb-4">
+              <p class="text-muted fw-medium text-uppercase mb-3">Price Range</p>
+              <div>
+                <div id="product-price-range" data-slider-color="secondary"></div>
+                <div class="formCost d-flex gap-2 align-items-center mt-4">
+                  <input class="form-control" type="text" id="minCost" value="0"> <span class="fw-semibold text-muted">to</span> <input class="form-control" type="text" id="maxCost" value="1000">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- end card -->
+
+      </div>
+      <!--end col-->
+    </div><!--end row-->
+  </div><!--end col-->
+</div><!--end row-->
+
+<div bsModal #addLogement="bs-modal" class="modal fade" id="addLogement">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addLogementModalLabel">Add Logement</h5>
+        <button type="button" class="btn-close" (click)="addLogement.hide()"></button>
+      </div>
+
+      <form (ngSubmit)="saveLogement()" [formGroup]="logementForm" class="tablelist-form" novalidate autocomplete="off">
+        <div class="modal-body">
+          <div id="alert-error-msg" class="d-none alert alert-danger py-2"></div>
+          <input type="hidden" id="id-field">
+
+          <div class="mb-3">
+            <label class="form-label">Logement Image<span class="text-danger">*</span></label>
+            <input type="file" formControlName="image" class="form-control" id="image-input" (change)="onChangeLogementImage($event)" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="logement-name-input" class="form-label">Logement Name<span class="text-danger">*</span></label>
+            <input type="text" id="logement-name-input" formControlName="name" class="form-control" placeholder="Enter Logement Name" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="logement-type-input" class="form-label">Type<span class="text-danger">*</span></label>
+            <select id="logement-type-input" formControlName="type" class="form-control" required>
+              <option *ngFor="let type of logementTypes" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="logement-quantity-input" class="form-label">Quantity<span class="text-danger">*</span></label>
+            <input type="number" id="logement-quantity-input" formControlName="quantity" class="form-control" placeholder="Enter Quantity" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="logement-price-input" class="form-label">Price<span class="text-danger">*</span></label>
+            <input type="number" id="logement-price-input" formControlName="price" class="form-control" placeholder="Enter Price" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="hstack gap-2 justify-content-end">
+            <button type="button" class="btn btn-ghost-danger" (click)="addLogement.hide()"><i class="bi bi-x-lg align-baseline me-1"></i> Close</button>
+            <button type="submit" class="btn btn-primary" id="add-btn">Add</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- modal-content -->
+  </div>
+</div>

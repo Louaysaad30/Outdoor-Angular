@@ -125,8 +125,8 @@ export class CampingfrontComponent {
      * BreadCrumb
      */
     this.breadCrumbItems = [
-      { label: 'Real Estate', active: true },
-      { label: 'Listing Grid', active: true }
+      { label: 'Centre Camping', active: true },
+      { label: 'List', active: true }
     ];
 
 

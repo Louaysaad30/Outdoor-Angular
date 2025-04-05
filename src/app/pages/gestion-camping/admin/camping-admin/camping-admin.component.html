@@ -1,0 +1,86 @@
+<div class="row">
+          <div class="col-lg-12">
+            <div class="card" id="centreCampingList">
+              <div class="card-header">
+                <div class="row align-items-center gy-3">
+                  <div class="col-lg-3 col-md-6 order-last order-md-first me-auto">
+                    <div class="search-box">
+                      <input type="text" class="form-control search" placeholder="Search for centre, name, address or something..." [(ngModel)]="term" (keyup)="filterData()">
+                      <i class="ri-search-line search-icon"></i>
+                    </div>
+                  </div>
+                  <div class="col-md-auto col-6 text-end">
+                    <div class="d-flex flex-wrap align-items-start gap-2">
+                      <button class="btn btn-subtle-danger d-none" id="remove-actions" >
+                        <i class="ri-delete-bin-2-line"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+                    <thead class="text-muted table-light">
+                    <tr>
+                      <th scope="col" class="sort cursor-pointer" (click)="onSort('name')">Name</th>
+                      <th scope="col" class="sort cursor-pointer" (click)="onSort('address')">Address</th>
+                      <th scope="col" class="sort cursor-pointer" (click)="onSort('latitude')">Latitude</th>
+                      <th scope="col" class="sort cursor-pointer" (click)="onSort('longitude')">Longitude</th>
+                      <th scope="col" class="sort cursor-pointer" (click)="onSort('capcite')">Capacity</th>
+                      <th scope="col" class="sort cursor-pointer" (click)="onSort('verified')">Verified</th>
+                      <th scope="col">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let centre of centre; trackBy: trackById">
+                      <td>{{centre.name}}</td>
+                      <td>{{centre.address}}</td>
+                      <td>{{centre.latitude}}</td>
+                      <td>{{centre.longitude}}</td>
+                      <td>{{centre.capcite}}</td>
+                      <td>
+                          <span class="badge" [ngClass]="{'bg-success-subtle text-success': centre.verified, 'bg-warning-subtle text-warning': !centre.verified}">
+                            <i class="bi bi-house-door align-baseline me-1"></i>
+                            {{centre.verified ? 'Verified' : 'Not Verified'}}
+                          </span>
+                      </td>
+                      <td>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-outline-success btn-sm px-3" (click)="verifyCenter(centre.idCentre)">
+                            <i class="bi bi-check-circle me-1"></i> Verify
+                          </button>
+                          <button class="btn btn-outline-danger btn-sm px-3" (click)="deactivateCenter(centre.idCentre)">
+                            <i class="bi bi-x-circle me-1"></i> Deactivate
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="noresult" style="display: none;">
+                    <div class="text-center py-4">
+                      <i class="ph-magnifying-glass fs-1 text-primary"></i>
+                      <h5 class="mt-2">Sorry! No Result Found</h5>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-3 align-items-center" id="pagination-element" *ngIf="centre.length > 0">
+                  <div class="col-sm">
+                    <div class="text-muted text-center text-sm-start">
+                      Showing <span class="fw-semibold">{{centre.length}}</span> of <span class="fw-semibold">{{filteredCentreList.length}}</span> Results
+                    </div>
+                  </div>
+                  <div class="col-sm-auto mt-3 mt-sm-0">
+                    <pagination class="pagination-wrap justify-content-center hstack gap-2"
+                                [totalItems]="filteredCentreList.length"
+                                [itemsPerPage]="4"
+                                (pageChanged)="pageChanged($event)">
+                    </pagination>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>

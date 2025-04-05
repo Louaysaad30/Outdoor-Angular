@@ -1,3 +1,4 @@
+import {Logement} from "./logments.model";
 
 export interface CentreCamping {
   idCentre: number;
@@ -7,7 +8,7 @@ export interface CentreCamping {
   name: string;
   capcite: number;
   image: string;
-  logements?: any[];
+  logements: Logement[]; // Ensure this property is defined
   materiels?: any[];
   reservations?: any[];
   idOwner: number;

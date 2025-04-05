@@ -51,4 +51,8 @@ export class CentreCampingService {
     return this.http.put<CentreCamping>(`${this.apiUrl}/verify/${id}`, {});
   }
 
+  deactivateCentreCamping(id: number): Observable<CentreCamping> {
+    return this.http.put<CentreCamping>(`${this.apiUrl}/deactivate/${id}`, {});
+  }
+
 }

@@ -25,6 +25,7 @@ import {image} from "ngx-editor/schema/nodes";
 import * as L from 'leaflet';
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
+import {RouterLink, RouterModule} from "@angular/router";
 
 
 @Component({
@@ -40,6 +41,7 @@ import {ReverseGeocodingService} from "../../services/reverse-geocoding.service"
     DropzoneModule,
     ModalModule,
     LeafletModule,
+    RouterModule,
 
     BsDropdownModule],
   templateUrl: './camping.component.html',
