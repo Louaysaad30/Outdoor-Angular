@@ -46,6 +46,10 @@ export class ProductListComponent implements OnInit {
     addRemoveLinks: true
   };
 
+  // Add these properties
+  sortDirection: 'asc' | 'desc' = 'asc';
+  currentSortColumn: string | null = null;
+
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
@@ -120,27 +124,37 @@ export class ProductListComponent implements OnInit {
   }
 
   onSort(column: string): void {
-    this.products = [...this.products].sort((a, b) => {
-      const valueA = this.getSortValue(a, column);
-      const valueB = this.getSortValue(b, column);
-      return valueA.localeCompare(valueB);
-    });
-  }
-
-  private getSortValue(item: Product, column: string): string {
-   // console.log('Sorting item:', item); // Debug log
-    switch (column) {
-      case 'nomProduit':
-        return item.nomProduit;
-      case 'categorie':
-        return item.categorie.nomCategorie;
-      case 'prixProduit':
-        return item.prixProduit.toString();
-      case 'stockProduit':
-        return item.stockProduit.toString();
-      default:
-        return '';
+    if (this.currentSortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.currentSortColumn = column;
+      this.sortDirection = 'asc';
     }
+
+    this.products = [...this.products].sort((a, b) => {
+      const multiplier = this.sortDirection === 'asc' ? 1 : -1;
+
+      switch (column) {
+        case 'prixProduit':
+        case 'stockProduit':
+          return (a[column] - b[column]) * multiplier;
+
+        case 'categorie':
+          const catA = a.categorie?.nomCategorie || '';
+          const catB = b.categorie?.nomCategorie || '';
+          return catA.localeCompare(catB) * multiplier;
+
+        case 'dateCreation':
+          const dateA = new Date(a.dateCreation).getTime();
+          const dateB = new Date(b.dateCreation).getTime();
+          return (dateA - dateB) * multiplier;
+
+        default:
+          const valA = String(a[column as keyof Product] || '');
+          const valB = String(b[column as keyof Product] || '');
+          return valA.localeCompare(valB) * multiplier;
+      }
+    });
   }
 
   checkUncheckAll(event: any): void {

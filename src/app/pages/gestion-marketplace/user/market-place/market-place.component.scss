@@ -23,3 +23,73 @@
         }
     }
 }
+
+.product-image {
+    width: 100%;
+    height: 220px; // Fixed image container height
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f8f9fa;
+    margin-bottom: 1rem;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; // Maintains aspect ratio
+        object-position: center;
+    }
+}
+
+.card {
+    height: 450px; // Fixed card height
+    margin-bottom: 20px;
+
+    .card-body {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+    }
+}
+
+.product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .title {
+        font-size: 1rem;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+        // Limit to 2 lines with ellipsis
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .price {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .category {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+// Action buttons container
+.hstack {
+    margin-top: auto; // Push buttons to bottom
+    gap: 0.5rem;
+
+    .btn {
+        flex: 1;
+    }
+}

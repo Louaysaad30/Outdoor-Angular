@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { LigneCommande } from '../models/LigneCommande';
 import { UpdateQuantiteDTO } from '../models/DTO/UpdateQuantiteDTO';
+import { UpdateTotalDTO } from '../models/DTO/UpdateTotalDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,10 @@ export class LignedecommandeService {
   }
 
   updateLigneCommande(dto: UpdateQuantiteDTO): Observable<LigneCommande> {
-    return this.http.put<LigneCommande>(`${this.apiUrl}/updateQuantite/${dto.idLigneCommande}`, dto).pipe(
+    return this.http.put<LigneCommande>(
+      `${this.apiUrl}/updateQuantite/${dto.idLigneCommande}`,
+      dto
+    ).pipe(
       tap(response => console.log('Update response:', response)),
       catchError(error => {
         console.error('Update error:', error);

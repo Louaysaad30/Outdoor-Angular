@@ -19,8 +19,7 @@ export class CartComponent implements OnInit {
 
   cartData: LigneCommande[] = [];
   subtotal: number = 0;
-  shippingRate: number = 65;
-  tax: number = 0;
+  flatFee: number = 1; // Add flat fee property
   totalprice: number = 0;
   userId: number = 1;
 
@@ -113,13 +112,21 @@ export class CartComponent implements OnInit {
     if (newQty !== currentQty && this.cartData[index]) {
       const ligne = this.cartData[index];
 
-      // Créer un DTO simple avec uniquement l'ID et la nouvelle quantité
+      // Temporarily update quantity to calculate new total
+      const originalQty = this.cartData[index].quantite;
+      this.cartData[index].quantite = newQty;
+      this.calculateTotals();
+
       const updateDto: UpdateQuantiteDTO = {
         idLigneCommande: ligne.idLigneCommande!,
-        quantite: newQty
+        quantite: newQty,
+        idPanier: ligne.panier?.idPanier!,
+        total: this.subtotal // Send subtotal instead of totalprice to database
       };
 
-      // Attendre la confirmation du serveur avant de mettre à jour l'UI
+      // Restore original quantity until server confirms update
+      this.cartData[index].quantite = originalQty;
+
       this.ligneCommandeService.updateLigneCommande(updateDto).pipe(
         tap(updatedLigne => {
           if (updatedLigne && updatedLigne.quantite) {
@@ -128,7 +135,8 @@ export class CartComponent implements OnInit {
           }
         }),
         catchError(error => {
-          console.error('Error updating quantity:', error);
+          console.error('Error updating quantity and total:', error);
+          this.calculateTotals();
           return EMPTY;
         })
       ).subscribe();
@@ -164,18 +172,22 @@ export class CartComponent implements OnInit {
 
   private calculateTotals(): void {
     this.subtotal = this.cartData.reduce((sum, item) =>
-      sum + (item.produit.prixProduit * item.quantite), 0);
-    this.tax = this.subtotal * 0.18; // 18% tax
-    this.totalprice = this.subtotal + this.tax + this.shippingRate;
+        sum + (item.produit.prixProduit * item.quantite), 0);
+    // Only store subtotal in database, but display total with fee in UI
+    this.totalprice = this.subtotal;
 
     console.log('Totals calculated:', {
-      subtotal: this.subtotal,
-      tax: this.tax,
-      total: this.totalprice
+        subtotal: this.subtotal,
+        total: this.totalprice
     });
   }
 
   updateCartTotals(): void {
     this.calculateTotals();
+  }
+
+  // Add method to get display total (for UI only)
+  getDisplayTotal(): number {
+    return this.totalprice + this.flatFee;
   }
 }

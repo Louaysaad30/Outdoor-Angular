@@ -75,20 +75,15 @@
                                             <td class="fw-semibold" colspan="2">Sub Total :</td>
                                             <td class="fw-semibold text-end cart-subtotal">${{subtotal}}</td>
                                         </tr>
-
                                         <tr>
-                                            <td colspan="2">Shipping Charge :</td>
-                                            <td class="text-end cart-shipping">${{shippingRate}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Estimated Tax (18%): </td>
-                                            <td class="text-end cart-tax">${{tax}}</td>
+                                            <td colspan="2">Service Fee :</td>
+                                            <td class="text-end cart-fee">${{flatFee}}</td>
                                         </tr>
                                         <tr>
                                             <th colspan="2">Total (USD) :</th>
                                             <td class="text-end">
                                                 <span class="fw-semibold cart-total">
-                                                    ${{totalprice}}
+                                                    ${{getDisplayTotal()}}
                                                 </span>
                                             </td>
                                         </tr>
@@ -98,8 +93,7 @@
 
                             <div class="text-end mt-4">
                                 <a routerLink="/ecommerce/products-grid" class="btn btn-secondary me-1">Continue Shopping</a>
-                                <a routerLink="/ecommerce/checkout" class="btn btn-primary me-1">Checkout</a>
-                                <a routerLink="/marketplacefront/user/market-place" class="btn btn-secondary me-1">Return to the Market</a>
+                                <a routerLink="/marketplacefront/user/market-place" class="btn btn-primary me-1">Return to the Market</a>
                             </div>
                         </div>
                     </div>

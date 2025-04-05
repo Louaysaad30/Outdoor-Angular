@@ -12,6 +12,7 @@ export class Product {
   codeProduit!: CodeProduit ;
   imageProduit!:string;
   prixProduit!: number;
+  dateCreation!: Date; // Add creation date field
   stockProduit!: number;
   categorie!:PCategorie;
   ligneCommande!:LigneCommande[];

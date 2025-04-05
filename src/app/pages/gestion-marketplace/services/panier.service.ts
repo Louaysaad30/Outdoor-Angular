@@ -55,4 +55,16 @@ export class PanierService {
       })
     );
   }
+
+  // Update Panier total
+  updatePanierTotal(panierId: number, total: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/updateTotal/${panierId}`, { total })
+      .pipe(
+        tap(response => console.log('Update total response:', response)),
+        catchError(error => {
+          console.error('Error updating total:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 }

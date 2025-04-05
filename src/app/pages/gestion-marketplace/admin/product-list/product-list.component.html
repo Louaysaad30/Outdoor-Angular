@@ -55,9 +55,46 @@
                           <thead class="table-light">
                               <tr>
                                   <th class="sort" (click)="onSort('nomProduit')">Product Name</th>
-                                  <th class="sort" (click)="onSort('categorie')">Category</th>
-                                  <th class="sort" (click)="onSort('prixProduit')">Price</th>
-                                  <th class="sort" (click)="onSort('stockProduit')">Stock</th>
+                                  <th class="sort" (click)="onSort('categorie')">
+                                      Category
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'categorie' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'categorie' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'categorie'">
+                                          </i>
+                                      </span>
+                                  </th>
+                                  <th class="sort" (click)="onSort('prixProduit')">
+                                      Price
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'prixProduit' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'prixProduit' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'prixProduit'">
+                                          </i>
+                                      </span>
+                                  </th>
+                                  <th class="sort" (click)="onSort('stockProduit')">
+                                      Stock
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'stockProduit' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'stockProduit' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'stockProduit'">
+                                          </i>
+                                      </span>
+                                  </th>
+                                  <th class="sort" (click)="onSort('dateCreation')">
+                                      Created On
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'dateCreation' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'dateCreation' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'dateCreation'">
+                                          </i>
+                                      </span>
+                                  </th>
                                   <th>Actions</th>
                               </tr>
                           </thead>
@@ -76,6 +113,9 @@
                                   <td>{{product.categorie?.nomCategorie || 'Uncategorized'}}</td>
                                   <td>{{product.prixProduit | currency}}</td>
                                   <td>{{product.stockProduit}}</td>
+                                  <td>
+                                      {{product.dateCreation | date:'medium'}}
+                                  </td>
                                   <td>
                                       <div class="d-flex gap-2">
                                           <button class="btn btn-sm btn-danger" (click)="removeItem(product.idProduit)">

@@ -134,14 +134,15 @@ export class AddProductComponent implements OnInit {
             throw new Error('No image URL received');
           }
 
-          // First create the product
+          // Create the product with current date
           const product: Partial<Product> = {
             nomProduit: this.productForm.value.nomProduit,
             descriptionProduit: this.productForm.value.descriptionProduit,
             prixProduit: Number(this.productForm.value.prixProduit),
             stockProduit: Number(this.productForm.value.stockProduit),
             imageProduit: imageUrl,
-            categorie: this.productForm.value.categorie
+            categorie: this.productForm.value.categorie,
+            dateCreation: new Date() // Add current date
           };
 
           return this.productService.addProduct(product as Product);
