@@ -67,7 +67,9 @@ export class SignupComponent {
             title: 'Registration successful',
             text: 'You have been successfully registered.',
           });
-          this.router.navigate(['/auth/signin']);
+          this.router.navigate(['/auth/twostep'], {
+            queryParams: { email: this.registrationForm.value.email }
+          });
         },
         (error) => {
           console.error('Registration failed', error);

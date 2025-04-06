@@ -10,7 +10,6 @@ import { LockscreenComponent } from './lockscreen/lockscreen.component';
 import { LogoutComponent } from './logout/logout.component';
 import { SuccessMsgComponent } from './success-msg/success-msg.component';
 import { TwostepComponent } from './twostep/twostep.component';
-import { AuthlayoutComponent } from 'src/app/authlayout/authlayout.component';
 
 const routes: Routes = [
   {
@@ -45,9 +44,6 @@ const routes: Routes = [
     path: 'twostep',
     component: TwostepComponent,
   }, 
-  {
-    path: 'home', component:AuthlayoutComponent
-  },
   {
     path: 'errors', loadChildren: () => import('./errors/errors.module').then(m => m.ErrorsModule)
   },

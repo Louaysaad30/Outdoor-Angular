@@ -21,7 +21,8 @@ export class SigninComponent {
   loginForm: FormGroup;
   errorLoginMessage = '';
 
-  
+  currentUser: any | null = null;
+
   constructor(private authService: AuthServiceService,private router:Router) {
     this.loginForm = new FormGroup({
       email: new FormControl('', [Validators.required, Validators.email]), // Added email validator
@@ -49,8 +50,32 @@ export class SigninComponent {
           });
   
           this.authService.handleLoginSuccess(response);
-          this.router.navigate(['/auth/home']);
+          
+        //  this.router.navigate(['/userfront']);
+          this.currentUser = this.authService.getSessionUser();
+          console.log('Current user:', this.currentUser);
+          localStorage.setItem('user', JSON.stringify(this.currentUser));
+          const authority = this.currentUser.authorities[0]?.authority;
 
+
+          // Navigation selon le rôle
+          if (authority === 'ADMIN') {
+            this.router.navigate(['/userback']);
+          } else if (authority === 'USER') {
+            this.router.navigate(['/userfront']);
+          } else {
+            // fallback (si aucun rôle reconnu)
+            this.router.navigate(['/auth/signin']);
+          }
+          // case 'OWNER':
+          //   this.router.navigate(['/campingback']);
+          //   break;
+          // case 'FORMATEUR':
+          //   this.router.navigate(['/formationback']);
+          //   break;
+          // case 'EVENT_MANAGER':
+          //   this.router.navigate(['/eventback']);
+      
         },
         (error) => {
           console.error('Login error:', error);

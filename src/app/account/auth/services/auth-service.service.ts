@@ -88,6 +88,12 @@ export class AuthServiceService {
   activateAccount(token: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/activate-account?token=${token}`);
   }
+  resendActivationToken(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/resend-token`, null, {
+      params: { email },
+    });
+  }
+  
   logout() {
     localStorage.removeItem('authToken');
     sessionStorage.removeItem('currentUser');
