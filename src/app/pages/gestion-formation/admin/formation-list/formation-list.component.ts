@@ -16,14 +16,18 @@ export class FormationListComponent implements OnInit {
   listData: any[] = [];
   gridlist: any[] = [];
   term: string = '';
+  statusFilter: string = '';
   submitted = false;
   deleteID: any;
 
+  categories: any[] = [];
+  sponsors: any[] = [];
+
+  mode: string = 'presentiel';
   isPresentiel = true;
   isOnline = false;
 
-  categories: any[] = [];
-  sponsors: any[] = [];
+  viewMode: 'grid' | 'list' = 'grid';
 
   @ViewChild('addFormationModal', { static: false }) addFormationModal?: ModalDirective;
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
@@ -46,20 +50,20 @@ export class FormationListComponent implements OnInit {
     this.formationForm = this.fb.group({
       id: [''],
       name: ['', Validators.required],
-      img: [''],
       description: ['', Validators.required],
       price: ['', Validators.required],
+      img: ['', Validators.required],
       publicationDate: ['', Validators.required],
       dateDebut: ['', Validators.required],
       dateFin: ['', Validators.required],
       mode: ['presentiel', Validators.required],
-      lieu: [{ value: '', disabled: false }],
-      titrePause: [{ value: '', disabled: false }],
-      dureePauseMinutes: [{ value: '', disabled: false }],
-      besoinSponsor: [{ value: false, disabled: false }],
-      sponsorId: [{ value: '', disabled: false }],
-      meetLink: [{ value: '', disabled: false }],
-      categorieId: ['', Validators.required]
+      lieu: [''],
+      titrePause: [''],
+      dureePauseMinutes: [''],
+      besoinSponsor: [false],
+      sponsorId: [''],
+      meetLink: [''],
+      categorieId: ['', Validators.required],
     });
 
     this.onModeChange();
@@ -103,42 +107,26 @@ export class FormationListComponent implements OnInit {
   }
 
   onModeChange() {
-    const mode = this.formationForm.get('mode')?.value;
-    this.isPresentiel = mode === 'presentiel';
-    this.isOnline = mode === 'enligne';
-
-    const lieu = this.formationForm.get('lieu');
-    const titrePause = this.formationForm.get('titrePause');
-    const dureePause = this.formationForm.get('dureePauseMinutes');
-    const besoinSponsor = this.formationForm.get('besoinSponsor');
-    const sponsorId = this.formationForm.get('sponsorId');
-    const meetLink = this.formationForm.get('meetLink');
+    this.mode = this.formationForm.get('mode')?.value;
+    this.isPresentiel = this.mode === 'presentiel';
+    this.isOnline = this.mode === 'enligne';
 
     if (this.isPresentiel) {
-      lieu?.enable();
-      titrePause?.enable();
-      dureePause?.enable();
-      besoinSponsor?.enable();
-      sponsorId?.enable();
-      meetLink?.disable();
+      this.formationForm.get('meetLink')?.disable();
+      this.formationForm.get('lieu')?.enable();
     } else {
-      lieu?.disable();
-      titrePause?.disable();
-      dureePause?.disable();
-      besoinSponsor?.disable();
-      sponsorId?.disable();
-      meetLink?.enable();
+      this.formationForm.get('meetLink')?.enable();
+      this.formationForm.get('lieu')?.disable();
     }
   }
 
   onSponsorChange() {
-    const sponsorId = this.formationForm.get('sponsorId');
-    const besoin = this.formationForm.get('besoinSponsor')?.value;
-    if (besoin) {
-      sponsorId?.enable();
+    const besoinSponsor = this.formationForm.get('besoinSponsor')?.value;
+    if (besoinSponsor) {
+      this.formationForm.get('sponsorId')?.enable();
     } else {
-      sponsorId?.disable();
-      sponsorId?.reset();
+      this.formationForm.get('sponsorId')?.setValue('');
+      this.formationForm.get('sponsorId')?.disable();
     }
   }
 
@@ -146,18 +134,22 @@ export class FormationListComponent implements OnInit {
     this.uploadedFiles = [];
     this.formationForm.reset();
     this.formationForm.get('mode')?.setValue('presentiel');
+    this.formationForm.get('meetLink')?.disable();
+    this.formationForm.get('lieu')?.enable();
+    this.formationForm.get('sponsorId')?.disable();
     this.onModeChange();
     this.addFormationModal?.show();
   }
 
   saveFormation() {
     if (this.formationForm.valid) {
-      if (this.formationForm.get('id')?.value) {
-        this.formationService.updateFormation(this.formationForm.value).subscribe(() => {
+      const formation = this.formationForm.value;
+      if (formation.id) {
+        this.formationService.updateFormation(formation).subscribe(() => {
           this.loadFormations();
         });
       } else {
-        this.formationService.createFormation(this.formationForm.value).subscribe(() => {
+        this.formationService.createFormation(formation).subscribe(() => {
           this.loadFormations();
         });
       }
@@ -174,6 +166,7 @@ export class FormationListComponent implements OnInit {
     this.formationForm.patchValue(data);
     this.uploadedFiles = [{ dataURL: data.img, name: 'image', size: 1024 }];
     this.onModeChange();
+    this.onSponsorChange();
     this.addFormationModal?.show();
   }
 
@@ -185,11 +178,11 @@ export class FormationListComponent implements OnInit {
   }
 
   filterdata() {
-    if (this.term) {
-      this.listData = this.gridlist.filter(f => f.name?.toLowerCase().includes(this.term.toLowerCase()));
-    } else {
-      this.listData = this.gridlist.slice(0, 10);
-    }
+    this.listData = this.gridlist.filter(f => {
+      const matchesTitle = f.name.toLowerCase().includes(this.term.toLowerCase());
+      const matchesStatus = !this.statusFilter || f.status === this.statusFilter;
+      return matchesTitle && matchesStatus;
+    });
   }
 
   pageChanged(event: any) {

@@ -3,149 +3,91 @@
 <!-- End Breadcrumbs -->
 
 <div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center gy-3">
-                    <div class="col-lg-3 order-last order-md-first me-auto">
-                        <div class="search-box">
-                            <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterdata()" placeholder="Search by title...">
-                            <i class="ri-search-line search-icon"></i>
-                        </div>
-                    </div>
-                    <div class="col-lg-auto text-end">
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary" (click)="openAddFormationModal()">
-                                <i class="bi bi-person-plus align-baseline me-1"></i> Add Formation
-                            </button>
-                        </div>
-                    </div>
-                </div>
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row align-items-center gy-3">
+          <!-- Search -->
+          <div class="col-lg-3 order-last order-md-first me-auto">
+            <div class="search-box">
+              <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterdata()" placeholder="Search for title...">
+              <i class="ri-search-line search-icon"></i>
             </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-lg-2">
+            <div>
+              <select class="form-select" [(ngModel)]="statusFilter">
+                <option value="">All</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Add Button + View Switch -->
+          <div class="col-lg-auto text-end">
+            <div class="d-flex gap-2">
+              <button class="btn btn-secondary" (click)="openAddFormationModal()">
+                <i class="bi bi-person-plus align-baseline me-1"></i> Add Formation
+              </button>
+
+              <!-- Grid View -->
+              <button class="btn btn-subtle-primary btn-icon" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
+                <i class="bi bi-grid"></i>
+              </button>
+
+              <!-- List View -->
+              <button class="btn btn-subtle-primary btn-icon" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+                <i class="bi bi-list-task"></i>
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Cards -->
-<div class="row row-cols-xl-5 row-cols-sm-2 row-cols-1">
-    <div class="col" *ngFor="let data of listData">
-        <div class="card overflow-hidden">
-            <div class="card-body text-center">
-                <img [src]="data.img" alt="" class="avatar-lg">
-            </div>
-            <div class="card-body">
-                <h6 class="text-truncate fs-md text-capitalize">
-                    {{ data.name }}
-                </h6>
-                <p class="text-muted">{{ data.category?.nom }}</p>
-                <p class="text-muted"><i class="bi bi-clock"></i> {{ data.dateDebut | date:'shortTime' }} - {{ data.dateFin | date:'shortTime' }}</p>
-            </div>
-        </div>
+<!-- Grid View -->
+<div *ngIf="viewMode === 'grid'" class="row row-cols-xl-5 row-cols-sm-2 row-cols-1">
+  <div class="col" *ngFor="let data of listData">
+    <div class="card overflow-hidden">
+      <div class="card-body text-center">
+        <img [src]="data.img" alt="" class="avatar-lg">
+      </div>
+      <div class="card-body">
+        <h6 class="text-truncate fs-md text-capitalize">{{ data.name }}</h6>
+        <p class="text-muted">{{ data.category?.nom }}</p>
+        <p class="text-muted">
+          <i class="bi bi-clock"></i> {{ data.dateDebut | date:'shortTime' }} - {{ data.dateFin | date:'shortTime' }}
+        </p>
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Modal: Add Formation -->
-<div bsModal #addFormationModal="bs-modal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content border-0">
-            <div class="modal-header bg-primary p-3">
-                <h5 class="modal-title text-white">Add Formation</h5>
-                <button type="button" class="btn-close btn-close-white" (click)="addFormationModal.hide()"></button>
-            </div>
-
-            <form [formGroup]="formationForm" (ngSubmit)="saveFormation()">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-control" formControlName="name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" formControlName="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Price</label>
-                        <input type="number" class="form-control" formControlName="price">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Image URL (Cloudinary)</label>
-                        <input type="text" class="form-control" formControlName="img">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Publication Date</label>
-                        <input type="datetime-local" class="form-control" formControlName="publicationDate">
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-6 mb-3">
-                            <label class="form-label">Start Time</label>
-                            <input type="datetime-local" class="form-control" formControlName="dateDebut">
-                        </div>
-                        <div class="col-lg-6 mb-3">
-                            <label class="form-label">End Time</label>
-                            <input type="datetime-local" class="form-control" formControlName="dateFin">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Mode</label>
-                        <select class="form-select" formControlName="mode" (change)="onModeChange()">
-                            <option value="presentiel">Présentiel</option>
-                            <option value="enligne">En ligne</option>
-                        </select>
-                    </div>
-
-                    <!-- Présentiel -->
-                    <div *ngIf="isPresentiel">
-                        <div class="mb-3">
-                            <label class="form-label">Lieu</label>
-                            <input type="text" class="form-control" formControlName="lieu">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Titre de Pause</label>
-                            <input type="text" class="form-control" formControlName="titrePause">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Durée de Pause (minutes)</label>
-                            <input type="number" class="form-control" formControlName="dureePauseMinutes">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Besoin de Sponsor ?</label>
-                            <select class="form-select" formControlName="besoinSponsor" (change)="onSponsorChange()">
-                                <option [value]="true">Oui</option>
-                                <option [value]="false">Non</option>
-                            </select>
-                        </div>
-                        <div *ngIf="formationForm.get('besoinSponsor')?.value">
-                            <label class="form-label">Sponsor</label>
-                            <select class="form-select" formControlName="sponsorId">
-                                <option *ngFor="let s of sponsors" [value]="s.id">{{ s.nom }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- En ligne -->
-                    <div *ngIf="isOnline">
-                        <div class="mb-3">
-                            <label class="form-label">Meet Link</label>
-                            <input type="url" class="form-control" formControlName="meetLink">
-                        </div>
-                    </div>
-
-                    <!-- Categorie -->
-                    <div class="mb-3">
-                        <label class="form-label">Catégorie</label>
-                        <select class="form-select" formControlName="categorieId">
-                            <option *ngFor="let c of categories" [value]="c.id">{{ c.nom }}</option>
-                        </select>
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" (click)="addFormationModal.hide()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<!-- List View -->
+<div *ngIf="viewMode === 'list'" class="table-responsive mt-4">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Mode</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let data of listData">
+        <td>{{ data.name }}</td>
+        <td>{{ data.category?.nom }}</td>
+        <td>{{ data.dateDebut | date:'short' }}</td>
+        <td>{{ data.dateFin | date:'short' }}</td>
+        <td>{{ data.mode === 'presentiel' ? 'Présentiel' : 'En ligne' }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
