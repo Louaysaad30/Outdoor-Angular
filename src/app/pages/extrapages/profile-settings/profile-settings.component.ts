@@ -9,7 +9,8 @@ import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
 })
 
 // Profile Setting component
-export class ProfileSettingsComponent {
+export class ProfileSettingsComponent 
+{
 
   // bread crumb items
   breadCrumbItems!: Array<{}>;
@@ -111,5 +112,4 @@ export class ProfileSettingsComponent {
   }
 
 }
-
 

@@ -10,7 +10,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import {LayoutsUserComponent} from "./layouts-user/layouts-user.component";
 
 const routes: Routes = [
-  { path: '', component: LayoutComponent, loadChildren: () => import('./pages/pages.module').then(m => m.PagesModule) ,canActivate: [AuthGuard] },
+  { path: '', component: LayoutComponent, loadChildren: () => import('./pages/pages.module').then(m => m.PagesModule)  },
   { path: 'auth', component: AuthlayoutComponent, loadChildren: () => import('./account/account.module').then(m => m.AccountModule) },
   { path: 'pages',component: AuthlayoutComponent, loadChildren: () => import('./extraspages/extraspages.module').then(m => m.ExtraspagesModule)},
   { path: 'userback', component: LayoutComponent, loadChildren: () => import('./pages/gestion-user/gestion-user.module').then(m => m.GestionUserModule) ,  canActivate: [ roleGuard] ,  data: { role: 'ADMIN' }},

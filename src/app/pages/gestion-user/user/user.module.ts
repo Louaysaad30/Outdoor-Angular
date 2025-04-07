@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TabsModule } from 'ngx-bootstrap/tabs';
 
 import { UserRoutingModule } from './user-routing.module';
 
@@ -8,7 +9,8 @@ import { UserRoutingModule } from './user-routing.module';
   declarations: [],
   imports: [
     CommonModule,
-    UserRoutingModule
+    UserRoutingModule,
+    
   ]
 })
 export class UserModule { }

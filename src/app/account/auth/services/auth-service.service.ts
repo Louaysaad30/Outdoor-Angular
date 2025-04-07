@@ -99,4 +99,8 @@ export class AuthServiceService {
     sessionStorage.removeItem('currentUser');
     this.currentUserSubject.next(null); // Clear BehaviorSubject
   }
+  verifyPassword(userId: number, password: string): Observable<any> {
+    const body = { userId, password };
+    return this.http.post(`${this.apiUrl}/verify-password`, body); // Ensure the URL matches the backend
+  }
 }
