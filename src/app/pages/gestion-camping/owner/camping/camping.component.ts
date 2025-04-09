@@ -116,7 +116,9 @@ export class CampingComponent {
       latitude: ['', Validators.required],
       address: ['', Validators.required],
       capcite: ['', Validators.required],
-      image: ['', Validators.required]
+      image: ['', Validators.required],
+      prixJr: [0, Validators.required] // Add this line
+
     });
 
     this.editCampingForm = this.formBuilder.group({
@@ -125,7 +127,9 @@ export class CampingComponent {
       latitude: ['', Validators.required],
       address: ['', Validators.required],
       capcite: ['', Validators.required],
-      image: ['', Validators.required]
+      image: ['', Validators.required],
+      prixJr: [0, Validators.required] // Add this line
+
 
     });
 
