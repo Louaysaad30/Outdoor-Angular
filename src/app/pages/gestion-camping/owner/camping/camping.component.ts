@@ -99,7 +99,7 @@ export class CampingComponent {
 
   deleteID: any;
   editData: any;
-
+  currentUser: any;
   constructor(private formBuilder: UntypedFormBuilder,
               public store: Store,
               private centreCampingService: CentreCampingService,
@@ -107,6 +107,7 @@ export class CampingComponent {
   }
 
   ngOnInit(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user')!);
 
     this.getCentreCampingList();
 
@@ -252,7 +253,7 @@ export class CampingComponent {
     if (this.centreCampingForm.valid) {
 
       const formData = this.centreCampingForm.value;
-
+      formData.idOwner = this.currentUser.id; 
       this.centreCampingService.addCentreCamping(formData).subscribe({
         next: (response) => {
           console.log('Camping center added:', response);
