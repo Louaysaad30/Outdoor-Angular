@@ -1,0 +1,11 @@
+.review-card {
+    transition: transform 0.3s ease;
+    border-radius: 12px;
+    background: #fff;
+  }
+  
+  .review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+  

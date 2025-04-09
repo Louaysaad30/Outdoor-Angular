@@ -14,11 +14,11 @@ export class VehiculeListComponent implements OnInit {
   vehicules: Vehicule[] = [];
   filteredVehicules: Vehicule[] = [];
   searchTerm: string = '';
-  vehiculeTypes: string[] = ['SUV', 'Sedan', 'Truck', 'Van']; 
-  vehiculeBrands: string[] = ['Toyota', 'Honda', 'Ford', 'BMW']; 
+  vehiculeTypes: string[] = ['VOITURE', 'MOTO', 'VELO', 'BUS', 'MINIBUS'];
+  vehiculeBrands: string[] = ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Nissan', 'Chevrolet', 'Hyundai'];
 
   pricevalue: number = 10;
-  maxVal: number = 100;
+  maxVal: number = 1000;
   minVal: number = 0;
   isLoading: boolean = true;
 
@@ -88,7 +88,7 @@ export class VehiculeListComponent implements OnInit {
   }
 
   goToDetail(id: number): void {
-    this.router.navigate(['/transportfront/user/detail-vehicule/${id}']);
+    this.router.navigate([`/transportfront/user/detail-vehicule/${id}`]);
   }
 
   // Handle price slider changes

@@ -1,77 +1,143 @@
 <div class="row">
-    <!-- vehicule Image -->
-    <div class="col-xxl-4">
-        <div class="card p-3 sticky-side-div">
-            <div class="product-img-slider">
-                <!-- Single Image Display -->
-                <div class="p-5 mx-4">
-                    <img *ngIf="vehicule?.image" [src]="vehicule?.image" alt="vehicule Image" class="img-fluid d-block">
-                </div>
-            </div>
+  <!-- vehicule Image -->
+  <div class="col-xxl-4">
+    <div class="card p-3 sticky-side-div">
+      <div class="product-img-slider">
+        <!-- Single Image Display -->
+        <div class="p-5 mx-4">
+          <img *ngIf="vehicule?.image" [src]="vehicule?.image" alt="vehicule Image" class="img-fluid d-block">
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- vehicule Details -->
+  <div class="col-xxl-8">
+    <div class="row g-0">
+      <div class="col-xxl-8">
+        <div class="card rounded-end-0">
+          <div class="card-body p-4">
+            <p class="text-muted float-md-end mb-md-0"><a href="javascript:void(0);"><i class="ph-storefront align-middle me-1"></i> Visit Store</a></p>
+            <h4 class="text-capitalize mb-3">{{ vehicule?.modele }}</h4>
+            <div class="hstack gap-3 flex-wrap mb-4">
+              <div class="text-muted"><b class="text-body fw-medium">{{ vehicule?.nbPlace }} Seats</b></div>
+              <div class="vr"></div>
+              <div class="text-muted"><b class="text-body fw-medium">{{ vehicule?.disponible ? 'Available' : 'Not Available' }}</b></div>
+              <div class="vr"></div>
+              <div class="text-muted">Location: <span class="text-body fw-medium">{{ vehicule?.localisation }}</span></div>
+            </div>
+
+            <h6 class="fs-md mb-3">Pricing:</h6>
+            <div class="d-flex flex-wrap gap-2">
+              <p class="text-muted"><b>Price per day:</b> ${{ vehicule?.prixParJour }}</p>
+            </div>
+
+            <div class="mt-4">
+              <h5 class="fs-md mb-3">Vehicle Rating:</h5>
+              <div style="font-size: 25px; color: #f6b749;">
+                <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+                  <i class="bi" [ngClass]="(vehicule?.rating || 0) >= star ? 'bi-star-fill' : 'bi-star'"></i>
+                </ng-container>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <h5 class="fs-md mb-3">Vehicle Type:</h5>
+              <p class="text-muted">{{ vehicule?.type }}</p>
+            </div>
+
+            <div class="mt-4">
+              <h5 class="fs-md mb-3">Status:</h5>
+              <p class="text-muted">{{ vehicule?.statut }}</p>
+            </div>
+          </div>
+        </div><!--end card-->
+      </div><!--end col-->
+
+      <!-- Sidebar with Actions (Reserve) -->
+      <div class="col-xxl-4">
+        <div class="card card-height-100 border-start rounded-start-0">
+          <div class="card-body p-4">
+            <div class="mt-4 d-flex gap-2">
+              <!-- Reserve Button (Redirect to form-vehicule) -->
+              <button [routerLink]="['/transportfront/user/reservation', vehicule?.id]" class="btn btn-primary w-100">
+                Réserver
+              </button>
+            </div>
+          </div>
+        </div><!--end card-->
+      </div><!--end col-->
+    </div><!--end row-->
+  </div><!--end col-->
+</div><!--end row-->
+
+<h3>Reviews</h3>
+<!-- Liste des avis -->
+<div *ngIf="reviews.length > 0" class="row g-3">
+  <div class="col-md-6" *ngFor="let review of reviews">
+    <div class="card shadow-sm h-100 border-0 p-3 review-card animate__animated animate__fadeIn">
+      <div class="d-flex align-items-center mb-2">
+        <!-- Etoiles -->
+        <div class="me-2" style="font-size: 20px; color: #f6b749;">
+          <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+            <i class="bi" [ngClass]="review.rating >= star ? 'bi-star-fill' : 'bi-star'"></i>
+          </ng-container>
+        </div>
+        <!-- Date -->
+        <small class="text-muted ms-auto">
+          {{ review.createdDate | date:'shortDate' }}
+        </small>
+      </div>
+
+      <!-- Commentaire -->
+      <p class="mb-2 text-dark fw-medium">{{ review.comment }}</p>
+
+      <!-- Bouton supprimer si besoin -->
+      <div class="text-end">
+        <button class="btn btn-sm btn-outline-danger" (click)="deleteReview(review.id!)">
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Aucun avis -->
+<div *ngIf="reviews.length === 0">
+  <p class="text-muted">Aucun avis pour ce véhicule.</p>
+</div>
+  
+<!-- Bouton pour afficher le formulaire -->
+<div class="my-4">
+  <button class="btn btn-primary" (click)="toggleReviewForm()">
+    {{ showForm ? 'Annuler' : 'Ajouter un avis' }}
+  </button>
+</div>
+  
+<!-- Formulaire d'ajout d'avis -->
+<div *ngIf="showForm" class="card p-3 mb-4">
+  <form [formGroup]="reviewForm" (ngSubmit)="saveReview()">
+    <div class="mb-3">
+      <label for="rating" class="form-label">Note</label>
+      <select id="rating" formControlName="rating" class="form-select">
+        <option [ngValue]="null" disabled>Choisir une note</option>
+        <option *ngFor="let r of [1, 2, 3, 4, 5]" [value]="r">{{ r }} ★</option>
+      </select>
     </div>
 
-    <!-- vehicule Details -->
-    <div class="col-xxl-8">
-        <div class="row g-0">
-            <div class="col-xxl-8">
+    <div class="mb-3">
+      <label for="comment" class="form-label">Commentaire</label>
+      <textarea
+        id="comment"
+        formControlName="comment"
+        class="form-control"
+        rows="3"
+        placeholder="Écrivez votre avis..."
+      ></textarea>
+    </div>
 
-                <div class="card rounded-end-0">
-                    
-                    <div class="card-body p-4">
-                        <p class="text-muted float-md-end mb-md-0"><a href="javascript:void(0);"><i class="ph-storefront align-middle me-1"></i> Visit Store</a></p>
-                        <h4 class="text-capitalize mb-3">{{ vehicule?.modele }}</h4>
-                        <div class="hstack gap-3 flex-wrap mb-4">
-                            <div class="text-muted"><b class="text-body fw-medium">{{ vehicule?.nbPlace }} Seats</b></div>
-                            <div class="vr"></div>
-                            <div class="text-muted"><b class="text-body fw-medium">{{ vehicule?.disponible ? 'Available' : 'Not Available' }}</b></div>
-                            <div class="vr"></div>
-                            <div class="text-muted">Location: <span class="text-body fw-medium">{{ vehicule?.localisation }}</span></div>
-                        </div>
-
-                        <h6 class="fs-md mb-3">Pricing:</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <p class="text-muted"><b>Price per day:</b> ${{ vehicule?.prixParJour }}</p>
-                        </div>
-
-                        <div class="mt-4">
-                            <h5 class="fs-md mb-3">vehicule Rating:</h5>
-                            <div style="font-size: 25px; color: #f6b749;">
-                                <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
-                                    <i class="bi" [ngClass]="(vehicule?.rating || 0) >= star ? 'bi-star-fill' : 'bi-star'"></i>
-                                </ng-container>
-                              </div>
-                              
-                        </div>
-
-                        
-                        <div class="mt-4">
-                            <h5 class="fs-md mb-3">vehicule Type:</h5>
-                            <p class="text-muted">{{ vehicule?.type }}</p>
-                        </div>
-
-                        <div class="mt-4">
-                            <h5 class="fs-md mb-3">Status:</h5>
-                            <p class="text-muted">{{ vehicule?.statut }}</p>
-                        </div>
-                    </div>
-                </div><!--end card-->
-            </div><!--end col-->
-
-            <!-- Sidebar with Actions (Reserve) -->
-            <div class="col-xxl-4">
-                <div class="card card-height-100 border-start rounded-start-0">
-                    <div class="card-body p-4">
-                        <div class="mt-4 d-flex gap-2">
-                            <!-- Reserve Button (Redirect to form-vehicule) -->
-                            <button [routerLink]="['/transportfront/user/reservation', vehicule?.id]" class="btn btn-primary w-100">
-                                Réserver
-                              </button>
-                              
-                        </div>
-                    </div>
-                </div><!--end card-->
-            </div><!--end col-->
-        </div><!--end row-->
-    </div><!--end col-->
-</div><!--end row-->
+    <button type="submit" class="btn btn-success" [disabled]="reviewForm.invalid">
+      Envoyer l'avis
+    </button>
+  </form>
+</div>
