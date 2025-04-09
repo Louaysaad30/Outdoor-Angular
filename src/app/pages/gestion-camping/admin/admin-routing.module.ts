@@ -1,9 +1,11 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import {CampingComponent} from "./camping/camping.component";
+import {CampingComponent} from "../owner/camping/camping.component";
+import {CampingAdminComponent} from "./camping-admin/camping-admin.component";
 
 const routes: Routes = [
-  {path:"camping",component:CampingComponent},
+  {path:"camping",component:CampingAdminComponent},
+
 ];
 
 @NgModule({
