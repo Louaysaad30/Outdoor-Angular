@@ -1,3 +1,4 @@
+
 import { ChartOptions } from "./column.model";
 
 /**
@@ -2451,7 +2452,7 @@ const dynamicLoadedChart: ChartOptions = {
   },
   colors: colors,
   states: {
-    normal: {
+    hover: {
         filter: {
             type: "desaturate",
         },
@@ -2460,7 +2461,7 @@ const dynamicLoadedChart: ChartOptions = {
         allowMultipleDataPointsSelection: true,
         filter: {
             type: "darken",
-            value: 1,
+          //  value: 1,
         },
     },
   },

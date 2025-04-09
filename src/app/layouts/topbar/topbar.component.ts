@@ -13,6 +13,7 @@ import { Store } from '@ngrx/store';
 import { changeMode } from 'src/app/store/layouts/layout-action';
 import { getLayoutmode } from 'src/app/store/layouts/layout-selector';
 import { TokenStorageService } from 'src/app/core/services/token-storage.service';
+import { AuthServiceService } from 'src/app/account/auth/services/auth-service.service';
 
 @Component({
   selector: 'app-topbar',
@@ -60,7 +61,9 @@ export class TopbarComponent {
     private router: Router,
     public _cookiesService: CookieService,
     public store: Store<RootReducerState>,
-    private TokenStorageService: TokenStorageService) { }
+    private TokenStorageService: TokenStorageService,
+    private authServicee: AuthServiceService) { }
+   
 
   ngOnInit(): void {
     this.element = document.documentElement;
@@ -338,13 +341,10 @@ export class TopbarComponent {
   /**
    * Logout the user
    */
-  logout() {
-    this.authService.logout();
-    // if (environment.defaultauth === 'firebase') {
-    //   this.authService.logout();
-    // } else {
-    //   this.authFackservice.logout();
-    // }
-    this.router.navigate(['/auth/login']);
-  }
+      logout() {
+        this.authServicee.logout();
+        this.router.navigate(['/auth/logout']); // Redirect to login
+      
+    }
+
 }
