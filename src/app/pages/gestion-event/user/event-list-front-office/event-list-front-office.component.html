@@ -1,0 +1,102 @@
+<!-- Start Breadcrumbs -->
+              <app-breadcrumbs [title]="'Event List'" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+              <!-- End Breadcrumbs -->
+
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="row g-3">
+                        <div class="col-xl-3 col-sm-6">
+                          <div class="search-box">
+                            <input type="text" class="form-control search" placeholder="Search events..." [(ngModel)]="term" (keyup)="searchList()">
+                            <i class="ri-search-line search-icon"></i>
+                          </div>
+                        </div>
+                        <div class="col-xl-2 col-sm-6">
+<select #statusSelect class="form-control" id="eventStatus" (change)="filterByStatus(statusSelect.value)">
+  <option value="all">All Statuses</option>
+                            <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Event Cards -->
+                <div class="col-xl-3 col-lg-4 col-md-6" *ngFor="let event of displayedEvents">
+                  <div class="card">
+                    <div class="card-body p-0">
+                      <div class="position-relative">
+                        <img [src]="event.imageUrl || 'assets/images/small/img-3.jpg'" alt="Event Image"
+                             class="img-fluid rounded-top" style="height: 220px; width: 100%; object-fit: cover;">
+                        <div class="position-absolute top-0 end-0 m-2">
+                          <button class="btn btn-icon btn-sm btn-ghost-light rounded-circle">
+                            <i class="bi bi-heart"></i>
+                          </button>
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 m-2">
+                          <span class="badge"
+                                [ngClass]="{
+                                  'bg-success': event.status === 'UPCOMING',
+                                  'bg-info': event.status === 'ONGOING',
+                                  'bg-danger': event.status === 'CANCELED',
+                                  'bg-secondary': event.status === 'FINISHED'
+                                }">
+                            {{ event.status }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="p-3">
+                        <h5 class="mb-1">{{ event.title }}</h5>
+                        <p class="text-muted mb-2">
+                          <i class="bi bi-geo-alt me-1"></i> {{ getEventAreaName(event.eventArea?.id) }}
+                        </p>
+                        <p class="text-muted mb-0">
+                          <i class="bi bi-calendar-event me-1"></i>
+                          {{ event.startDate | date: 'MMM d, y, h:mm a' }}
+                        </p>
+                        <p class="text-muted text-truncate mt-2">{{ event.description }}</p>
+                        <div class="hstack gap-2 justify-content-end">
+                          <a [routerLink]="['/eventfront/user/events', event.id]" class="btn btn-sm btn-primary">View Details</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Loading Spinner -->
+              <div id="elmLoader" class="text-center py-5">
+                <div class="spinner-border text-primary avatar-md" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+
+              <!-- No results message -->
+              <div id="noresult" style="display: none;" class="py-4 text-center">
+                <div class="avatar-sm mx-auto mb-4">
+                  <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                    <i class="bi bi-search"></i>
+                  </div>
+                </div>
+                <h5>Sorry! No Events Found</h5>
+              </div>
+
+              <!-- Pagination -->
+              <div class="row align-items-center mt-4" id="pagination-element">
+                <div class="col-sm">
+                  <div class="text-muted text-center text-sm-start">
+                    Showing <span class="fw-semibold">{{ displayedEvents.length }}</span> of <span class="fw-semibold">{{ events.length }}</span> Events
+                  </div>
+                </div>
+                <div class="col-sm-auto mt-3 mt-sm-0">
+                  <pagination class="pagination-wrap hstack justify-content-center gap-2"
+                            [totalItems]="events.length"
+                            [itemsPerPage]="itemsPerPage"
+                            (pageChanged)="pageChanged($event)"></pagination>
+                </div>
+              </div>

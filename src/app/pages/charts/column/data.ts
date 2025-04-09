@@ -2461,7 +2461,7 @@ const dynamicLoadedChart: ChartOptions = {
         allowMultipleDataPointsSelection: true,
         filter: {
             type: "darken",
-          //  value: 1,
+
         },
     },
   },
