@@ -1,3 +1,4 @@
+
 import { ChartOptions } from "./column.model";
 
 /**
@@ -2460,7 +2461,7 @@ const dynamicLoadedChart: ChartOptions = {
         allowMultipleDataPointsSelection: true,
         filter: {
             type: "darken",
-            // value: 1,
+
         },
     },
   },

@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 
+
 @Component({
   selector: 'app-authlayout',
   templateUrl: './authlayout.component.html',
   styleUrls: ['./authlayout.component.scss']
 })
 export class AuthlayoutComponent {
+ 
   theme: any;
-
-  constructor() { }
 
   ngOnInit(): void {
     this.theme = document.documentElement.getAttribute('data-theme')
