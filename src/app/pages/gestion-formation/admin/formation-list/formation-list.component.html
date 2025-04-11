@@ -1,0 +1,191 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Formation Grid View" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row align-items-center gy-3">
+          <div class="col-lg-3 me-auto">
+            <div class="search-box">
+              <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterdata()" placeholder="Search for title...">
+              <i class="ri-search-line search-icon"></i>
+            </div>
+          </div>
+
+          <div class="col-lg-2">
+            <select class="form-select" [(ngModel)]="modeFilter" (change)="filterdata()">
+              <option value="">All</option>
+              <option value="presentiel">Présentiel</option>
+              <option value="enligne">En ligne</option>
+            </select>
+          </div>
+
+          <div class="col-lg-auto text-end">
+            <div class="d-flex gap-2">
+              <button class="btn btn-secondary" (click)="openAddFormationModal()">
+                <i class="bi bi-person-plus me-1"></i> Add Formation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start Formation Cards -->
+<div class="row row-cols-xl-5 row-cols-sm-2 row-cols-1">
+  <div class="col" *ngFor="let data of listData">
+    <div class="card overflow-hidden h-100">
+      <!-- Image -->
+      <div class="card-body text-center">
+        <!-- Vérifiez que l'image existe -->
+        <img *ngIf="data.imageUrl" [src]="data.imageUrl" alt="Formation Image" class="avatar-lg img-fluid" style="height: 120px; object-fit: cover;">
+        <div *ngIf="!data.imageUrl" class="no-image-placeholder">Formation Image</div>
+      </div>
+
+      <!-- Formation Info -->
+      <div class="card-body">
+        <h6 class="fs-md text-capitalize text-truncate">{{ data.name || 'No Title' }}</h6>
+
+        <p class="text-muted mb-1">
+          <strong>Prix:</strong> {{ data.price ? (data.price | currency:'USD') : 'N/A' }}
+        </p>
+
+        <p class="text-muted mb-1">
+          <strong>Catégorie:</strong> {{ data.category || 'N/A' }}
+        </p>
+
+        <p class="text-muted mb-1">
+          <i class="bi bi-clock"></i>
+          {{ data.dateDebut ? (data.dateDebut | date:'shortTime') : 'N/A' }} - 
+          {{ data.dateFin ? (data.dateFin | date:'shortTime') : 'N/A' }}
+        </p>
+
+        <p class="text-muted mb-1" *ngIf="data.mode === 'enligne'">
+          <strong>Meet:</strong> <a [href]="data.meetLink" target="_blank">{{ data.meetLink || 'N/A' }}</a>
+        </p>
+
+        <p class="text-muted mb-1" *ngIf="data.mode === 'presentiel'">
+          <strong>Lieu:</strong> {{ data.lieu || 'N/A' }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Add Formation Modal -->
+<div bsModal #addFormationModal="bs-modal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0">
+      <div class="modal-header bg-primary p-3">
+        <h5 class="modal-title text-white">Add Formation</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="addFormationModal.hide()"></button>
+      </div>
+
+      <form [formGroup]="formationForm" (ngSubmit)="saveFormation()">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Title</label>
+              <input type="text" class="form-control" formControlName="name" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Price</label>
+              <input type="number" class="form-control" formControlName="price" required>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" rows="3" formControlName="description" required></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Image</label>
+              <input type="file" class="form-control" (change)="onFileSelected($event)">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Publication Date</label>
+              <input type="datetime-local" class="form-control" formControlName="publicationDate" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Start Time</label>
+              <input type="datetime-local" class="form-control" formControlName="dateDebut">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">End Time</label>
+              <input type="datetime-local" class="form-control" formControlName="dateFin">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Mode</label>
+              <select class="form-select" formControlName="mode" (change)="onModeChange()">
+                <option value="presentiel">Présentiel</option>
+                <option value="enligne">En ligne</option>
+              </select>
+            </div>
+
+            <!-- Présentiel Section -->
+            <div *ngIf="isPresentiel" class="col-12">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Lieu</label>
+                  <input type="text" class="form-control" formControlName="lieu">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Titre de Pause</label>
+                  <input type="text" class="form-control" formControlName="titrePause">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Durée de Pause (minutes)</label>
+                  <input type="number" class="form-control" formControlName="dureePauseMinutes">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Besoin de Sponsor ?</label>
+                  <select class="form-select" formControlName="besoinSponsor" (ngModelChange)="onSponsorChange()">
+                    <option [ngValue]="true">Oui</option>
+                    <option [ngValue]="false">Non</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6" *ngIf="formationForm.get('besoinSponsor')?.value">
+                  <label class="form-label">Sponsor</label>
+                  <select class="form-select" formControlName="sponsorId">
+                    <option *ngFor="let s of sponsors" [value]="s.id">{{ s.nom }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- En Ligne Section -->
+            <div *ngIf="isOnline" class="col-md-6">
+              <label class="form-label">Meet Link</label>
+              <input type="url" class="form-control" formControlName="meetLink">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Catégorie</label>
+              <select class="form-select" formControlName="categorieId" required>
+                <option *ngFor="let c of categories" [value]="c.id">{{ c.nom }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" (click)="addFormationModal.hide()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
