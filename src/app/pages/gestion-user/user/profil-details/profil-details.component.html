@@ -1,0 +1,142 @@
+<!-- Right Column for Edit Button - Now positioned before the card -->
+<div class="col-xl-12">
+    <div class="d-flex justify-content-end mb-3">
+        <button (click)="goToEditProfile()" class="btn btn-primary">
+          <i class="ri-edit-box-line align-bottom"></i> Edit Profile
+        </button>
+      </div>
+      
+</div>
+
+
+<!-- Profile Card -->
+<div class="col-xl-6 mx-auto">
+    <div class="card">
+        <div class="card-body">
+            <!-- Share Dropdown -->
+            <div class="d-flex mb-3">
+                <div dropdown class="dropdown flex-shrink-0 ms-auto">
+                    <button dropdownToggle class="btn btn-light btn-icon btn-sm" type="button">
+                        <i class="bi bi-share"></i>
+                    </button>
+                    <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-facebook me-1 align-baseline"></i> Facebook</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-whatsapp me-1 align-baseline"></i> Whatsapp</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);"><i class="bi bi-instagram me-1 align-baseline"></i> Instagram</a></li>
+                    </ul>
+                </div>
+            </div>
+
+       <!-- Profile Header -->
+<div class="text-center border-bottom border-dashed pb-4">
+    <!-- Utilisation de l'image dynamique de l'utilisateur -->
+    <img [src]="currentUser.image || 'assets/images/users/avatar-1.jpg'" alt="" class="avatar-lg rounded-circle p-1 img-thumbnail">
+    <div class="mt-3">
+        <!-- Utilisation du nom et prénom dynamique de l'utilisateur -->
+        <h5>{{ currentUser.nom }} {{ currentUser.prenom }} <i class="bi bi-patch-check-fill align-baseline text-info ms-1"></i></h5>
+        <!-- Utilisation du statut dynamique de l'utilisateur -->
+        <p class="text-muted">{{ currentUser.authorities[0].authority || 'none' }}</p>
+    </div>
+
+    <!-- Buttons -->
+    <!-- @if (user.id === currentUser.id) {
+    <div class="d-flex gap-2 mt-4">
+        <button type="button" class="btn btn-subtle-secondary custom-toggle w-50" (click)="Followbtn($event)">
+          <span class="icon-on">
+            <i class="bi bi-person-plus align-baseline me-1"></i> Follow
+          </span>
+          <span class="icon-off">
+            <i class="bi bi-person-x align-baseline me-1"></i> Unfollow
+          </span>
+        </button>
+        <button type="button" class="btn btn-primary text-truncate w-50">
+          <i class="bi bi-chat-left-text align-baseline me-1"></i> Contact
+        </button>
+      </div>
+    } -->
+</div>
+
+<!-- Info Table -->
+<div class="border-bottom border-dashed py-4">
+    <h5 class="card-title mb-3">Information</h5>
+    <div class="table-responsive">
+        <table class="table table-borderless table-sm align-middle mb-0">
+            <tbody>
+                <tr><th class="ps-0">First Name</th><td class="text-muted text-end">{{ currentUser.nom || ' none' }}</td></tr>
+                <tr><th class="ps-0">Last Name</th><td class="text-muted text-end">{{ currentUser.prenom || ' none' }}</td></tr>
+                <tr><th class="ps-0">Phone No</th><td class="text-muted text-end">+216 {{ currentUser.tel }}</td></tr>
+                <tr><th class="ps-0">Birth of Date</th>
+                    <td class="text-muted text-end">{{ currentUser.dateNaissance }}</td></tr>
+                <tr><th class="ps-0">Email</th><td class="text-muted text-end">{{ currentUser.email }}</td></tr>                <tr>
+                    <!-- <th>Social Media</th>
+                    <td>
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <a href="javascript:void(0);" class="avatar-xs d-block"><span class="avatar-title rounded-circle bg-secondary-subtle text-dark"><i class="bi bi-github"></i></span></a>
+                            <a href="javascript:void(0);" class="avatar-xs d-block"><span class="avatar-title rounded-circle bg-primary-subtle text-primary"><i class="bi bi-facebook"></i></span></a>
+                            <a href="javascript:void(0);" class="avatar-xs d-block"><span class="avatar-title rounded-circle bg-success-subtle text-success"><i class="bi bi-dribbble"></i></span></a>
+                            <a href="javascript:void(0);" class="avatar-xs d-block"><span class="avatar-title rounded-circle bg-danger-subtle text-danger"><i class="bi bi-instagram"></i></span></a>
+                        </div>
+                    </td> -->
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+            <!-- Recent Followers -->
+            <div class="pt-4">
+                <div class="d-flex align-items-center mb-3 gap-2">
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-0">Recent Followers</h5>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="javascript:void(0);" class="icon-link">View all <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 pb-2">
+                        <div class="avatar-sm flex-shrink-0"><img src="assets/images/users/avatar-3.jpg" alt="" class="img-fluid img-thumbnail"></div>
+                        <div class="flex-grow-1">
+                            <h6 class="fs-md">Esther James</h6>
+                            <p class="text-muted fs-sm mb-0">Web Designer</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button class="btn btn-sm btn-outline-info custom-toggle active" (click)="Followbtn($event)">
+                                <span class="icon-on"><i class="bx bx-user-check align-bottom fs-md"></i></span>
+                                <span class="icon-off"><i class="bx bx-user-x align-bottom fs-md"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 pb-2">
+                        <div class="avatar-sm flex-shrink-0"><img src="assets/images/users/avatar-6.jpg" alt="" class="img-fluid img-thumbnail"></div>
+                        <div class="flex-grow-1">
+                            <h6 class="fs-md">Jacqueline Steve</h6>
+                            <p class="fs-sm text-muted mb-0">UI/UX Designer</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button class="btn btn-sm btn-outline-info custom-toggle" (click)="Followbtn($event)">
+                                <span class="icon-on"><i class="bx bx-user-check align-bottom fs-md"></i></span>
+                                <span class="icon-off"><i class="bx bx-user-x align-bottom fs-md"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar-sm flex-shrink-0"><img src="assets/images/users/48/avatar-2.jpg" alt="" class="img-fluid img-thumbnail"></div>
+                        <div class="flex-grow-1">
+                            <h6 class="fs-md">George Whalen</h6>
+                            <p class="fs-sm text-muted mb-0">Backend Developer</p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <button class="btn btn-sm btn-outline-info custom-toggle" (click)="Followbtn($event)">
+                                <span class="icon-on"><i class="bx bx-user-check align-bottom fs-md"></i></span>
+                                <span class="icon-off"><i class="bx bx-user-x align-bottom fs-md"></i></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- end followers -->
+
+        </div>
+    </div><!-- end card -->
+</div><!-- end col -->

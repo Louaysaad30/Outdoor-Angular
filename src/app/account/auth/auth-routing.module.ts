@@ -43,10 +43,12 @@ const routes: Routes = [
   {
     path: 'twostep',
     component: TwostepComponent,
-  },
+  }, 
   {
     path: 'errors', loadChildren: () => import('./errors/errors.module').then(m => m.ErrorsModule)
   },
+
+
 ];
 
 @NgModule({

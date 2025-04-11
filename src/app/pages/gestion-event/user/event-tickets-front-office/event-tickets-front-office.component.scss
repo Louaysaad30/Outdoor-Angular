@@ -1,0 +1,37 @@
+/* Add to your component's scss file */
+.ribbon-box .ribbon {
+  position: absolute;
+  left: -5px;
+  top: 15px;
+  padding: 5px 10px;
+  z-index: 1;
+}
+
+.ribbon-box .ribbon.round-shape {
+  border-radius: 0 30px 30px 0;
+}
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+
+  // Hover effects based on ticket type
+  &.ticket-vip:hover {
+    background-color: rgba(220, 53, 69, 0.1); // Light danger/red
+  }
+
+  &.ticket-premium:hover {
+    background-color: rgba(25, 135, 84, 0.1); // Light success/green
+  }
+
+  &.ticket-regular:hover {
+    background-color: rgba(108, 117, 125, 0.1); // Light secondary/gray
+  }
+
+  &.ticket-student:hover {
+    background-color: rgba(13, 202, 240, 0.1); // Light info/blue
+  }
+}
