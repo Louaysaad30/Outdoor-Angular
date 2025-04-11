@@ -3,6 +3,8 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { FormationListService } from '../../services/formation-list.service';
+import { FormationRequest } from '../../models/formation-request.model';
+
 
 @Component({
   selector: 'app-formation-list',
@@ -12,31 +14,19 @@ import { FormationListService } from '../../services/formation-list.service';
 export class FormationListComponent implements OnInit {
   breadCrumbItems!: Array<{}>;
   formationForm!: UntypedFormGroup;
-  uploadedFiles: any[] = [];
   listData: any[] = [];
   gridlist: any[] = [];
   term: string = '';
-  statusFilter: string = '';
+  modeFilter: string = '';
   submitted = false;
-  deleteID: any;
-
+  viewMode: 'grid' | 'list' = 'grid';
   categories: any[] = [];
   sponsors: any[] = [];
-
-  mode: string = 'presentiel';
   isPresentiel = true;
   isOnline = false;
-
-  viewMode: 'grid' | 'list' = 'grid';
+  selectedFile?: File;
 
   @ViewChild('addFormationModal', { static: false }) addFormationModal?: ModalDirective;
-  @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
-
-  public dropzoneConfig: DropzoneConfigInterface = {
-    clickable: true,
-    addRemoveLinks: true,
-    previewsContainer: false,
-  };
 
   constructor(private fb: UntypedFormBuilder, private formationService: FormationListService) {}
 
@@ -52,7 +42,6 @@ export class FormationListComponent implements OnInit {
       name: ['', Validators.required],
       description: ['', Validators.required],
       price: ['', Validators.required],
-      img: ['', Validators.required],
       publicationDate: ['', Validators.required],
       dateDebut: ['', Validators.required],
       dateFin: ['', Validators.required],
@@ -66,23 +55,129 @@ export class FormationListComponent implements OnInit {
       categorieId: ['', Validators.required],
     });
 
-    this.onModeChange();
     this.loadFormations();
     this.loadCategories();
     this.loadSponsors();
+    this.onModeChange();
   }
 
   get form() {
     return this.formationForm.controls;
   }
 
-  loadFormations() {
-    this.formationService.getFormations().subscribe(data => {
-      this.listData = data;
-      this.gridlist = [...data];
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+    }
+  }
+
+  onModeChange() {
+    const mode = this.formationForm.get('mode')?.value;
+    this.isPresentiel = mode === 'presentiel';
+    this.isOnline = mode === 'enligne';
+  }
+
+  onSponsorChange() {
+    const besoinSponsor = this.formationForm.get('besoinSponsor')?.value;
+    if (!besoinSponsor) {
+      this.formationForm.get('sponsorId')?.setValue(null);
+    }
+  }
+
+  openAddFormationModal() {
+    this.formationForm.reset();
+    this.formationForm.get('mode')?.setValue('presentiel');
+    this.selectedFile = undefined;
+    this.onModeChange();
+    this.addFormationModal?.show();
+  }
+
+  saveFormation() {
+    if (this.formationForm.valid && this.selectedFile) {
+      const values = this.formationForm.value;
+  
+      // ⚙️ Mapper les valeurs du formulaire vers FormationRequest
+      const formationRequest: FormationRequest = {
+        titre: values.name,
+        description: values.description,
+        prix: values.price,
+        formateurId: 1, // 👈 fixe temporaire ou mets-le depuis un select plus tard
+        mode: values.mode,
+        dateDebut: values.dateDebut,
+        dateFin: values.dateFin,
+        categorieId: values.categorieId,
+        lieu: values.mode === 'presentiel' ? values.lieu : '',
+        pauseTitle: values.mode === 'presentiel' ? values.titrePause : '',
+        pauseDuration: values.mode === 'presentiel' ? values.dureePauseMinutes : 0,
+        pauseSponsorRequired: values.mode === 'presentiel' && values.besoinSponsor,
+        sponsorId: values.mode === 'presentiel' && values.besoinSponsor ? values.sponsorId : null
+      };
+  
+      const formData = new FormData();
+      formData.append('request', new Blob([JSON.stringify(formationRequest)], { type: 'application/json' }));
+      formData.append('image', this.selectedFile);
+  
+      this.formationService.createFormationWithImage(formData).subscribe(() => {
+        this.loadFormations();
+        this.formationForm.reset();
+        this.addFormationModal?.hide();
+      });
+    } else {
+      this.submitted = true;
+    }
+  }
+  
+  
+
+  filterdata() {
+    this.listData = this.gridlist.filter(f => {
+      const matchesTitle = f.name?.toLowerCase().includes(this.term.toLowerCase());
+      const matchesMode = !this.modeFilter || f.mode === this.modeFilter;
+      return matchesTitle && matchesMode;
     });
   }
 
+  loadFormations() {
+    this.formationService.getFormations().subscribe(data => {
+      console.log("Réponse de l'API:", data); // Ajoutez un log pour vérifier la réponse de l'API
+  
+      // Assurez-vous que vous mappez correctement les données
+      this.listData = data.map((f: any) => ({
+        id: f.id,
+        name: f.titre, // Vérifiez que 'titre' est bien défini dans la réponse
+        description: f.description,
+        price: f.prix, // Vérifiez que 'prix' est bien défini
+        imageUrl: f.imageUrl, // Vérifiez que 'imageUrl' est bien défini
+        category: f.categorie?.nom, // Vérifiez si 'categorie' et 'nom' existent
+        dateDebut: f.dateDebut,
+        dateFin: f.dateFin,
+        duration: this.getDuration(f.dateDebut, f.dateFin),
+        instructor: 'Nom Formateur', // Placeholder pour l'instructeur
+        students: 0, // Placeholder pour le nombre d'élèves
+        lessons: 0, // Placeholder pour le nombre de leçons
+        status: 'Beginner', // Statut par défaut
+        profile: 'assets/images/users/avatar-1.jpg', // Image de profil par défaut
+        mode: f.mode
+      }));
+  
+      console.log("Liste des formations après mappage:", this.listData); // Log pour vérifier les données après mappage
+  
+      this.gridlist = [...this.listData];
+    });
+  }
+  
+  getDuration(start: string, end: string): string {
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+    const diffInMs = endTime.getTime() - startTime.getTime();
+    const diffInMin = diffInMs / 60000;
+    const hours = Math.floor(diffInMin / 60);
+    const minutes = Math.floor(diffInMin % 60);
+    return `${hours}h ${minutes}min`;
+  }
+  
+  
   loadCategories() {
     this.formationService.getCategories().subscribe(data => {
       this.categories = data;
@@ -93,101 +188,5 @@ export class FormationListComponent implements OnInit {
     this.formationService.getSponsors().subscribe(data => {
       this.sponsors = data;
     });
-  }
-
-  onUploadSuccess(event: any) {
-    setTimeout(() => {
-      this.uploadedFiles.push(event[0]);
-      this.formationForm.controls['img'].setValue(event[0].dataURL);
-    }, 0);
-  }
-
-  removeFile(event: any) {
-    this.uploadedFiles.splice(this.uploadedFiles.indexOf(event), 1);
-  }
-
-  onModeChange() {
-    this.mode = this.formationForm.get('mode')?.value;
-    this.isPresentiel = this.mode === 'presentiel';
-    this.isOnline = this.mode === 'enligne';
-
-    if (this.isPresentiel) {
-      this.formationForm.get('meetLink')?.disable();
-      this.formationForm.get('lieu')?.enable();
-    } else {
-      this.formationForm.get('meetLink')?.enable();
-      this.formationForm.get('lieu')?.disable();
-    }
-  }
-
-  onSponsorChange() {
-    const besoinSponsor = this.formationForm.get('besoinSponsor')?.value;
-    if (besoinSponsor) {
-      this.formationForm.get('sponsorId')?.enable();
-    } else {
-      this.formationForm.get('sponsorId')?.setValue('');
-      this.formationForm.get('sponsorId')?.disable();
-    }
-  }
-
-  openAddFormationModal() {
-    this.uploadedFiles = [];
-    this.formationForm.reset();
-    this.formationForm.get('mode')?.setValue('presentiel');
-    this.formationForm.get('meetLink')?.disable();
-    this.formationForm.get('lieu')?.enable();
-    this.formationForm.get('sponsorId')?.disable();
-    this.onModeChange();
-    this.addFormationModal?.show();
-  }
-
-  saveFormation() {
-    if (this.formationForm.valid) {
-      const formation = this.formationForm.value;
-      if (formation.id) {
-        this.formationService.updateFormation(formation).subscribe(() => {
-          this.loadFormations();
-        });
-      } else {
-        this.formationService.createFormation(formation).subscribe(() => {
-          this.loadFormations();
-        });
-      }
-
-      this.formationForm.reset();
-      this.addFormationModal?.hide();
-    } else {
-      this.submitted = true;
-    }
-  }
-
-  editFormation(index: number) {
-    const data = this.listData[index];
-    this.formationForm.patchValue(data);
-    this.uploadedFiles = [{ dataURL: data.img, name: 'image', size: 1024 }];
-    this.onModeChange();
-    this.onSponsorChange();
-    this.addFormationModal?.show();
-  }
-
-  removeFormation(index: number) {
-    const id = this.listData[index].id;
-    this.formationService.deleteFormation(id).subscribe(() => {
-      this.loadFormations();
-    });
-  }
-
-  filterdata() {
-    this.listData = this.gridlist.filter(f => {
-      const matchesTitle = f.name.toLowerCase().includes(this.term.toLowerCase());
-      const matchesStatus = !this.statusFilter || f.status === this.statusFilter;
-      return matchesTitle && matchesStatus;
-    });
-  }
-
-  pageChanged(event: any) {
-    const startItem = (event.page - 1) * event.itemsPerPage;
-    const endItem = event.page * event.itemsPerPage;
-    this.listData = this.gridlist.slice(startItem, endItem);
   }
 }
