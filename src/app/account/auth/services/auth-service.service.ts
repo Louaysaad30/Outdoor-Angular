@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RegistrationRequest } from '../models/RegistrationRequest';
-import {  Observable, BehaviorSubject  } from 'rxjs';
+import {  Observable, BehaviorSubject, tap  } from 'rxjs';
 import { AuthenticationRequest } from '../models/AuthenticationRequest';
 import { User } from '../models/User';
 import { jwtDecode } from 'jwt-decode';
@@ -44,6 +44,7 @@ export class AuthServiceService {
   // Set current user in session
   setCurrentUser(user: User): void {
     sessionStorage.setItem('currentUser', JSON.stringify(user)); // Store user in session storage
+    localStorage.setItem('user', JSON.stringify(user)); // Store user in local storage
     this.currentUserSubject.next(user); // Update the BehaviorSubject
   }
 
@@ -57,28 +58,19 @@ export class AuthServiceService {
   authenticate(request: AuthenticationRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/authenticate`, request);
   }
-
-  // Handle login response and store user and token
-  handleLoginSuccess(response: any): void {
-    // Save the token
+  handleLoginSuccess(response: any): Observable<User> {
     localStorage.setItem('authToken', response.token);
-
-    // Decode token to get the user's email
     const decodedToken: any = jwtDecode(response.token);
     const email = decodedToken.sub;
-
-    // Fetch the user details by email
-    this.getUserByEmail(email).subscribe(
-      (user: User) => {
-        this.setCurrentUser(user); // Store user in session
+  
+    return this.getUserByEmail(email).pipe(
+      tap((user: User) => {
+        this.setCurrentUser(user);
         console.log('User data:', user);
-      },
-      (error) => {
-        console.error('Error fetching user details', error);
-      }
+      })
     );
   }
-
+  
   // Register a user
   register(request: RegistrationRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, request);
@@ -96,11 +88,19 @@ export class AuthServiceService {
   
   logout() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     sessionStorage.removeItem('currentUser');
     this.currentUserSubject.next(null); // Clear BehaviorSubject
   }
   verifyPassword(userId: number, password: string): Observable<any> {
     const body = { userId, password };
     return this.http.post(`${this.apiUrl}/verify-password`, body); // Ensure the URL matches the backend
+  }
+  changePassword(data: { userId: string; oldPassword: string; newPassword: string }) {
+    return this.http.put(`${this.apiUrl}/change-password`, data);
+  }
+  sendResetLink(email: string) {
+    // Send as {email: string} to match backend @RequestBody
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email },{ responseType: 'text' });
   }
 }

@@ -11,7 +11,7 @@ import {LayoutsUserComponent} from "./layouts-user/layouts-user.component";
 
 const routes: Routes = [
   { path: '', component: LayoutComponent, loadChildren: () => import('./pages/pages.module').then(m => m.PagesModule)  },
-  { path: 'auth', component: AuthlayoutComponent, loadChildren: () => import('./account/account.module').then(m => m.AccountModule) },
+  { path: 'auth', component: AuthlayoutComponent, loadChildren: () => import('./account/account.module').then(m => m.AccountModule),canActivate: [authGuard ] },
   { path: 'pages',component: AuthlayoutComponent, loadChildren: () => import('./extraspages/extraspages.module').then(m => m.ExtraspagesModule)},
   { path: 'userback', component: LayoutComponent, loadChildren: () => import('./pages/gestion-user/gestion-user.module').then(m => m.GestionUserModule) ,  canActivate: [ roleGuard] ,  data: { role: 'ADMIN' }},
   { path: 'userfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-user/gestion-user.module').then(m => m.GestionUserModule) ,  canActivate: [ roleGuard] ,  data: { role: 'USER' }},

@@ -13,6 +13,7 @@ import { Store } from '@ngrx/store';
 import { changeMode } from 'src/app/store/layouts/layout-action';
 import { getLayoutmode } from 'src/app/store/layouts/layout-selector';
 import { TokenStorageService } from 'src/app/core/services/token-storage.service';
+import { AuthServiceService } from 'src/app/account/auth/services/auth-service.service';
 
 @Component({
   selector: 'app-topbar',
@@ -56,7 +57,8 @@ export class TopbarComponent {
   constructor(@Inject(DOCUMENT) private document: any,
     private eventService: EventService,
     public languageService: LanguageService,
-    private authService: AuthenticationService,
+    private authServicee: AuthServiceService,
+
     private router: Router,
     public _cookiesService: CookieService,
     public store: Store<RootReducerState>,
@@ -97,7 +99,12 @@ export class TopbarComponent {
       }
     });
   }
-
+  logout() {
+    console.log('Logout clicked!');
+    this.authServicee.logout();
+    this.router.navigate(['/auth/signin']);
+  }
+  
   windowScroll() {
     if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
       (document.getElementById('back-to-top') as HTMLElement).style.display = "block";
@@ -338,13 +345,5 @@ export class TopbarComponent {
   /**
    * Logout the user
    */
-  logout() {
-    this.authService.logout();
-    // if (environment.defaultauth === 'firebase') {
-    //   this.authService.logout();
-    // } else {
-    //   this.authFackservice.logout();
-    // }
-    this.router.navigate(['/auth/login']);
-  }
+
 }

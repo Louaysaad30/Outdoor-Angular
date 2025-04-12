@@ -442,8 +442,11 @@
                         <a class="dropdown-item" routerLink="/pages/profile"><i class="mdi mdi-wallet text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Balance : <b>$8451.36</b></span></a>
                         <a class="dropdown-item" routerLink="/pages/profile-settings"><span class="badge bg-success-subtle text-success mt-1 float-end">New</span><i class="mdi mdi-cog-outline text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Settings</span></a>
                         <a class="dropdown-item" routerLink="/auth/lockscreen"><i class="mdi mdi-lock text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Lock screen</span></a>
-                        <a class="dropdown-item" href="javascript: void(0);" (click)="logout()"><i class="mdi mdi-logout text-muted fs-lg align-middle me-1"></i> <span class="align-middle" data-key="t-logout"> Logout</span></a>
-                    </div>
+                        <button class="dropdown-item" (click)="logout()" style="background: none; border: none; width: 100%;">
+                            <i class="mdi mdi-logout text-muted fs-lg align-middle me-1"></i>
+                            <span class="align-middle" data-key="t-logout">Logouttttt</span>
+                          </button>
+                                              </div>
                 </div>
             </div>
         </div>

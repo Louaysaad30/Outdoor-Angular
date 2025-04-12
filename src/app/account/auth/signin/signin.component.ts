@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 
 import {AuthenticationRequest} from '../models/AuthenticationRequest';
+import { User } from '../models/User';
 
 @Component({
   selector: 'app-signin',
@@ -42,55 +43,45 @@ export class SigninComponent {
   
       this.authService.authenticate(loginUser).subscribe(
         (response: any) => {
-          console.log('Login successful:', response);
-          Swal.fire({
-            icon: 'success',
-            title: 'Login Successful',
-            text: 'You are now logged in!',
-          });
+          // Wait for user data before continuing
+          this.authService.handleLoginSuccess(response).subscribe(
+            (user: User) => {
+              this.currentUser = user;
+              const authority = this.currentUser.authorities[0]?.authority;
   
-          this.authService.handleLoginSuccess(response);
-          
-        //  this.router.navigate(['/userfront']);
-          this.currentUser = this.authService.getSessionUser();
-          console.log('Current user:', this.currentUser);
-          localStorage.setItem('user', JSON.stringify(this.currentUser));
-          const authority = this.currentUser.authorities[0]?.authority;
-
-
-          // Navigation selon le rôle
-          if (authority === 'ADMIN') {
-            this.router.navigate(['/userback']);
-          } else if (authority === 'USER') {
-            this.router.navigate(['/userfront']);
-          } else {
-            // fallback (si aucun rôle reconnu)
-            this.router.navigate(['/auth/signin']);
-          }
-          // case 'OWNER':
-          //   this.router.navigate(['/campingback']);
-          //   break;
-          // case 'FORMATEUR':
-          //   this.router.navigate(['/formationback']);
-          //   break;
-          // case 'EVENT_MANAGER':
-          //   this.router.navigate(['/eventback']);
-      
+              Swal.fire({
+                icon: 'success',
+                title: 'Login Successful',
+                text: 'You are now logged in!',
+              }).then(() => {
+                if (authority === 'ADMIN') {
+                  this.router.navigate(['/userback']);
+                } else if (authority === 'USER') {
+                  this.router.navigate(['/userfront']);
+                } else {
+                  this.router.navigate(['/auth/signin']);
+                }
+              });
+            },
+            (error) => {
+              console.error('Error fetching user details', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: 'Could not load user data.',
+              });
+            }
+          );
         },
         (error) => {
           console.error('Login error:', error);
-  
           let errorMessage = 'Unknown error. Please try again.';
-  
           if (error.status === 0) {
-            // No connection / backend is offline
             errorMessage = 'Unable to connect to server. Please check your backend.';
           } else {
-            // Directly access the error object and use it
-            errorMessage = error || 'Login failed. Please check your credentials.';
+            errorMessage = error?.error || 'Login failed. Please check your credentials.';
           }
   
-          // Store the error message for HTML display
           this.errorLoginMessage = errorMessage;
   
           Swal.fire({
@@ -102,6 +93,7 @@ export class SigninComponent {
       );
     }
   }
+  
   
   // Toggle the visibility of the password
   toggleFieldTextType(): void {
