@@ -649,5 +649,521 @@ video.img-fluid {
   background-color: #f0f2f5;
 }
 
+.edit-comment-form {
+  width: 100%;
+}
+
+.edit-comment-form .input-group {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.edit-comment-form .form-control {
+  border-top-left-radius: 18px;
+  border-bottom-left-radius: 18px;
+  background-color: #f0f2f5;
+}
+
+.edit-comment-form .btn-primary {
+  padding: 0.25rem 0.75rem;
+}
+
+.edit-comment-form .btn-light {
+  padding: 0.25rem 0.75rem;
+  background-color: #e4e6eb;
+  border-color: #e4e6eb;
+}
+/* Facebook-like comment styling for long comments */
+.fb-comment-container {
+  max-width: calc(100% - 40px);
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  border-radius: 18px;
+  padding: 8px 12px;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-left: 12px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.comment-action {
+  color: #65676b;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.comment-action:hover {
+  text-decoration: underline;
+}
+
+.action-dot {
+  padding: 0 4px;
+  color: #65676b;
+}
+
+.comment-time {
+  color: #65676b;
+}
+
+/* Edit comment form styling */
+.edit-comment-form {
+  width: 100%;
+}
+
+.edit-comment-form textarea.form-control {
+  border-radius: 18px;
+  background-color: #f0f2f5;
+  padding: 8px 12px;
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  min-width: 120px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f2f5;
+}
+
+/* Fix for dropdown toggle */
+.dropdown-toggle::after {
+  display: none;
+}
+
+/* Add these styles to your component's CSS file */
+.nested-replies {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+    border-radius: 1px;
+  }
+}
+
+.reply-bubble {
+  background-color: #f8f9fa;
+  border-radius: 16px;
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  border-radius: 18px;
+  padding: 8px 12px;
+}
+
+.comment-actions {
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.comment-action {
+  color: #65676B;
+  text-decoration: none;
+}
+
+.comment-action:hover {
+  text-decoration: underline;
+}
+
+.action-dot {
+  margin: 0 4px;
+  color: #65676B;
+}
+
+.comment-time {
+  color: #65676b;
+}
+
+/* Dropdown styling */
+.dropdown-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.dropdown-toggle::after {
+  display: none;
+}
+
+.dropdown-menu {
+  min-width: 120px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f2f5;
+}
+
+.edit-comment-form {
+  width: 100%;
+}
+
+.edit-comment-form .input-group {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.edit-comment-form .form-control {
+  border-top-left-radius: 18px;
+  border-bottom-left-radius: 18px;
+  background-color: #f0f2f5;
+}
+
+.edit-comment-form .btn-primary {
+  padding: 0.25rem 0.75rem;
+}
+
+.edit-comment-form .btn-light {
+  padding: 0.25rem 0.75rem;
+  background-color: #e4e6eb;
+  border-color: #e4e6eb;
+}
+/* Facebook-like comment styling for long comments */
+.fb-comment-container {
+  max-width: calc(100% - 40px);
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  border-radius: 18px;
+  padding: 8px 12px;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-left: 12px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.comment-action {
+  color: #65676b;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.comment-action:hover {
+  text-decoration: underline;
+}
+
+.action-dot {
+  padding: 0 4px;
+  color: #65676b;
+}
+
+.comment-time {
+  color: #65676b;
+}
+
+/* Edit comment form styling */
+.edit-comment-form {
+  width: 100%;
+}
+
+.edit-comment-form textarea.form-control {
+  border-radius: 18px;
+  background-color: #f0f2f5;
+  padding: 8px 12px;
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  min-width: 120px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f2f5;
+}
+
+/* Fix for dropdown toggle */
+.dropdown-toggle::after {
+  display: none;
+}
+
+/* Add these styles to your component's CSS file */
+.nested-replies {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+    border-radius: 1px;
+  }
+}
+
+.reply-bubble {
+  background-color: #f8f9fa;
+  border-radius: 16px;
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  border-radius: 18px;
+  padding: 8px 12px;
+}
+
+.comment-actions {
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.comment-action {
+  color: #65676B;
+  text-decoration: none;
+}
+
+.comment-action:hover {
+  text-decoration: underline;
+}
+
+.action-dot {
+  margin: 0 4px;
+  color: #65676B;
+}
+
+/* forum-post.component.scss */
+.modal-dialog1 {
+  max-width: 500px !important;
+  width: auto !important;
+}
+
+.reply-input-container {
+  transition: all 0.2s ease;
+}
+
+.reply-input-wrapper {
+  position: relative;
+}
+
+.fb-reply-input {
+  background-color: #f0f2f5;
+  border-radius: 20px;
+  border: none;
+  padding: 8px 40px 8px 16px;
+  font-size: 0.9rem;
+  min-height: 36px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fb-reply-input:focus {
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+  outline: none;
+}
+
+.reply-actions {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+
+.btn-emoji {
+  background: transparent;
+  border: none;
+  color: #65676b;
+  font-size: 16px;
+  padding: 4px;
+  margin-right: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-emoji:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1877f2;
+}
+
+.btn-reply-submit {
+  background: transparent;
+  border: none;
+  color: #1877f2;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.btn-reply-submit:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.btn-reply-submit:disabled {
+  color: #BCC0C4;
+  cursor: default;
+}
+
+.reply-loading {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
+
+// Facebook-style comment input
+.comment-input-container {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e4e6eb;
+}
+
+.comment-input-wrapper {
+  position: relative;
+}
+
+.comment-input-field {
+  background-color: #f0f2f5;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 90px 8px 12px;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  height: auto;
+  min-height: 40px;
+}
+
+.comment-input-field:focus {
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+}
+
+.comment-actions-bar {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon-action {
+  background: transparent;
+  border: none;
+  color: #65676b;
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-icon-action:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #1877f2;
+}
+
+.btn-send-comment {
+  background: transparent;
+  border: none;
+  color: #65676b;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-send-comment.active {
+  color: #1877f2;
+}
+
+.btn-send-comment.active:hover {
+  transform: scale(1.1);
+  background-color: rgba(24, 119, 242, 0.1);
+}
+
+.btn-send-comment:disabled {
+  color: #BCC0C4;
+  cursor: not-allowed;
+}
+
 
 

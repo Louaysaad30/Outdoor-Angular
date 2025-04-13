@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, UntypedFormGroup, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -15,6 +15,8 @@ import { Reaction } from '../../models/reaction.model';
 import { Media } from "../../models/media.model";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TabsModule} from "ngx-bootstrap/tabs";
+import {Observable} from "rxjs";
+import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
 ;
 
 
@@ -30,7 +32,8 @@ import {TabsModule} from "ngx-bootstrap/tabs";
     PickerComponent,
     ReactiveFormsModule,
     BsDropdownModule,
-    TabsModule
+    TabsModule,
+    ModalModule
   ],
   templateUrl: './mes-posts.component.html',
   styleUrl: './mes-posts.component.scss'
@@ -164,7 +167,7 @@ export class MesPostsComponent implements OnInit {
       case ReactionType.LIKE: return 'bi bi-hand-thumbs-up-fill text-primary';
       case ReactionType.LOVE: return 'bi bi-heart-fill text-danger';
       case ReactionType.HAHA: return 'bi bi-emoji-laughing-fill text-warning';
-      case ReactionType.WOW: return 'bi bi-emoji-surprise-fill text-warning';
+      case ReactionType.WOW: return 'bi bi-emoji-dizzy-fill text-warning';
       case ReactionType.SAD: return 'bi bi-emoji-frown-fill text-info';
       case ReactionType.ANGRY: return 'bi bi-emoji-angry-fill text-danger';
       default: return 'bi bi-hand-thumbs-up text-muted';
@@ -274,7 +277,15 @@ export class MesPostsComponent implements OnInit {
   openPostDetail(post: Post): void {
     this.selectedPost = {...post};
     console.log("Post:", this.selectedPost);
+    console.log(this.selectedPost.comments);
     this.isDetailModalOpen = true;
+    // Pre-load top level comments when opening post detail
+    this.commentService.getTolevel(post.id!).subscribe({
+      next: (comments) => {
+        this.topLevelComments[post.id!] = comments || [];
+      }
+    });
+
   }
 
   closeDetailModal() {
@@ -718,14 +729,284 @@ goToPost(postId: string | undefined): void {
   }
 
   // Implement these methods
-  editComment(comment: any): void {
-    // Handle edit comment logic
+// Variables to add to your component
+  editingCommentId: string | null = null;
+  editCommentText: string = '';
+
+  // Update the editComment method
+  editComment(comment: ForumComment): void {
+    this.editingCommentId = comment.id!;
+    this.editCommentText = comment.content!;
     this.activeCommentDropdown = null;
   }
+
+  // Add a saveEditedComment method
+saveEditedComment(): void {
+  if (!this.editingCommentId || !this.editCommentText.trim()) return;
+
+  this.commentService.editComment(this.editingCommentId, this.editCommentText).subscribe({
+    next: (updatedComment) => {
+      // Update comment in selectedPost if it exists
+      if (this.selectedPost && this.selectedPost.comments) {
+        const commentIndex = this.selectedPost.comments.findIndex(c => c.id === this.editingCommentId);
+        if (commentIndex !== -1) {
+          this.selectedPost.comments[commentIndex] = updatedComment;
+        }
+      }
+
+      // Update comment in the main posts array
+      this.posts.forEach(post => {
+        if (post.comments) {
+          const commentIndex = post.comments.findIndex(c => c.id === this.editingCommentId);
+          if (commentIndex !== -1) {
+            post.comments[commentIndex] = updatedComment;
+          }
+        }
+      });
+
+      // Update comment in the topLevelComments object - this is what's displayed in the modal
+      if (this.selectedPost && this.selectedPost.id && this.topLevelComments[this.selectedPost.id]) {
+        const topLevelIndex = this.topLevelComments[this.selectedPost.id].findIndex(
+          c => c.id === this.editingCommentId
+        );
+        if (topLevelIndex !== -1) {
+          this.topLevelComments[this.selectedPost.id][topLevelIndex] = updatedComment;
+        }
+
+        // Also check for replies within top level comments
+        this.topLevelComments[this.selectedPost.id].forEach(comment => {
+          if (comment.replies) {
+            const replyIndex = comment.replies.findIndex(r => r.id === this.editingCommentId);
+            if (replyIndex !== -1) {
+              comment.replies[replyIndex] = updatedComment;
+            }
+          }
+        });
+      }
+
+      // Create a new reference to trigger change detection
+      if (this.selectedPost && this.selectedPost.id) {
+        this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
+      }
+
+      // Reset edit mode
+      this.editingCommentId = null;
+      this.editCommentText = '';
+    },
+    error: (err) => {
+      console.error('Error updating comment:', err);
+    }
+  });
+}  cancelEditComment(): void {
+    this.editingCommentId = null;
+    this.editCommentText = '';
+  }
+
 
   deleteComment(commentId: string): void {
-    // Handle delete comment logic
-    this.activeCommentDropdown = null;
+    // Show a confirmation dialog if desired
+    if (confirm('Are you sure you want to delete this comment?')) {
+      // Call your API service to delete the comment
+      this.commentService.deleteComment(commentId).subscribe({
+        next: () => {
+          // Remove the comment from selectedPost.comments (existing code)
+          if (this.selectedPost && this.selectedPost.comments) {
+            this.selectedPost.comments = this.selectedPost.comments.filter(
+              comment => comment.id !== commentId
+            );
+          }
+
+          // Remove comment from topLevelComments
+          if (this.selectedPost && this.selectedPost.id) {
+            const postId = this.selectedPost.id;
+
+            // Remove if it's a top-level comment
+            if (this.topLevelComments[postId]) {
+              this.topLevelComments[postId] = this.topLevelComments[postId].filter(
+                comment => comment.id !== commentId
+              );
+
+              // Also check for this comment in replies and remove it
+              this.topLevelComments[postId].forEach(comment => {
+                if (comment.replies) {
+                  comment.replies = comment.replies.filter(
+                    reply => reply.id !== commentId
+                  );
+                }
+              });
+
+              // Create a new reference to trigger change detection
+              this.topLevelComments[postId] = [...this.topLevelComments[postId]];
+            }
+          }
+
+          // Remove from posts array too
+          this.posts.forEach(post => {
+            if (post.comments) {
+              post.comments = post.comments.filter(c => c.id !== commentId);
+            }
+          });
+
+          // Close the dropdown
+          this.activeCommentDropdown = null;
+        },
+        error: (err) => {
+          console.error('Error deleting comment:', err);
+        }
+      });
+    }
   }
 
+
+// Component properties to manage reply input state
+  showReplyInput: { [key: string]: boolean } = {};
+  replyContent: { [key: string]: string } = {};
+  replySubmitting: { [key: string]: boolean } = {};
+
+  @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal!: ModalDirective;
+
+  toxicContentDetected: boolean = false; // Added property
+  handleToxicContentError() {
+    this.toxicContentDetected = true;
+    setTimeout(() => {
+      this.deleteRecordModal.show();
+    });
+  }
+
+// Toggle reply input visibility
+  toggleReplyInput(commentId: string): void {
+    this.showReplyInput[commentId] = !this.showReplyInput[commentId];
+    if (!this.showReplyInput[commentId]) {
+      this.replyContent[commentId] = '';
+    }
+  }
+
+// Submit a reply to a comment
+  submitReply(commentId: string): void {
+    if (!this.replyContent[commentId] || !this.replyContent[commentId].trim()) {
+      return;
+    }
+
+    // Show loading indicator
+    this.replySubmitting[commentId] = true;
+
+    // Call the comment service to submit the reply
+    this.commentService.replyToComment(commentId, this.replyContent[commentId], this.USER_ID).subscribe({
+      next: (reply) => {
+        // Add the reply to the selected post (modal view)
+        this.addReplyToComment(commentId, reply);
+
+        // Also update the post in the main posts list if it exists
+        if (this.selectedPost?.id && this.posts) {
+          const mainPost = this.posts.find(p => p.id === this.selectedPost?.id);
+          if (mainPost) {
+            this.addReplyToComment(commentId, reply, mainPost.comments);
+          }
+        }
+
+        // Update the top-level comments if they were already fetched
+        if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
+          this.addReplyToComment(commentId, reply, this.topLevelComments[this.selectedPost.id]);
+        }
+
+        // Reset state
+        this.replyContent[commentId] = '';
+        this.showReplyInput[commentId] = false;
+        this.replySubmitting[commentId] = false;
+      },
+      error: (errorObj) => {
+        this.replySubmitting[commentId] = false;
+
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError();
+        } else {
+          // Handle other errors
+          console.error('Error adding reply:', errorObj);
+          this.error = errorObj.message || 'An error occurred';
+        }
+      }
+    });
+  }
+
+// Helper method to recursively find the parent comment and add the reply
+  addReplyToComment(parentId: string, reply: ForumComment, comments: ForumComment[] = this.selectedPost?.comments ?? []): boolean {
+    for (let i = 0; i < comments.length; i++) {
+      const comment = comments[i];
+
+      // If this is the parent comment we're looking for
+      if (comment.id === parentId) {
+        if (!comment.replies) {
+          comment.replies = [];
+        }
+
+        // Check if the reply already exists
+        const replyExists = comment.replies.some(r => r.id === reply.id);
+        if (!replyExists) {
+          comment.replies.push(reply);
+        }
+        return true;
+      }
+
+      // Search through nested replies recursively
+      if (comment.replies && comment.replies.length > 0) {
+        if (this.addReplyToComment(parentId, reply, comment.replies)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+
+// Add this property to your component class
+topLevelComments: { [postId: string]: ForumComment[] } = {};
+
+// Replace the existing getTopLevelComments method with this:
+getTopLevelComments(postId: string): ForumComment[] {
+  // Check if we already have the comments for this post
+  if (!this.topLevelComments[postId]) {
+    // If not, fetch them
+    console.log('Fetching top-level comments for postId:', postId);
+    this.commentService.getTolevel(postId).subscribe({
+      next: (comments) => {
+        console.log('Received top-level comments:', comments);
+        this.topLevelComments[postId] = comments || [];
+      },
+      error: (error) => {
+        console.error('Error fetching comments:', error);
+        this.topLevelComments[postId] = [];
+      }
+    });
+
+    // Initialize with empty array while waiting for response
+    this.topLevelComments[postId] = [];
+  }
+
+  return this.topLevelComments[postId] || [];
 }
+
+
+  getRepliesForComment(commentId: string): ForumComment[] {
+  if (!this.selectedPost || !this.selectedPost.comments) {
+    return [];
+  }
+  return this.selectedPost.comments.filter(comment =>
+    comment.parentCommentId === commentId
+  );
+}
+  getCommentReplies(commentId: string): any[] {
+    if (!this.selectedPost || !this.selectedPost.comments) {
+      return [];
+    }
+
+    return this.selectedPost.comments.filter(comment =>
+      comment.parentCommentId === commentId
+    );
+  }
+
+
+}
+
+

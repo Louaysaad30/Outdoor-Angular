@@ -234,10 +234,11 @@
           </div>
         </div>
 
+
         <p class="mb-3">{{ selectedPost.content }}</p>
 
         <!-- Media Gallery -->
-<!-- Media Gallery with Navigation -->
+        <!-- Media Gallery with Navigation -->
         <div *ngIf="selectedPost?.hasMedia && selectedPost?.media && (selectedPost?.media?.length || 0) > 0" class="mb-3 position-relative">
           <div class="media-detail-container">
             <!-- Current media display -->
@@ -309,8 +310,8 @@
                         'bi bi-hand-thumbs-up text-primary'"></i>
               <span>
                 {{ userReactions.get(selectedPost.id!) ?
-                   userReactions.get(selectedPost.id!)!.reactionType!.charAt(0) + userReactions.get(selectedPost.id!)!.reactionType!.slice(1).toLowerCase() :
-                   'Like' }}
+                userReactions.get(selectedPost.id!)!.reactionType!.charAt(0) + userReactions.get(selectedPost.id!)!.reactionType!.slice(1).toLowerCase() :
+                'Like' }}
               </span>
             </button>
 
@@ -337,7 +338,7 @@
               <button class="reaction-button"
                       [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.WOW)}"
                       (click)="reactToPost(selectedPost.id!, ReactionType.WOW)">
-                <i class="bi bi-emoji-surprise-fill text-warning reaction-icon"></i>
+                <i class="bi bi-emoji-dizzy-fill text-warning reaction-icon"></i>
               </button>
               <button class="reaction-button"
                       [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.SAD)}"
@@ -364,33 +365,146 @@
         <hr>
 
         <!-- Comment List -->
-        <div class="comments-section mb-3">
-          <h6>Comments</h6>
+        <!-- Comment List -->
+        <div class="fb-comments-section mb-3">
+          <h6 class="mb-3">Comments</h6>
           <div *ngIf="selectedPost.comments && selectedPost.comments.length > 0">
-            <div *ngFor="let comment of selectedPost.comments" class="d-flex mb-2">
-              <img [src]="'assets/images/users/avatar-2.jpg'" alt="User" class="rounded-circle me-2" width="32" height="32">
-              <div class="bg-light rounded p-2 flex-grow-1">
-                <h6 class="mb-0 fs-sm">{{ comment.username }}</h6>
-                <p class="mb-0">{{ comment.content }}</p>
-                <small class="text-muted">{{ comment.createdAt | date:'short' }}</small>
-              </div>
-            </div>
+            <ng-container *ngFor="let comment of getTopLevelComments(selectedPost.id!)">
+              <!-- Use recursive template pattern to handle nested comments -->
+              <ng-container *ngTemplateOutlet="commentTemplate; context: {comment: comment, level: 0}"></ng-container>
+            </ng-container>
           </div>
-          <div *ngIf="!selectedPost.comments || selectedPost.comments.length === 0" class="text-muted">
-            No comments yet. Be the first to comment!
+          <div *ngIf="!selectedPost.comments || selectedPost.comments.length === 0" class="text-center py-3 bg-light rounded">
+            <i class="bi bi-chat-left-text text-muted fs-4 d-block mb-2"></i>
+            <p class="text-muted mb-0">No comments yet. Be the first to comment!</p>
           </div>
         </div>
 
-        <!-- Add Comment -->
-        <div class="d-flex">
-          <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="32" height="32">
-          <div class="flex-grow-1">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Write a comment..." [(ngModel)]="newDetailComment">
-              <button class="btn btn-primary" type="button" (click)="addDetailComment()" [disabled]="!newDetailComment.trim()">
-                <i class="bi bi-send"></i>
-              </button>
+        <!-- Recursive comment template -->
+        <ng-template #commentTemplate let-comment="comment" let-level="level">
+          <div class="d-flex mb-3" [ngClass]="{'ms-4': level > 0}">
+            <div class="me-2">
+              <img [src]="'assets/images/users/avatar-' + ((level % 4) + 1) + '.jpg'" alt="User" class="rounded-circle flex-shrink-0"
+                   [style.width.px]="32 - (level * 2)" [style.height.px]="32 - (level * 2)">
             </div>
+            <div class="fb-comment-container w-100">
+              <!-- Regular comment view -->
+              <div class="comment-bubble" [ngClass]="{'reply-bubble': level > 0}" *ngIf="editingCommentId !== comment.id">
+                <h6 class="mb-0 fs-sm fw-semibold">{{ comment.username }}</h6>
+                <p class="mb-0 comment-text">{{ comment.content }}</p>
+              </div>
+
+              <!-- Edit comment form -->
+              <div class="edit-comment-form" *ngIf="editingCommentId === comment.id">
+                <div class="input-group mb-1">
+                  <textarea class="form-control" [(ngModel)]="editCommentText" placeholder="Edit your comment..." rows="3"></textarea>
+                </div>
+                <div class="text-end mt-2">
+                  <button class="btn btn-light btn-sm me-2" type="button" (click)="cancelEditComment()">
+                    Cancel
+                  </button>
+                  <button class="btn btn-primary btn-sm" type="button" (click)="saveEditedComment()">
+                    Save
+                  </button>
+                </div>
+              </div>
+
+              <!-- Comment actions -->
+              <div class="comment-actions" *ngIf="editingCommentId !== comment.id">
+                <a href="javascript:void(0);" class="comment-action">Like</a>
+                <span class="action-dot">·</span>
+                <a href="javascript:void(0);" class="comment-action" (click)="toggleReplyInput(comment.id!)">Reply</a>
+                <span class="action-dot">·</span>
+                <span class="comment-time">{{ comment.createdAt | date:'short' }}</span>
+
+                <!-- Comment dropdown menu -->
+                <div class="dropdown d-inline-block" *ngIf="comment.userId === USER_ID">
+                  <span class="action-dot">·</span>
+                  <button class="comment-action dropdown-toggle" type="button" (click)="toggleCommentDropdown(comment.id!)">
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+                  <div class="dropdown-menu shadow-sm border-light position-absolute"
+                       [ngClass]="{'show': activeCommentDropdown === comment.id!}"
+                       style="z-index: 1060;">
+                    <a class="dropdown-item" href="javascript:void(0);" (click)="editComment(comment)">
+                      <i class="bi bi-pencil me-2"></i> Edit
+                    </a>
+                    <a class="dropdown-item text-danger" href="javascript:void(0);" (click)="deleteComment(comment.id!)">
+                      <i class="bi bi-trash me-2"></i> Delete
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reply input form -->
+<div *ngIf="showReplyInput[comment.id!]" class="reply-input-container mt-2 mb-3 animate__animated animate__fadeIn">
+                <div class="d-flex align-items-start">
+                  <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="32" height="32">
+                  <div class="flex-grow-1 reply-input-wrapper">
+                    <div class="position-relative">
+                      <input type="text"
+                             class="form-control fb-reply-input"
+                             placeholder="Write a reply..."
+                             [(ngModel)]="replyContent[comment.id!]"
+                             (keyup.enter)="replyContent[comment.id!]?.trim() && submitReply(comment.id!)">
+
+                      <div class="reply-actions">
+                        <button class="btn-reply-submit" type="button"
+                                [disabled]="!replyContent[comment.id!]?.trim() || replySubmitting[comment.id!]"
+                                (click)="submitReply(comment.id!)">
+                          <i class="bi bi-send-fill"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div *ngIf="replySubmitting[comment.id!]" class="reply-loading mt-1">
+                      <div class="spinner-grow spinner-grow-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      <small class="text-muted ms-1">Sending reply...</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Nested replies - recursively render child comments -->
+              <div *ngIf="comment.replies && comment.replies.length > 0" class="nested-replies mt-2">
+                <ng-container *ngFor="let reply of comment.replies">
+                  <ng-container *ngTemplateOutlet="commentTemplate; context: {comment: reply, level: level + 1}"></ng-container>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+<div class="comment-input-section mt-3">
+          <div class="d-flex align-items-start">
+            <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="36" height="36">
+            <div class="flex-grow-1 reply-input-wrapper">
+              <input
+                type="text"
+                class="form-control fb-reply-input w-100"
+                placeholder="Write a comment..."
+                [(ngModel)]="newDetailComment"
+                (keyup.enter)="addDetailComment()">
+
+              <div class="reply-actions">
+                <button
+                  class="btn-reply-submit"
+                  type="button"
+                  (click)="addDetailComment()"
+                  [disabled]="!newDetailComment.trim() || isSubmitting">
+                  <i class="bi bi-send-fill"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading indicator (optional) -->
+          <div class="reply-loading ms-5 mt-2" *ngIf="isSubmitting">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>Sending comment...</span>
           </div>
         </div>
       </div>
@@ -399,49 +513,103 @@
 </div>
 
   <div class="row  ">
-    <!-- Left Sidebar - Navigation -->
-    <div class="card col-lg-3 d-none d-lg-block position-fixed" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; left: 20px;">
-      <div class="left-sidebar p-4">
-        <div class="user-profile d-flex align-items-center mb-3">
-          <img [src]="profileImage" alt="Profile Image" class="rounded-circle me-2" style="width: 40px; height: 40px;">
-          <h6 class="mb-0 fw-bold">Iyed Mejri</h6>
-        </div>
 
-        <div class="navigation-menu">
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-people-fill fs-5 me-3 text-primary"></i>
-            <span class="fw-medium clickable-content" [routerLink]="['/forumfront/user/mesPost']">Mes Posts</span>
-          </div>
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-bookmark-fill fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Enregistrements</span>
-          </div>
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-calendar-event fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Événements</span>
-          </div>
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-clock-history fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Souvenirs</span>
-          </div>
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-shop fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Marketplace</span>
-          </div>
-          <hr>
-          <h6 class="text-muted mb-2 small">Vos raccourcis</h6>
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-file-earmark-text fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Documents récents</span>
-          </div>
-          <div class="d-flex align-items-center mb-2 p-2 hover-bg-light rounded">
-            <i class="bi bi-chat-square-dots fs-5 me-3 text-primary"></i>
-            <span class="fw-medium">Forums de discussion</span>
+
+    <!-- Left Sidebar - Navigation -->
+<div class="sidebar-wrapper position-fixed d-none d-lg-block" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; left: 20px;">
+      <!-- User Profile -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="p-3">
+          <div class="d-flex align-items-center mb-3">
+            <div class="position-relative me-2">
+              <img [src]="profileImage" alt="Iyed Mejri" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+              <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 10px; height: 10px; border: 2px solid white;"></span>
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold">Iyed Mejri</h6>
+              <small class="text-muted">Actif maintenant</small>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
+      <!-- Main Navigation -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="list-group list-group-flush">
+          <a [routerLink]="['/forumfront/user/mesPost']" routerLinkActive="active-link" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-people-fill fs-5 text-primary"></i>
+              </div>
+              <span class="fw-medium">Mes Posts</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                <div class="me-3 fb-icon-container">
+                  <i class="bi bi-bookmark-fill fs-5 text-blue"></i>
+                </div>
+                <span class="fw-medium">Enregistrements</span>
+              </div>
+              <span class="badge bg-primary rounded-pill">4</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-calendar-event fs-5 text-purple"></i>
+              </div>
+              <span class="fw-medium">Événements</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-clock-history fs-5 text-teal"></i>
+              </div>
+              <span class="fw-medium">Souvenirs</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-shop fs-5 text-orange"></i>
+              </div>
+              <span class="fw-medium">Marketplace</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-transparent border-0 pb-0">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="text-muted mb-0 small">Vos raccourcis</h6>
+            <a href="javascript:void(0)" class="text-primary small">Modifier</a>
+          </div>
+        </div>
+        <div class="list-group list-group-flush">
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-file-earmark-text fs-5 text-info"></i>
+              </div>
+              <span class="fw-medium">Documents récents</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-chat-square-dots fs-5 text-success"></i>
+              </div>
+              <span class="fw-medium">Forums de discussion</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
     <!-- Main Content Area - Forum Feed -->
     <div class="col-lg-6 offset-lg-3 ">
       <!--add post-->
@@ -465,6 +633,217 @@
         </div>
       </div>
 
+      <!-- Posts list -->
+
+
+      <div *ngFor="let post of posts" class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/images/users/avatar-1.jpg" alt="" class="rounded-circle me-3" style="width: 48px; height: 48px;">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fw-semibold">{{ post.username || 'Anonymous User' }}</h6>
+              <p class="text-muted small mb-0">{{ post.createdAt | date:'dd MMM yyyy - hh:mm a' }}</p>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-three-dots"></i>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="javascript:void(0);">Enregistrer la publication</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Masquer la publication</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Signaler la publication</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Post content with read more functionality -->
+          <p class="mb-3 clickable-content" (click)="openPostDetail(post)">{{ post.content }}</p>
+          <!-- Post media -->
+          <!-- Post media -->
+          <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media mb-3 clickable-content" (click)="openPostDetail(post)">
+            <div class="media-container" [ngClass]="{
+    'media-single': post.media.length === 1,
+    'media-double': post.media.length === 2,
+    'media-grid-3': post.media.length === 3,
+    'media-grid-4 equal-size': post.media.length === 4,
+    'media-grid-more': post.media.length > 4
+  }">
+              <!-- For single photo -->
+              <ng-container *ngIf="post.media.length === 1">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For double photo layout -->
+              <ng-container *ngIf="post.media.length === 2">
+                <div *ngFor="let media of post.media; let i = index" class="media-item">
+                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For triple photo layout -->
+              <ng-container *ngIf="post.media.length === 3">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+                <div class="secondary-media-container">
+                  <div *ngFor="let media of post.media.slice(1); let i = index" class="media-item secondary-media">
+                    <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                    <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                      <source [src]="media.mediaUrl!" type="video/mp4">
+                    </video>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- For 4 photos in 2x2 grid -->
+              <ng-container *ngIf="post.media.length === 4">
+                <div *ngFor="let media of post.media; let i = index"
+                     class="media-item"
+                     [ngClass]="{'main-media': i === 0, 'secondary-media': i > 0}">
+                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For 5+ photos -->
+              <ng-container *ngIf="post.media.length > 4">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+
+                <div class="secondary-media-container">
+                  <ng-container *ngFor="let media of post.media.slice(1, 4); let i = index">
+                    <div class="media-item secondary-media" [ngClass]="{'has-overlay': i === 2}">
+                      <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                      <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
+                        <source [src]="media.mediaUrl!" type="video/mp4">
+                      </video>
+
+                      <div *ngIf="i === 2" class="more-overlay" (click)="showAllMedia(post.media); $event.stopPropagation()">
+                        <div class="more-count">+{{ post.media.length - 4 }}</div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
+              </ng-container>
+            </div>
+          </div>                  <!-- Interaction buttons -->
+
+          <!-- Interaction buttons -->
+          <!-- Interaction buttons -->
+          <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+            <div class="position-relative">
+              <!-- Main reaction button -->
+              <button class="btn btn-sm"
+                      [ngClass]="userReactions.get(post.id!) ?
+                    getReactionIcon(userReactions.get(post.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                    'text-primary'"
+                      (click)="toggleReactionBar(post.id!)"
+                      (mouseenter)="showReactionBar(post.id!)"
+                      (mouseleave)="hideReactionBarWithDelay(post.id!)">
+                <i [class]="userReactions.get(post.id!) ?
+              getReactionIcon(userReactions.get(post.id!)!.reactionType!) :
+              'bi bi-hand-thumbs-up text-primary'"></i>
+                <span>
+      {{ userReactions.get(post.id!) ?
+                  userReactions.get(post.id!)!.reactionType!.charAt(0) + userReactions.get(post.id!)!.reactionType!.slice(1).toLowerCase() :
+                  'Like' }}
+                  {{ getTotalReactionCount(post.id!) > 0 ? '(' + getTotalReactionCount(post.id!) + ')' : '' }}
+    </span>
+              </button>
+
+              <!-- Reaction bar that shows on hover/click -->
+              <div *ngIf="reactionBarVisible.get(post.id!)"
+                   class="reaction-bar"
+                   (mouseenter)="keepReactionBarVisible(post.id!)"
+                   (mouseleave)="hideReactionBar(post.id!)">
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LIKE)}"
+                        (click)="reactToPost(post.id!, ReactionType.LIKE)">
+                  <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LOVE)}"
+                        (click)="reactToPost(post.id!, ReactionType.LOVE)">
+                  <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.HAHA)}"
+                        (click)="reactToPost(post.id!, ReactionType.HAHA)">
+                  <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.WOW)}"
+                        (click)="reactToPost(post.id!, ReactionType.WOW)">
+                  <i class="bi bi-emoji-dizzy-fill text-warning reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.SAD)}"
+                        (click)="reactToPost(post.id!, ReactionType.SAD)">
+                  <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.ANGRY)}"
+                        (click)="reactToPost(post.id!, ReactionType.ANGRY)">
+                  <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm text-primary" (click)="openPostDetail(post)">
+              <i class="bi bi-chat-dots me-1"></i>Comment {{ (post.comments || []).length ? '(' + (post.comments || []).length + ')' : '' }}
+            </button>
+
+            <button class="btn btn-sm text-primary">
+              <i class="bi bi-share me-1"></i>Share
+            </button>
+          </div>
+          <!-- Comment Input -->
+          <div class="comment-input-container mt-3 mb-2">
+            <div class="d-flex align-items-start gap-2">
+              <div class="comment-avatar">
+                <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle"
+                     style="width: 38px; height: 38px; object-fit: cover;">
+              </div>
+              <div class="comment-input-wrapper flex-grow-1">
+                <div class="position-relative">
+                  <input type="text"
+                         [(ngModel)]="post.newComment"
+                         class="form-control comment-input-field"
+                         placeholder="Write a comment..."
+                         autocomplete="off">
+
+                  <div class="comment-actions-bar">
+                    <button class="btn-send-comment"
+                            [disabled]="!post.newComment || !post.newComment.trim()"
+                            [ngClass]="{'active': post.newComment && post.newComment.trim()}"
+                            (click)="addComment(post.id!, post.newComment || ''); post.newComment = ''">
+                      <i class="bi bi-send-fill"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       <!-- Modal -->
       <div class="modal fade"
            [ngClass]="{ show: isModalOpen }"
@@ -481,6 +860,28 @@
             </div>
 
             <div class="modal-body p-4">
+<!-- Replace the existing error alert with this -->
+              <div *ngIf=toxicContentDetected class="alert"
+                   [ngClass]="{
+                     'alert-danger': !toxicContentDetected,
+                     'alert-warning': toxicContentDetected
+                   }">
+                <div class="d-flex align-items-center">
+                  <i class="bi" [ngClass]="{
+                       'bi-exclamation-triangle-fill me-2': toxicContentDetected,
+                       'bi-x-circle-fill me-2': !toxicContentDetected
+                     }"></i>
+                  <div>
+                    <strong>{{ error.split(':')[0] }}</strong>
+                    <p class="mb-0">{{ error.split(':')[1] }}</p>
+
+                    <div *ngIf="toxicContentDetected" class="mt-2 small">
+                      <strong>Tip:</strong> Please review your content and remove any inappropriate language or themes.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="d-flex align-items-center mb-3">
                 <img [src]="profileImage" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px;">
                 <div>
@@ -603,203 +1004,6 @@
         </div>
       </div>
 
-      <!-- Posts list -->
-      <div *ngFor="let post of posts" class="card mb-4 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex align-items-center mb-3">
-            <img src="assets/images/users/avatar-1.jpg" alt="" class="rounded-circle me-3" style="width: 48px; height: 48px;">
-            <div class="flex-grow-1">
-              <h6 class="mb-0 fw-semibold">{{ post.username || 'Anonymous User' }}</h6>
-              <p class="text-muted small mb-0">{{ post.createdAt | date:'dd MMM yyyy - hh:mm a' }}</p>
-            </div>
-            <div class="dropdown">
-              <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
-                <i class="bi bi-three-dots"></i>
-              </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="javascript:void(0);">Enregistrer la publication</a></li>
-                <li><a class="dropdown-item" href="javascript:void(0);">Masquer la publication</a></li>
-                <li><a class="dropdown-item" href="javascript:void(0);">Signaler la publication</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- Post content with read more functionality -->
-<p class="mb-3 clickable-content" (click)="openPostDetail(post)">{{ post.content }}</p>
-          <!-- Post media -->
-          <!-- Post media -->
-          <div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media mb-3 clickable-content" (click)="openPostDetail(post)">
-            <div class="media-container" [ngClass]="{
-    'media-single': post.media.length === 1,
-    'media-double': post.media.length === 2,
-    'media-grid-3': post.media.length === 3,
-    'media-grid-4 equal-size': post.media.length === 4,
-    'media-grid-more': post.media.length > 4
-  }">
-              <!-- For single photo -->
-              <ng-container *ngIf="post.media.length === 1">
-                <div class="media-item main-media">
-                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
-                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
-                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
-                  </video>
-                </div>
-              </ng-container>
-
-              <!-- For double photo layout -->
-              <ng-container *ngIf="post.media.length === 2">
-                <div *ngFor="let media of post.media; let i = index" class="media-item">
-                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
-                  <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
-                    <source [src]="media.mediaUrl!" type="video/mp4">
-                  </video>
-                </div>
-              </ng-container>
-
-              <!-- For triple photo layout -->
-              <ng-container *ngIf="post.media.length === 3">
-                <div class="media-item main-media">
-                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
-                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
-                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
-                  </video>
-                </div>
-                <div class="secondary-media-container">
-                  <div *ngFor="let media of post.media.slice(1); let i = index" class="media-item secondary-media">
-                    <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
-                    <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
-                      <source [src]="media.mediaUrl!" type="video/mp4">
-                    </video>
-                  </div>
-                </div>
-              </ng-container>
-
-              <!-- For 4 photos in 2x2 grid -->
-              <ng-container *ngIf="post.media.length === 4">
-                <div *ngFor="let media of post.media; let i = index"
-                     class="media-item"
-                     [ngClass]="{'main-media': i === 0, 'secondary-media': i > 0}">
-                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
-                  <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
-                    <source [src]="media.mediaUrl!" type="video/mp4">
-                  </video>
-                </div>
-              </ng-container>
-
-              <!-- For 5+ photos -->
-              <ng-container *ngIf="post.media.length > 4">
-                <div class="media-item main-media">
-                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
-                  <video *ngIf="isVideo(post.media[0].mediaUrl!)" controls class="img-fluid rounded">
-                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
-                  </video>
-                </div>
-
-                <div class="secondary-media-container">
-                  <ng-container *ngFor="let media of post.media.slice(1, 4); let i = index">
-                    <div class="media-item secondary-media" [ngClass]="{'has-overlay': i === 2}">
-                      <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
-                      <video *ngIf="isVideo(media.mediaUrl!)" controls class="img-fluid rounded">
-                        <source [src]="media.mediaUrl!" type="video/mp4">
-                      </video>
-
-                      <div *ngIf="i === 2" class="more-overlay" (click)="showAllMedia(post.media); $event.stopPropagation()">
-                        <div class="more-count">+{{ post.media.length - 4 }}</div>
-                      </div>
-                    </div>
-                  </ng-container>
-                </div>
-              </ng-container>
-            </div>
-          </div>                  <!-- Interaction buttons -->
-
-          <!-- Interaction buttons -->
-<!-- Interaction buttons -->
-          <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
-            <div class="position-relative">
-              <!-- Main reaction button -->
-              <button class="btn btn-sm"
-                      [ngClass]="userReactions.get(post.id!) ?
-                    getReactionIcon(userReactions.get(post.id!)!.reactionType!).split(' ').slice(-1)[0] :
-                    'text-primary'"
-                      (click)="toggleReactionBar(post.id!)"
-                      (mouseenter)="showReactionBar(post.id!)"
-                      (mouseleave)="hideReactionBarWithDelay(post.id!)">
-                <i [class]="userReactions.get(post.id!) ?
-              getReactionIcon(userReactions.get(post.id!)!.reactionType!) :
-              'bi bi-hand-thumbs-up text-primary'"></i>
-                <span>
-      {{ userReactions.get(post.id!) ?
-                  userReactions.get(post.id!)!.reactionType!.charAt(0) + userReactions.get(post.id!)!.reactionType!.slice(1).toLowerCase() :
-                  'Like' }}
-                  {{ getTotalReactionCount(post.id!) > 0 ? '(' + getTotalReactionCount(post.id!) + ')' : '' }}
-    </span>
-              </button>
-
-              <!-- Reaction bar that shows on hover/click -->
-              <div *ngIf="reactionBarVisible.get(post.id!)"
-                   class="reaction-bar"
-                   (mouseenter)="keepReactionBarVisible(post.id!)"
-                   (mouseleave)="hideReactionBar(post.id!)">
-                <button class="reaction-button"
-                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LIKE)}"
-                        (click)="reactToPost(post.id!, ReactionType.LIKE)">
-                  <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
-                </button>
-                <button class="reaction-button"
-                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LOVE)}"
-                        (click)="reactToPost(post.id!, ReactionType.LOVE)">
-                  <i class="bi bi-heart-fill text-danger reaction-icon"></i>
-                </button>
-                <button class="reaction-button"
-                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.HAHA)}"
-                        (click)="reactToPost(post.id!, ReactionType.HAHA)">
-                  <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
-                </button>
-                <button class="reaction-button"
-                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.WOW)}"
-                        (click)="reactToPost(post.id!, ReactionType.WOW)">
-                  <i class="bi bi-emoji-dizzy-fill text-warning reaction-icon"></i>
-                </button>
-                <button class="reaction-button"
-                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.SAD)}"
-                        (click)="reactToPost(post.id!, ReactionType.SAD)">
-                  <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
-                </button>
-                <button class="reaction-button"
-                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.ANGRY)}"
-                        (click)="reactToPost(post.id!, ReactionType.ANGRY)">
-                  <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
-                </button>
-              </div>
-            </div>
-            <button class="btn btn-sm text-primary" (click)="openPostDetail(post)">
-              <i class="bi bi-chat-dots me-1"></i>Comment {{ (post.comments || []).length ? '(' + (post.comments || []).length + ')' : '' }}
-            </button>
-
-            <button class="btn btn-sm text-primary">
-              <i class="bi bi-share me-1"></i>Share
-            </button>
-          </div>
-          <!-- Comment Input -->
-            <div class="d-flex gap-2">
-            <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle" style="width: 38px; height: 38px;">
-            <div class="flex-grow-1">
-              <div class="input-group">
-                <input type="text"
-                       [(ngModel)]="post.newComment"
-                       class="form-control bg-light"
-                       placeholder="Écrivez un commentaire...">
-                <button class="btn btn-primary comment-btn"
-                        [disabled]="!post.newComment || !post.newComment.trim()"
-                        (click)="addComment(post.id!, post.newComment || ''); post.newComment = ''">
-                  <i class="bi bi-send-fill"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
 
@@ -965,3 +1169,28 @@
 
   </div>
 
+<!-- Reduced padding (p-2), smaller icon (fs-4), and modal-sm for a more compact design -->
+<!-- Updated Inappropriate Content Modal -->
+<div *ngIf="toxicContentDetected" id="deleteRecordModal" class="modal fade zoomIn" bsModal #deleteRecordModal="bs-modal">
+  <div class="modal-dialog1 modal-dialog-centered mx-auto" style="max-width: 600px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" id="deleteRecord-close" (click)="deleteRecordModal.hide()"></button>
+      </div>
+      <div class="modal-body p-md-5">
+        <div class="text-center">
+          <div class="text-warning">
+            <i class="bi bi-exclamation-triangle display-4"></i>
+          </div>
+          <div class="mt-4">
+            <h3 class="mb-2">Inappropriate Content</h3>
+            <p class="text-muted fs-lg mx-3 mb-0">Comment content contains inappropriate language that violates our community guidelines!</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+          <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

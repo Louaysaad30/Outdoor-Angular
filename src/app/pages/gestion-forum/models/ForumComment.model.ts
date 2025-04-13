@@ -5,6 +5,6 @@ export class ForumComment {
   userId?: number;
   username?: string; // For display purposes
   postId?: string;
-  parentCommentId?: string;
+  parentCommentId?: string | null; // For nested comments
   replies?: ForumComment[];
 }

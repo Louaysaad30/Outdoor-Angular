@@ -5,6 +5,10 @@ import { Injectable } from '@angular/core';
               import { catchError, map } from 'rxjs/operators';
 import {Media} from "../models/media.model";
 
+
+
+import {co} from "@fullcalendar/core/internal-common";
+
               @Injectable({
                 providedIn: 'root'
               })
@@ -14,21 +18,39 @@ import {Media} from "../models/media.model";
                 constructor(private http: HttpClient) { }
 
                 // Create a new post with multipart/form-data
-                createPost(post: Post, mediaFiles?: File[]): Observable<Post> {
-                  const formData = new FormData();
-                  formData.append('content', post.content || '');
-                  formData.append('userId', post.userId?.toString() || '');
+createPost(post: Post, mediaFiles?: File[]): Observable<Post> {
+  const formData = new FormData();
 
-                  if (mediaFiles && mediaFiles.length > 0) {
-                    mediaFiles.forEach(file => {
-                      formData.append('mediaFiles', file);
-                    });
-                  }
+  // Add basic post data
+  formData.append('content', post.content || '');
+  formData.append('userId', post.userId?.toString() || '');
+  formData.append('username', post.username || '');
+  formData.append('email', post.email || '');
 
-                  return this.http.post<Post>(`${this.apiUrl}/add`, formData);
-                }
+  // Add media files if they exist
+  if (mediaFiles && mediaFiles.length > 0) {
+    mediaFiles.forEach(file => {
+      formData.append('mediaFiles', file);
+    });
+  }
 
-                // Get all posts
+  // The API already handles content toxicity checking on the backend
+  return this.http.post<Post>(`${this.apiUrl}/add`, formData).pipe(
+    catchError(error => {
+
+      console.log("erreur",error)
+      // Handle specific API errors
+      if (error.status === 400 && error.error?.message?.includes('toxic')) {
+        // Content toxicity detected by backend
+        return throwError(() => new Error('Your post contains inappropriate content that violates our community guidelines.'));
+      }
+      return throwError(() => error);
+    })
+  );
+}
+
+
+// Get all posts
                 getPosts(): Observable<Post[]> {
                   return this.http.get<Post[]>(`${this.apiUrl}/all`);
                 }
@@ -125,4 +147,8 @@ import {Media} from "../models/media.model";
                   );
                 }
 
+
+                getTopRatedPosts(): Observable<any[]> {
+                  return this.http.get<any[]>(`${this.apiUrl}/top-rated-posts`);
+                }
               }
