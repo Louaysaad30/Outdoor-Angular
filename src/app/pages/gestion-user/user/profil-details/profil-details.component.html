@@ -67,7 +67,13 @@
                 <tr><th class="ps-0">Phone No</th><td class="text-muted text-end">+216 {{ currentUser.tel }}</td></tr>
                 <tr><th class="ps-0">Birth of Date</th>
                     <td class="text-muted text-end">{{ currentUser.dateNaissance }}</td></tr>
-                <tr><th class="ps-0">Email</th><td class="text-muted text-end">{{ currentUser.email }}</td></tr>                <tr>
+                <tr><th class="ps-0">Email</th><td class="text-muted text-end">{{ currentUser.email }}</td></tr>             
+                  <tr  *ngIf="isAgence()">
+                    <th class="ps-0">Location</th>
+                    <td class="text-muted text-end">{{ currentUser.location }}</td>
+                  </tr>
+                  
+                <tr>
                     <!-- <th>Social Media</th>
                     <td>
                         <div class="d-flex flex-wrap justify-content-end gap-2">

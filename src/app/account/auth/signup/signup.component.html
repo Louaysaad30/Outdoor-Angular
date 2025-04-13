@@ -154,7 +154,6 @@
                                           </div>
                                         </div>
                                       
-                                        <!-- Image URL -->
                                         <!-- Image File Upload -->
                                         <div class="mb-3">
                                           <label for="image" class="form-label">Profile Image</label>
@@ -178,17 +177,29 @@
                                             </p>
                                           </div>
                                         </div>
+                                        <!-- Role Dropdown -->
+                                        <div class="form-group">
+                                          <label for="role">Role</label>
+                                          <select id="role" class="form-control" formControlName="role">
+                                            <option value="USER">User</option>
+                                            <option value="AGENCE">Agence</option>
+                                            <option value="OWNER">Owner</option>
+                                            <option value="FORMATEUR">Formateur</option>
+                                            <option value="EVENT_MANAGER">Event Manager</option>
+                                          </select>
+                                        </div>
+
+                                        <!-- Location Field, only show if role is AGENT -->
+                                        <div class="form-group" *ngIf="registrationForm.get('role')?.value === 'AGENCE'">
+                                          <label for="location">Location</label>
+                                          <input id="location" class="form-control" formControlName="location" />
+                                        </div>
                                       
                                         <!-- Submit Button -->
                                         <div class="mt-4">
-                                          <button class="btn btn-primary w-100" type="submit" [disabled]="registrationForm.invalid">Sign Up</button>
+                                          <button class="btn btn-primary w-100" type="submit" >Sign Up</button>
                                         </div>
                                       </form>
-                                      
-                                      
-                                      
-                                    
-  
                                     </div>
                                     <div class="mt-4 text-center">
                                         <p class="mb-0">Already have an account ? <a routerLink="/auth/signin" class="fw-semibold text-primary text-decoration-underline"> Signin </a> </p>

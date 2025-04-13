@@ -80,6 +80,7 @@ export class EditProfileComponent {
         Validators.required,
         this.dateInThePastValidator() // Custom validator to ensure the date is in the past
       ]),
+      location: new FormControl(this.currentUser.location, []), // Optional, adjust as needed
       // You can add additional fields if needed
       // If the backend expects specific attributes, ensure these names match exactly.
     //  image: new FormControl(this.currentUser.image || '', []), // Optional, assuming image is handled elsewhere
@@ -113,6 +114,8 @@ onSubmit(): void {
     formData.append('tel', this.userForm.value.tel);
     formData.append('dateNaissance', this.userForm.value.dateNaissance);
     formData.append('email', this.userForm.value.email);
+    formData.append('location', this.userForm.value?.location);
+
 
     // Append image file if selected
     if (this.selectedFile) {
@@ -137,6 +140,10 @@ onSubmit(): void {
     alert('Form is invalid. Please check the inputs.');
   }
 }
+isAgence(): boolean {
+  return this.currentUser?.authorities?.[0]?.authority === 'AGENCE';
+}
+
   fileChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
@@ -214,7 +221,6 @@ onSubmit(): void {
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'Yes, delete my account!',
           }).then((result) => {
-            if (result.isConfirmed) {
               // Proceed to delete the user account
               this.userService.deleteUser(this.currentUser.id).subscribe(
                 (deleteRes) => {
@@ -228,7 +234,7 @@ onSubmit(): void {
                 }
               );
             }
-          });
+          );
         } else {
           // If password is incorrect, show an error message
           Swal.fire('Error!', 'Incorrect password. Please try again.', 'error');

@@ -175,6 +175,13 @@
                                       </div>
                                     </div>
                                   </div>
+                                  <div class="col-lg-6" *ngIf="isAgence()">
+                                    <div class="mb-3">
+                                      <label for="locationInput" class="form-label">Location</label>
+                                      <input type="text" class="form-control" id="locationInput" formControlName="location">
+                                    </div>
+                                  </div>
+                                  
                                   <div class="col-lg-12">
                                     <div class="hstack gap-2 justify-content-end">
                                       <button type="submit" class="btn btn-primary">Update</button>

@@ -58,6 +58,14 @@ export class SigninComponent {
                   this.router.navigate(['/userback']);
                 } else if (authority === 'USER') {
                   this.router.navigate(['/userfront']);
+                } else if (authority === 'AGENCE') {
+                  this.router.navigate(['/transportback']);
+                } else if (authority === 'OWNER') {
+                  this.router.navigate(['/campingback']);
+                } else if (authority === 'FORMATEUR') {
+                  this.router.navigate(['/formationback']);
+                } else if (authority === 'EVENT_MANAGER') {
+                  this.router.navigate(['/eventback']);
                 } else {
                   this.router.navigate(['/auth/signin']);
                 }
@@ -79,7 +87,7 @@ export class SigninComponent {
           if (error.status === 0) {
             errorMessage = 'Unable to connect to server. Please check your backend.';
           } else {
-            errorMessage = error?.error || 'Login failed. Please check your credentials.';
+            errorMessage = error || 'Login failed. Please check your credentials.';
           }
   
           this.errorLoginMessage = errorMessage;

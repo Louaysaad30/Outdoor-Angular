@@ -42,6 +42,8 @@ export class SignupComponent {
         Validators.pattern('^[0-9]{8}$') // Ensures exactly 8 digits
       ]),
       dateNaissance: new FormControl('', [this.dateInThePastValidator()]),
+      role: new FormControl('USER', [Validators.required]), // default role
+      location: new FormControl('') // only required if role is AGENT
     });
     
   }
@@ -70,7 +72,12 @@ export class SignupComponent {
       formData.append('dateNaissance', this.registrationForm.get('dateNaissance')?.value);
       formData.append('tel', this.registrationForm.get('tel')?.value);
       formData.append('image', this.selectedImage); // the actual image file
-  
+      formData.append('role', this.registrationForm.get('role')?.value);
+      if(this.registrationForm.get('location')){
+        formData.append('location', this.registrationForm.get('location')?.value);
+      }
+      console.log(formData);
+
       this.authService.register(formData).subscribe(
         () => {
           Swal.fire({
@@ -84,15 +91,38 @@ export class SignupComponent {
         },
         (error) => {
           console.error('Registration failed', error);
-          if (error && error.includes('Email')) {
-            this.emailError = error;
+        
+          let errorMsg = 'Something went wrong. Please try again.';
+        
+          if (error) {
+            if (error.error && typeof error.error === 'object' && error.error.message) {
+              errorMsg = error.error.message;
+            } else if (error.message) {
+              errorMsg = error.message;
+            } else {
+              try {
+                // Try parsing error body if it's a string
+                const parsed = JSON.parse(error);
+                if (parsed?.message) {
+                  errorMsg = parsed.message;
+                }
+              } catch (e) {
+                // If not JSON, fallback
+                errorMsg = 'Something went wrong. Please try again.';
+              }
+            }
           }
+        
+          this.emailError = errorMsg;
+        
           Swal.fire({
             icon: 'error',
             title: 'Registration failed',
-            text: this.emailError || 'Something went wrong. Please try again.',
+            text: this.emailError,
           });
         }
+        
+        
       );
     } else {
       this.registrationForm.markAllAsTouched();

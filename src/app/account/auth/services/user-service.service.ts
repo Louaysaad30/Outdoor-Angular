@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { User } from '../models/User';
-import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root'
@@ -40,6 +39,10 @@ export class UserServiceService {
 
   updateUser(id: number, formData: FormData): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/${id}`, formData);
+  }
+  
+  verifyUser(userId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/verify/${userId}`, {});
   }
   
   deleteUser(id: number): Observable<any> {

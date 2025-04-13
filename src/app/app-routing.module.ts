@@ -14,7 +14,7 @@ const routes: Routes = [
   { path: 'auth', component: AuthlayoutComponent, loadChildren: () => import('./account/account.module').then(m => m.AccountModule),canActivate: [authGuard ] },
   { path: 'pages',component: AuthlayoutComponent, loadChildren: () => import('./extraspages/extraspages.module').then(m => m.ExtraspagesModule)},
   { path: 'userback', component: LayoutComponent, loadChildren: () => import('./pages/gestion-user/gestion-user.module').then(m => m.GestionUserModule) ,  canActivate: [ roleGuard] ,  data: { role: 'ADMIN' }},
-  { path: 'userfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-user/gestion-user.module').then(m => m.GestionUserModule) ,  canActivate: [ roleGuard] ,  data: { role: 'USER' }},
+  { path: 'userfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-user/gestion-user.module').then(m => m.GestionUserModule) ,  canActivate: [ roleGuard] ,  data: { roles: ['USER', 'AGENCE'] }},
   { path: 'campingback', component: LayoutComponent, loadChildren: () => import('./pages/gestion-camping/gestion-camping.module').then(m => m.GestionCampingModule)  },
   { path: 'campingfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-camping/gestion-camping.module').then(m => m.GestionCampingModule)  },
   { path: 'forumback', component: LayoutComponent, loadChildren: () => import('./pages/gestion-forum/gestion-forum.module').then(m => m.GestionForumModule)  },
