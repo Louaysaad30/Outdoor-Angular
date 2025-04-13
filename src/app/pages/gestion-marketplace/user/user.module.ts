@@ -14,9 +14,13 @@ import { ModalModule } from 'ngx-bootstrap/modal';
 import { AccordionModule } from 'ngx-bootstrap/accordion';
 import { NgxSliderModule } from '@angular-slider/ngx-slider';
 import { CartComponent } from './cart/cart.component';
+import { CheckoutComponent } from './checkout/checkout.component';
+import { AlertModule } from 'ngx-bootstrap/alert';
+import { OrderOverviewComponent } from './order-overview/order-overview.component';
+import { saveAs } from 'file-saver';
 
 @NgModule({
-  declarations: [MarketPlaceComponent,CartComponent],
+  declarations: [MarketPlaceComponent,CartComponent,CheckoutComponent,OrderOverviewComponent],
   imports: [
     CommonModule,
     UserRoutingModule,
@@ -30,7 +34,9 @@ import { CartComponent } from './cart/cart.component';
     PaginationModule.forRoot(),
     ModalModule.forRoot(),
     AccordionModule.forRoot(),
-    NgxSliderModule
+    NgxSliderModule,
+    AlertModule.forRoot()
+
   ]
 })
 export class UserModule { }

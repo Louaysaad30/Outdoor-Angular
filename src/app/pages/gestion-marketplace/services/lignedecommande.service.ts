@@ -39,6 +39,16 @@ export class LignedecommandeService {
     return this.http.get<LigneCommande>(`${this.apiUrl}/get/${id}`);
   }
 
+  getByCommandeId(idCommande: number): Observable<LigneCommande[]> {
+    return this.http.get<LigneCommande[]>(`${this.apiUrl}/getByCommande/${idCommande}`).pipe(
+      tap(response => console.log(`LigneCommande for order ${idCommande}:`, response)),
+      catchError(error => {
+        console.error(`Error fetching ligne commandes for order ${idCommande}:`, error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   deleteLigneCommande(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
   }
@@ -51,6 +61,19 @@ export class LignedecommandeService {
         idProduit: ligne.produit?.idProduit // This will be undefined if produit is null/undefined
       } as LigneCommande))), // Explicit type assertion
       tap(mapped => console.log('Mapped lignes with product IDs:', mapped))
+    );
+  }
+
+  affecterCommandeToLigneCommande(idLigneCommande: number, idCommande: number): Observable<LigneCommande> {
+    return this.http.put<LigneCommande>(
+      `${this.apiUrl}/affecterCommandeToLigneCommande/${idLigneCommande}/${idCommande}`,
+      {}
+    ).pipe(
+      tap(response => console.log('Affectation response:', response)),
+      catchError(error => {
+        console.error('Affectation error:', error);
+        return throwError(() => error);
+      })
     );
   }
 }

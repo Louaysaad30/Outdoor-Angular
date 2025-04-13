@@ -2,7 +2,7 @@
   <div class="col-lg-12">
     <div class="card">
       <div class="card-body">
-          <app-add-product-code></app-add-product-code>
+
           <app-add-pcategory></app-add-pcategory>
 
         <div class="row">
@@ -83,23 +83,38 @@
             </div>
 
             <div class="form-group">
-              <label for="imageProduit">Product Image</label>
+              <label>Product Images</label>
+
+              <!-- Aperçu des images sélectionnées -->
+              <div class="d-flex flex-wrap gap-2 mt-2 mb-2">
+                <div *ngFor="let preview of imagePreviewUrls; let i = index" class="position-relative">
+                  <img [src]="preview" class="rounded" style="height: 100px; width: 100px; object-fit: cover;">
+                  <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
+                          style="width: 25px; height: 25px; padding: 0 !important;"
+                          (click)="removeSelectedImage(i)">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input file multiple -->
               <input
                 type="file"
                 id="imageProduit"
                 (change)="onFileSelected($event)"
                 class="form-control"
                 accept="image/*"
-                [ngClass]="{'is-invalid': !isImageSelected() && formControls['imageProduit'].touched}"
+                multiple
+                [ngClass]="{'is-invalid': selectedFiles.length === 0 && formControls['imageProduit'].touched}"
               >
-              <div class="invalid-feedback" *ngIf="!isImageSelected() && formControls['imageProduit'].touched">
-                Please select an image
+              <div class="invalid-feedback" *ngIf="selectedFiles.length === 0 && formControls['imageProduit'].touched">
+                Please select at least one image
               </div>
               <small class="form-text text-muted">
-                Maximum file size: 5MB. Supported formats: JPG, PNG, GIF
+                Maximum file size: 5MB per image. Supported formats: JPG, PNG, GIF. You can select multiple images.
               </small>
-              <div *ngIf="selectedFile" class="mt-2">
-                <small class="text-success">Selected file: {{selectedFile.name}}</small>
+              <div *ngIf="selectedFiles.length > 0" class="mt-2">
+                <small class="text-success">Selected: {{selectedFiles.length}} image(s)</small>
               </div>
             </div>
 

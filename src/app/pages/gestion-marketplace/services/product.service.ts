@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Product } from '../models/product';
 import { environment } from 'src/environments/environment';
+import { ProductImageService } from './product-image.service'; // Adjust the path as needed
 
 @Injectable({
   providedIn: 'root'
@@ -52,5 +53,12 @@ export class ProductService {
     const formData = new FormData();
     formData.append('image', file);
     return this.http.post(`${this.apiUrl}/upload`, formData);
+  }
+
+  // Add this method temporarily if needed
+  addProductImage(productId: number, imageUrl: string): Observable<any> {
+    // This is just a wrapper that calls the proper service
+    const productImageService = new ProductImageService(this.http);
+    return productImageService.addImageToProduct(productId, imageUrl);
   }
 }

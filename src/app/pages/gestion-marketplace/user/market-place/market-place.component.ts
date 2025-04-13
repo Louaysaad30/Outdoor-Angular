@@ -6,10 +6,33 @@ import { PanierService } from '../../services/panier.service';
 import { Options } from 'ng5-slider';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { Router } from '@angular/router';
+import { ProductImageService } from '../../services/product-image.service';
+import { ProductImage } from '../../models/ProductImage';
 
 @Component({
   selector: 'app-market-place',
-  templateUrl: './market-place.component.html'
+  templateUrl: './market-place.component.html',
+  styles: [`
+    .product-image-transition {
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .btn-light.rounded-circle {
+      background-color: rgba(255, 255, 255, 0.7);
+      border: none;
+      opacity: 0.7;
+      transition: opacity 0.2s ease, background-color 0.2s ease;
+    }
+
+    .btn-light.rounded-circle:hover {
+      background-color: rgba(255, 255, 255, 0.9);
+      opacity: 1;
+    }
+
+    .card:hover .product-image-transition {
+      transform: scale(1.03);
+    }
+  `]
 })
 export class MarketPlaceComponent implements OnInit {
   products: any[] = [];
@@ -43,7 +66,8 @@ export class MarketPlaceComponent implements OnInit {
     private categoryService: PCategoryService,
     private ligneCommandeService: LignedecommandeService,
     private panierService: PanierService,
-    private router: Router
+    private router: Router,
+    private productImageService: ProductImageService,
   ) {}
 
   ngOnInit(): void {
@@ -58,6 +82,10 @@ export class MarketPlaceComponent implements OnInit {
       next: (data) => {
         this.products = data;
         this.productlist = data;
+        // Load images for each product
+        this.products.forEach(product => {
+          this.loadProductImages(product);
+        });
         this.isLoading = false;
       },
       error: (error) => {
@@ -182,5 +210,65 @@ export class MarketPlaceComponent implements OnInit {
     } else {
       console.log('Cart is empty');
     }
+  }
+
+  loadProductImages(product: any): void {
+    // Set default image index
+    product.currentImageIndex = 0;
+
+    // First add main image to gallery
+    product.imageGallery = [{
+      idImage: -1, // Use negative to indicate it's not from DB
+      imageUrl: product.imageProduit,
+      displayOrder: 0
+    }];
+
+    // Then load other images from API
+    this.productImageService.getImagesByProductId(product.idProduit).subscribe({
+      next: (images) => {
+        // Only add images that aren't already the main image
+        const additionalImages = images.filter(img =>
+          img.imageUrl !== product.imageProduit
+        );
+
+        if (additionalImages.length > 0) {
+          // Combine main image with additional images
+          product.imageGallery = [...product.imageGallery, ...additionalImages];
+        }
+      },
+      error: (error) => {
+        console.error('Error loading product images for product ' + product.idProduit, error);
+      }
+    });
+  }
+
+  navigateProductImage(product: any, direction: 'prev' | 'next', event: Event): void {
+    // Prevent the click from triggering parent elements
+    event.stopPropagation();
+
+    if (!product.imageGallery || product.imageGallery.length <= 1) {
+      return; // No navigation needed for single image
+    }
+
+    const totalImages = product.imageGallery.length;
+
+    if (direction === 'next') {
+      product.currentImageIndex = (product.currentImageIndex + 1) % totalImages;
+    } else {
+      product.currentImageIndex = (product.currentImageIndex - 1 + totalImages) % totalImages;
+    }
+  }
+
+  getCurrentImageUrl(product: any): string {
+    if (product.imageGallery && product.imageGallery.length > 0 &&
+        product.currentImageIndex !== undefined &&
+        product.imageGallery[product.currentImageIndex]) {
+      return product.imageGallery[product.currentImageIndex].imageUrl;
+    }
+    return product.imageProduit;
+  }
+
+  getImageCount(product: any): number {
+    return product.imageGallery ? product.imageGallery.length : 1;
   }
 }

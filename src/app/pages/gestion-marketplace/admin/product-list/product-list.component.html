@@ -43,7 +43,7 @@
                           <button class="btn btn-subtle-danger d-none" id="remove-actions" (click)="deleteRecordModal.show()">
                               <i class="ri-delete-bin-2-line"></i>
                           </button>
-                          <button type="button" class="btn btn-primary add-btn" (click)="navigateToAddProduct()">
+                          <button type="button" class="btn btn-primary add-btn" (click)="addModal.show()">
                               <i class="bi bi-plus-circle align-baseline me-1"></i> Add Product
                           </button>
                       </div>
@@ -55,16 +55,8 @@
                           <thead class="table-light">
                               <tr>
                                   <th class="sort" (click)="onSort('nomProduit')">Product Name</th>
-                                  <th class="sort" (click)="onSort('categorie')">
-                                      Category
-                                      <span class="ms-1">
-                                          <i class="bi"
-                                             [class.bi-sort-up-alt]="currentSortColumn === 'categorie' && sortDirection === 'asc'"
-                                             [class.bi-sort-down]="currentSortColumn === 'categorie' && sortDirection === 'desc'"
-                                             [class.bi-filter]="currentSortColumn !== 'categorie'">
-                                          </i>
-                                      </span>
-                                  </th>
+                                  <th>Image</th> <!-- Added column for image gallery -->
+                                  <th class="sort" (click)="onSort('categorie')">Category</th>
                                   <th class="sort" (click)="onSort('prixProduit')">
                                       Price
                                       <span class="ms-1">
@@ -100,17 +92,42 @@
                           </thead>
                           <tbody>
                               <tr *ngFor="let product of products; let i = index">
-                                  <td class="products">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-xs bg-light rounded p-1 me-2">
-                                            <img src="{{product.imageProduit}}" alt="" class="img-fluid d-block">
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0"><a routerLink="/ecommerce/product-details" class="text-reset products">{{product.nomProduit}}</a></h6>
-                                        </div>
+                                  <td>{{ product.nomProduit }}</td>
+
+                                  <!-- Product Image Gallery -->
+                                  <td>
+                                    <div class="position-relative" style="width: 150px; height: 100px;">
+                                      <!-- Main product image -->
+                                      <img [src]="(product.imageGallery && product.imageGallery.length > 0 && product.currentImageIndex !== undefined) ?
+                                                   product.imageGallery[product.currentImageIndex].imageUrl :
+                                                   product.imageProduit"
+                                           class="rounded product-image-transition"
+                                           style="width: 100%; height: 100%; object-fit: cover;"
+                                           alt="{{ product.nomProduit }}">
+
+                                      <!-- Navigation controls -->
+                                      <div *ngIf="product.imageGallery && product.imageGallery.length > 1" class="d-flex justify-content-between position-absolute w-100" style="top: 50%; transform: translateY(-50%);">
+                                        <button class="btn btn-sm btn-light rounded-circle"
+                                                style="width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                (click)="navigateProductImage(product, 'prev', $event)">
+                                          <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light rounded-circle"
+                                                style="width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                (click)="navigateProductImage(product, 'next', $event)">
+                                          <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                      </div>
+
+                                      <!-- Image counter -->
+                                      <span *ngIf="product.imageGallery && product.imageGallery.length > 0"
+                                            class="badge bg-dark position-absolute bottom-0 end-0 m-1">
+                                        {{ (product.currentImageIndex !== undefined ? product.currentImageIndex : 0) + 1 }}/{{ getImageCount(product) }}
+                                      </span>
                                     </div>
-                                </td>
-                                  <td>{{product.categorie?.nomCategorie || 'Uncategorized'}}</td>
+                                  </td>
+
+                                  <td>{{ product.categorie?.nomCategorie }}</td>
                                   <td>{{product.prixProduit | currency}}</td>
                                   <td>{{product.stockProduit}}</td>
                                   <td>
@@ -190,12 +207,12 @@
   </div>
 </div>
 
-<!-- Add Product Modal -->
+<!-- Edit Product Modal -->
 <div class="modal fade" bsModal #showModal="bs-modal">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header px-4 pt-4">
-                <h5 class="modal-title" id="exampleModalLabel">Add Product</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Edit Product</h5>
                 <button type="button" class="btn-close" (click)="showModal.hide()"></button>
             </div>
 
@@ -263,21 +280,59 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Product Image</label>
-                        <div class="d-flex align-items-center gap-2">
-                            <img *ngIf="currentImage"
-                                 [src]="currentImage"
-                                 class="rounded"
-                                 style="height: 100px; width: 100px; object-fit: cover;">
-                            <input type="file"
-                                   class="form-control"
-                                   (change)="onFileSelected($event)"
-                                   accept="image/*">
-                        </div>
-                        <small class="text-muted mt-2">
-                            Current image will be kept if no new image is selected
-                        </small>
-                    </div>
+  <label class="form-label">Product Images</label>
+
+  <!-- Aperçu des images existantes et nouvelles -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <!-- Image principale actuelle -->
+    <div *ngIf="currentImage" class="position-relative">
+      <img [src]="currentImage"
+          class="rounded border border-primary"
+          style="height: 100px; width: 100px; object-fit: cover;">
+      <span class="badge bg-primary position-absolute bottom-0 end-0">Main</span>
+    </div>
+
+    <!-- Images de la galerie (si disponibles) -->
+    <div *ngFor="let image of productGalleryImages; let i = index" class="position-relative">
+      <img [src]="image.imageUrl"
+          class="rounded"
+          style="height: 100px; width: 100px; object-fit: cover;">
+      <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
+              style="width: 25px; height: 25px; padding: 0 !important;"
+              (click)="removeGalleryImage(image.idImage)">
+        <i class="bi bi-x"></i>
+      </button>
+      <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 p-1"
+              style="width: 25px; height: 25px; padding: 0 !important;"
+              (click)="setAsMainImage(image.imageUrl)">
+        <i class="bi bi-star"></i>
+      </button>
+    </div>
+
+    <!-- Nouvelles images sélectionnées pour upload -->
+    <div *ngFor="let preview of newImagePreviewUrls; let i = index" class="position-relative">
+      <img [src]="preview"
+          class="rounded border border-warning"
+          style="height: 100px; width: 100px; object-fit: cover;">
+      <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
+              style="width: 25px; height: 25px; padding: 0 !important;"
+              (click)="removeNewImage(i)">
+        <i class="bi bi-x"></i>
+      </button>
+      <span class="badge bg-warning position-absolute bottom-0 start-0">New</span>
+    </div>
+  </div>
+
+  <!-- Input file multiple -->
+  <input type="file"
+        class="form-control"
+        (change)="onFileSelected($event)"
+        accept="image/*"
+        multiple>
+  <small class="text-muted mt-2">
+    Select multiple images to add to product gallery (max 5MB each)
+  </small>
+</div>
 
                 </div>
                 <div class="modal-footer">
@@ -289,4 +344,19 @@
             </form>
         </div>
     </div>
+</div>
+
+
+<!-- Add Product Modal -->
+<div class="modal fade" bsModal #addModal="bs-modal">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header px-4 pt-4">
+              <h5 class="modal-title">Add Product</h5>
+              <button type="button" class="btn-close" (click)="addModal.hide()"></button>
+          </div>
+
+          <app-add-product (productAdded)="refreshProducts()"></app-add-product>
+      </div>
+  </div>
 </div>

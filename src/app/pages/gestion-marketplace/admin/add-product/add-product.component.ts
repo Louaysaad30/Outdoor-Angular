@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { concat, Observable, of, throwError } from 'rxjs';
+import { concat, forkJoin, Observable, of, throwError } from 'rxjs';
 import { catchError, last, switchMap, tap } from 'rxjs/operators';
 import { CodeProduit } from '../../models/CodeProduit';
 import { ProductService } from '../../services/product.service';
@@ -10,6 +10,7 @@ import { PCategoryService } from '../../services/pcategory.service';
 import { FileUploadService } from '../../services/cloudinary.service';
 import { ProductCodeService } from '../../services/product-code.service';
 import { Product } from '../../models/product';
+import { ProductImageService } from '../../services/product-image.service';
 
 @Component({
   selector: 'app-add-product',
@@ -25,13 +26,19 @@ export class AddProductComponent implements OnInit {
   errorMessage: string = '';
   isLoading: boolean = false;
 
+  selectedFiles: File[] = [];
+  imagePreviewUrls: string[] = [];
+
+  @Output() productAdded = new EventEmitter<boolean>();
+
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
     private categoryService: PCategoryService,
     private productCodeService: ProductCodeService, // Add this
     private router: Router,
-    private fileUploadService: FileUploadService
+    private fileUploadService: FileUploadService,
+    private productImageService: ProductImageService  // Add this
   ) {
     this.productForm = this.fb.group({
       nomProduit: ['', [Validators.required]],
@@ -64,35 +71,62 @@ export class AddProductComponent implements OnInit {
   }
 
   onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        this.showErrorMessage = true;
-        this.errorMessage = 'Please select an image file';
-        setTimeout(() => this.showErrorMessage = false, 3000);
-        return;
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      // Réinitialiser si nécessaire
+      // this.selectedFiles = [];
+      // this.imagePreviewUrls = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Valider le type de fichier
+        if (!file.type.startsWith('image/')) {
+          this.showErrorMessage = true;
+          this.errorMessage = 'Please select only image files';
+          continue;
+        }
+
+        // Valider la taille (5MB max)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+          this.showErrorMessage = true;
+          this.errorMessage = 'File size must not exceed 5MB';
+          continue;
+        }
+
+        this.selectedFiles.push(file);
+
+        // Générer un aperçu
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.imagePreviewUrls.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
       }
 
-      // Validate file size (e.g., 5MB max)
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        this.showErrorMessage = true;
-        this.errorMessage = 'File size must not exceed 5MB';
-        setTimeout(() => this.showErrorMessage = false, 3000);
-        return;
-      }
-
-      this.selectedFile = file;
-      // Update form control
+      // Mettre à jour le contrôle de formulaire
       this.productForm.patchValue({
-        imageProduit: file
+        imageProduit: this.selectedFiles.length > 0 ? 'selected' : null
       });
-      const imageControl = this.productForm.get('imageProduit');
-      if (imageControl) {
-        imageControl.markAsTouched();
-        imageControl.setErrors(null);
+
+      if (this.selectedFiles.length > 0) {
+        const imageControl = this.productForm.get('imageProduit');
+        if (imageControl) {
+          imageControl.markAsTouched();
+          imageControl.updateValueAndValidity();
+        }
       }
+    }
+  }
+
+  removeSelectedImage(index: number): void {
+    this.selectedFiles.splice(index, 1);
+    this.imagePreviewUrls.splice(index, 1);
+
+    // Mettre à jour le contrôle de formulaire
+    if (this.selectedFiles.length === 0) {
+      this.productForm.patchValue({ imageProduit: null });
     }
   }
 
@@ -101,7 +135,7 @@ export class AddProductComponent implements OnInit {
   }
 
   isImageSelected(): boolean {
-    return !!this.selectedFile;
+    return this.selectedFiles.length > 0;
   }
 
   onSubmit(): void {
@@ -109,106 +143,69 @@ export class AddProductComponent implements OnInit {
       this.markFormGroupTouched(this.productForm);
       this.showErrorMessage = true;
       this.errorMessage = !this.isImageSelected() ?
-        'Please select an image' : 'Please fill all required fields correctly';
-      setTimeout(() => this.showErrorMessage = false, 3000);
+        'Please select at least one image' : 'Please fill all required fields correctly';
       return;
     }
 
-    if (this.productForm.valid && this.selectedFile) {
+    if (this.productForm.valid && this.selectedFiles.length > 0) {
       this.isLoading = true;
+      this.showErrorMessage = false;
 
-      this.fileUploadService.uploadFile(this.selectedFile).pipe(
-        tap(imageUrl => {
-          console.log('Received URL from server:', imageUrl);
-        }),
-        catchError(error => {
-          console.error('Upload error:', error);
-          this.showErrorMessage = true;
-          this.errorMessage = error.message || 'Failed to upload image';
-          this.isLoading = false;
-          setTimeout(() => this.showErrorMessage = false, 3000);
-          return throwError(() => error);
-        }),
-        switchMap(imageUrl => {
-          if (!imageUrl) {
-            throw new Error('No image URL received');
-          }
-
-          // Create the product with current date
-          const product: Partial<Product> = {
-            nomProduit: this.productForm.value.nomProduit,
-            descriptionProduit: this.productForm.value.descriptionProduit,
-            prixProduit: Number(this.productForm.value.prixProduit),
-            stockProduit: Number(this.productForm.value.stockProduit),
-            imageProduit: imageUrl,
-            categorie: this.productForm.value.categorie,
-            dateCreation: new Date() // Add current date
+      // Upload multiple images
+      this.fileUploadService.uploadMultipleFiles(this.selectedFiles).subscribe({
+        next: (imageUrls) => {
+          const productData = {
+            ...this.productForm.value,
+            imageProduit: imageUrls[0], // La première image comme image principale
+            dateCreation: new Date()
           };
 
-          return this.productService.addProduct(product as Product);
-        }),
-        switchMap(createdProduct => {
-          if (!createdProduct || !createdProduct.idProduit) {
-            throw new Error('Product creation failed');
-          }
-
-          const tasks: Observable<Product>[] = [];
-
-          // Assign category if selected
-          if (this.productForm.value.categorie) {
-            tasks.push(
-              this.productService.assignProductToCategory(
-                createdProduct.idProduit,
-                this.productForm.value.categorie.idCategorie
-              )
-            );
-          }
-
-          // Assign product code if selected
-          const selectedCode = this.productForm.value.codeProduit;
-          if (selectedCode && selectedCode.idCodeProduit) {
-            console.log('Assigning product code:', selectedCode);
-            tasks.push(
-              this.productService.assignProductToProductCode(
-                createdProduct.idProduit,
-                selectedCode.idCodeProduit
-              )
-            );
-          }
-
-          // If we have assignments to make, execute them in sequence
-          return tasks.length > 0 ?
-            concat(...tasks).pipe(
-              tap(result => console.log('Assignment result:', result)),
-              catchError(error => {
-                console.error('Assignment error:', error);
-                return throwError(() => new Error('Failed to assign category or product code'));
-              }),
-              last()
-            ) :
-            of(createdProduct);
-        })
-      ).subscribe({
-        next: (finalProduct) => {
-          console.log('Product created and assigned successfully:', finalProduct);
-          this.showSuccessMessage = true;
-          this.isLoading = false;
-          this.productForm.reset();
-          this.selectedFile = null;
-          setTimeout(() => {
-            this.showSuccessMessage = false;
-            this.router.navigate(['/marketplaceback/admin/productList']);
-          }, 1500);
+          this.productService.addProduct(productData).subscribe({
+            next: (product) => {
+              // Si plus d'une image, ajouter les autres à la galerie
+              if (imageUrls.length > 1) {
+                const additionalImages = imageUrls.slice(1);
+                this.addImagesToProductGallery(product.idProduit, additionalImages);
+              } else {
+                this.handleSuccess();
+              }
+            },
+            error: (error) => this.handleError(error)
+          });
         },
-        error: (error) => {
-          console.error('Operation failed:', error);
-          this.showErrorMessage = true;
-          this.errorMessage = error.message || 'Failed to complete product setup';
-          this.isLoading = false;
-          setTimeout(() => this.showErrorMessage = false, 3000);
-        }
+        error: (error) => this.handleError(error)
       });
     }
+  }
+
+  private addImagesToProductGallery(productId: number, imageUrls: string[]): void {
+    // Use the productImageService instead of productService
+    forkJoin(imageUrls.map(url => this.productImageService.addImageToProduct(productId, url)))
+      .subscribe({
+        next: (_) => this.handleSuccess(),
+        error: (error) => this.handleError(error)
+      });
+  }
+
+  private handleSuccess(): void {
+    this.showSuccessMessage = true;
+    this.isLoading = false;
+    this.productForm.reset();
+    this.selectedFiles = [];
+    this.imagePreviewUrls = [];
+
+    // Notifier le composant parent
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+      this.productAdded.emit(true);
+    }, 1500);
+  }
+
+  private handleError(error: any): void {
+    console.error('Error:', error);
+    this.showErrorMessage = true;
+    this.errorMessage = 'Failed to create product: ' + (error.message || 'Unknown error');
+    this.isLoading = false;
   }
 
   private markFormGroupTouched(formGroup: FormGroup) {

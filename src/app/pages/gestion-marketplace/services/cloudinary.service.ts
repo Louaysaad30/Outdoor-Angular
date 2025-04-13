@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, forkJoin } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 @Injectable({
@@ -11,6 +11,7 @@ export class FileUploadService {
 
   constructor(private http: HttpClient) {}
 
+  // Keep existing method for single file uploads
   uploadFile(file: File): Observable<string> {
     const formData = new FormData();
     formData.append('file', file);
@@ -26,6 +27,19 @@ export class FileUploadService {
       }),
       catchError(this.handleError)
     );
+  }
+
+  // Add new method for multiple file uploads
+  uploadMultipleFiles(files: File[]): Observable<string[]> {
+    if (!files || files.length === 0) {
+      return throwError(() => new Error('No files provided'));
+    }
+
+    // Create an array of observables, one for each file upload
+    const uploadObservables = files.map(file => this.uploadFile(file));
+
+    // Use forkJoin to wait for all uploads to complete
+    return forkJoin(uploadObservables);
   }
 
   private handleError(error: HttpErrorResponse) {
