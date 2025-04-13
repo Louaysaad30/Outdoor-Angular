@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RegistrationRequest } from '../models/RegistrationRequest';
 import {  Observable, BehaviorSubject, tap  } from 'rxjs';
@@ -102,5 +102,9 @@ export class AuthServiceService {
   sendResetLink(email: string) {
     // Send as {email: string} to match backend @RequestBody
     return this.http.post(`${this.apiUrl}/forgot-password`, { email },{ responseType: 'text' });
+  }
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    const params = new HttpParams().set('token', token);
+    return this.http.post(`${this.apiUrl}/reset-password`, { newPassword }, { params });
   }
 }
