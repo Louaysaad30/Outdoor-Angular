@@ -155,18 +155,15 @@
                                         </div>
                                       
                                         <!-- Image URL -->
+                                        <!-- Image File Upload -->
                                         <div class="mb-3">
-                                          <label for="image" class="form-label">Image URL</label>
-                                          <input type="text" formControlName="image" class="form-control" id="image" placeholder="Enter image URL">
+                                          <label for="image" class="form-label">Profile Image</label>
+                                          <input type="file" (change)="onFileChange($event)" class="form-control" id="image" accept="image/*">
                                           <div>
-                                            <p class="alert alert-danger" *ngIf="registrationForm.controls['image'].hasError('required') && registrationForm.controls['image'].touched">
-                                              Image URL is required
-                                            </p>
-                                            <p class="alert alert-danger" *ngIf="registrationForm.controls['image'].hasError('pattern') && registrationForm.controls['image'].touched">
-                                              Please enter a valid image URL
-                                            </p>
+                                            <p class="alert alert-danger" *ngIf="imageError">{{ imageError }}</p>
                                           </div>
                                         </div>
+
                                       
                                         <!-- Phone -->
                                         <div class="mb-3">

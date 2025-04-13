@@ -21,6 +21,9 @@ export class SignupComponent {
   emailError: string | null = null;
   registrationForm: FormGroup;  
   register!:RegistrationRequest;
+  selectedImage: File | null = null;
+
+  imageError: string | null = null;
 
   constructor(private authService: AuthServiceService, private router: Router) 
   {
@@ -57,10 +60,18 @@ export class SignupComponent {
   }
 
   onSubmit() {
-    if (this.registrationForm.valid) {
-      this.register=this.registrationForm.value;
-      this.emailError = null; // Reset l'erreur avant de soumettre
-      this.authService.register(this.register).subscribe(
+    if (this.registrationForm.valid && this.selectedImage) {
+      const formData = new FormData();
+  
+      formData.append('nom', this.registrationForm.get('nom')?.value);
+      formData.append('prenom', this.registrationForm.get('prenom')?.value);
+      formData.append('email', this.registrationForm.get('email')?.value);
+      formData.append('motDePasse', this.registrationForm.get('motDePasse')?.value);
+      formData.append('dateNaissance', this.registrationForm.get('dateNaissance')?.value);
+      formData.append('tel', this.registrationForm.get('tel')?.value);
+      formData.append('image', this.selectedImage); // the actual image file
+  
+      this.authService.register(formData).subscribe(
         () => {
           Swal.fire({
             icon: 'success',
@@ -73,14 +84,9 @@ export class SignupComponent {
         },
         (error) => {
           console.error('Registration failed', error);
-  
-          // Vérifier si la réponse contient un message d'erreur JSON
-          if (error) {
-            if (error.includes('Email')) {
-              this.emailError = error; // Stocker l'erreur pour affichage dans l'HTML
-            }
+          if (error && error.includes('Email')) {
+            this.emailError = error;
           }
-  
           Swal.fire({
             icon: 'error',
             title: 'Registration failed',
@@ -90,8 +96,19 @@ export class SignupComponent {
       );
     } else {
       this.registrationForm.markAllAsTouched();
+      if (!this.selectedImage) {
+        this.imageError = 'Image is required.';
+      }
     }
   }
+  
+  onFileChange(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedImage = file;
+    }
+  }
+  
     /**
    * Password Hide/Show
    */

@@ -50,6 +50,7 @@ export class EditProfileComponent {
   formGroups: FormGroup[] = [];
   educationForm!: FormGroup;
   currentTab = 'personalDetails';
+  selectedFile: File | null = null;
 
   constructor(private formBuilder: FormBuilder,private fb: FormBuilder, private userService: UserServiceService, private router: Router,private authService:AuthServiceService) {}
 
@@ -101,29 +102,52 @@ export class EditProfileComponent {
       description: ['']
     });
     this.formGroups.push(this.educationForm);
+}
+onSubmit(): void {
+  if (this.userForm.valid) {
+    const formData = new FormData();
 
+    // Append each field individually
+    formData.append('nom', this.userForm.value.nom);
+    formData.append('prenom', this.userForm.value.prenom);
+    formData.append('tel', this.userForm.value.tel);
+    formData.append('dateNaissance', this.userForm.value.dateNaissance);
+    formData.append('email', this.userForm.value.email);
+
+    // Append image file if selected
+    if (this.selectedFile) {
+      formData.append('image', this.selectedFile);
+    }
+
+    this.userService.updateUser(this.currentUser.id, formData).subscribe({
+      next: (res) => {
+        alert('Profile updated successfully!');
+        localStorage.setItem('user', JSON.stringify(res));
+        this.authService.notifyUserUpdated(); // tell other components to reload user data
+
+        this.router.navigate(['/userfront/user/profile']);
+      },
+      error: (err) => {
+        const errorMessage = err?.error?.message || 'Profile update failed. Please try again.';
+        console.error('Update failed', err);
+        alert(errorMessage);
+      }
+    });
+  } else {
+    alert('Form is invalid. Please check the inputs.');
   }
-  
-  onSubmit(): void {
-    if (this.userForm.valid) {
-      const updatedUser = this.userForm.value;
-      console.log('Updated User:', updatedUser); // Log the updated user object for debugging
-      console.log('Current User:', this.currentUser.id); // Log the current user object for debugging
-      this.userService.updateUser(this.currentUser.id, updatedUser).subscribe({
-        next: (res) => {
-          alert('Profile updated successfully!');
-          localStorage.setItem('user', JSON.stringify(res));
-          this.router.navigate(['/userfront/user/profile']);
-        },
-        error: (err) => {
-          // Improved error handling
-          const errorMessage = err?.error?.message || 'Profile update failed. Please try again.'; // Use optional chaining and fallback message
-          console.error('Update failed', err);
-          alert(errorMessage); // Show the appropriate error message to the user
-        }
-      });
-    } else {
-      alert('Form is invalid. Please check the inputs.');
+}
+  fileChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+
+      // Preview image
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.currentUser.image = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
   }
 
@@ -255,28 +279,6 @@ export class EditProfileComponent {
     this.currentTab = tab;
   }
 
-  // File Upload
-  imageURL: any;
-  fileChange(event: any, id: any) {
-    let fileList: any = (event.target as HTMLInputElement);
-    let file: File = fileList.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.imageURL = reader.result as string;
-      if (id == '0') {
-        document.querySelectorAll('#cover-img').forEach((element: any) => {
-          element.src = this.imageURL;
-        });
-      }
-      if (id == '1') {
-        document.querySelectorAll('#user-img').forEach((element: any) => {
-          element.src = this.imageURL;
-        });
-      }
-    }
-
-    reader.readAsDataURL(file)
-  }
 
   /**
   * Password Hide/Show

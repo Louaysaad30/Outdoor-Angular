@@ -13,6 +13,8 @@ import { UserServiceService } from './user-service.service';
 export class AuthServiceService {
   private apiUrl = `http://localhost:9096/auth`; // Backend API URL
   private currentUserSubject: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
+  private userUpdatedSubject = new BehaviorSubject<void>(undefined);
+  public userUpdated$ = this.userUpdatedSubject.asObservable();
 
   constructor(private http: HttpClient, private userService: UserServiceService) {}
 
@@ -48,6 +50,11 @@ export class AuthServiceService {
     this.currentUserSubject.next(user); // Update the BehaviorSubject
   }
 
+
+  notifyUserUpdated(): void {
+    this.userUpdatedSubject.next();
+  }
+
   // Get current user from session
   getSessionUser(): User | null {
     const user = sessionStorage.getItem('currentUser');
@@ -72,9 +79,10 @@ export class AuthServiceService {
   }
   
   // Register a user
-  register(request: RegistrationRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, request);
+  register(formData: FormData): Observable<any> {
+    return this.http.post(this.apiUrl+'/register', formData);
   }
+  
 
   // Activate the account
   activateAccount(token: string): Observable<any> {

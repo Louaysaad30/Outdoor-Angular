@@ -53,6 +53,7 @@ export class TopbarComponent {
   totalNotify: number = 0;
   newNotify: number = 0;
   readNotify: number = 0;
+  currentUser: any;
 
   constructor(@Inject(DOCUMENT) private document: any,
     private eventService: EventService,
@@ -63,10 +64,14 @@ export class TopbarComponent {
     public _cookiesService: CookieService,
     public store: Store<RootReducerState>,
     private TokenStorageService: TokenStorageService) { }
-
+    image:any;
   ngOnInit(): void {
     this.element = document.documentElement;
     this.userData = this.TokenStorageService.getUser();
+    this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    this.authServicee.userUpdated$.subscribe(() => {
+      this.loadUser(); // re-read localStorage
+    });
     this.cartData = cartList
     this.cartData.map((x: any) => {
       x['total'] = (x['qty'] * x['price']).toFixed(2)
@@ -98,6 +103,10 @@ export class TopbarComponent {
         this.readNotify = element.items.length
       }
     });
+  }
+  loadUser(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    this.image = this.currentUser?.image;
   }
   logout() {
     console.log('Logout clicked!');

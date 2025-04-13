@@ -6,21 +6,18 @@
     <!--end col-->
     <div class="col-xxl-3">
         <div class="card overflow-hidden">
+            <!-- Cover Image (No edit option here anymore) -->
             <div>
-                <img src="assets/images/small/img-7.jpg" alt="" id="cover-img" class="card-img-top profile-wid-img object-fit-cover" style="height: 200px;">
-                <div>
-                    <input id="profile-foreground-img-file-input" type="file" class="profile-foreground-img-file-input d-none" (change)="fileChange($event,'0')">
-                    <label for="profile-foreground-img-file-input" class="profile-photo-edit btn btn-light btn-sm position-absolute end-0 top-0 m-3">
-                        <i class="ri-image-edit-line align-bottom me-1"></i> Edit Cover Images
-                    </label>
-                </div>
+                <img src="../../../../../assets/images/hobbies.webp" alt="" id="cover-img" class="card-img-top profile-wid-img object-fit-cover" style="height: 200px;">
             </div>
             <div class="card-body pt-0 mt-n5">
                 <div class="text-center">
                     <div class="profile-user position-relative d-inline-block mx-auto">
-                        <img src="assets/images/users/avatar-1.jpg" alt="" id="user-img" class="avatar-lg rounded-circle object-fit-cover border-0 img-thumbnail user-profile-image">
+                        <!-- User Profile Image with edit option -->
+                        <img [src]="currentUser.image || 'assets/images/users/32/avatar-1.jpg'" alt="" id="user-img" class="avatar-lg rounded-circle object-fit-cover border-0 img-thumbnail user-profile-image">
                         <div class="avatar-xs p-0 rounded-circle profile-photo-edit position-absolute end-0 bottom-0">
-                            <input id="profile-img-file-input" type="file" class="profile-img-file-input d-none" (change)="fileChange($event,'1')">
+                            <!-- File input for the user profile image -->
+                            <input id="profile-img-file-input" type="file" class="profile-img-file-input d-none" (change)="fileChange($event)">
                             <label for="profile-img-file-input" class="profile-photo-edit avatar-xs">
                                 <span class="avatar-title rounded-circle bg-light text-body">
                                     <i class="bi bi-camera"></i>
@@ -29,8 +26,8 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <h5>Richard Marshall <i class="bi bi-patch-check-fill align-baseline text-info ms-1"></i></h5>
-                        <p class="text-muted">Web Developer</p>
+                        <h5>{{currentUser.nom}} {{currentUser.prenom}} <i class="bi bi-patch-check-fill align-baseline text-info ms-1"></i></h5>
+                        <!-- <p class="text-muted">Web Developer</p> -->
                     </div>
                 </div>
             </div>
@@ -90,10 +87,10 @@
                     </div>
                     <input type="text" class="form-control" id="pinterestName" placeholder="Username" value="Richard Marshall">
                 </div>
-
             </div>
         </div>
     </div>
+    
     <div class="col-xxl-9">
 
         <div class="d-flex align-items-center flex-wrap gap-2 mb-4">

@@ -37,10 +37,11 @@ export class UserServiceService {
     return this.http.put<User>(`${this.apiUrl}/unblock/${id}`, {});
   }
 
-  // Update user profile
-  updateUser(id: number, data: User): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/${id}`, data);
+
+  updateUser(id: number, formData: FormData): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}`, formData);
   }
+  
   deleteUser(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
