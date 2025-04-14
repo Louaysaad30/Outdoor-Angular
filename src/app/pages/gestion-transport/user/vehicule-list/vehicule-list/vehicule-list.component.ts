@@ -35,7 +35,7 @@ export class VehiculeListComponent implements OnInit {
     this.vehiculeService.getVehicules().subscribe({
       next: (data) => {
         this.vehicules = data;  
-        this.filteredVehicules = this.vehicules; // Initially show all vehicles
+        this.filteredVehicules = this.vehicules; 
         this.isLoading = false;
       },
       error: (err) => {

@@ -1,0 +1,17 @@
+.vehicule-img-wrapper {
+    height: 200px;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa; /* optional for empty spaces */
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+.vehicule-img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
