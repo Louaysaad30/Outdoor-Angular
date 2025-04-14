@@ -56,4 +56,10 @@ import { Injectable } from '@angular/core';
 
           return throwError(errorMsg);
         }
+
+
+        checkReservationLimit(userId: number, ticketId: number): Observable<any> {
+          return this.http.get<any>(`${this.apiUrl}/check-limit?userId=${userId}&ticketId=${ticketId}`)
+            .pipe(catchError(this.handleError));
+        }
       }

@@ -1,111 +1,200 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '../../../../shared/shared.module';
-import { TicketService } from '../../services/ticket.service';
-import { EventService } from '../../services/event.service';
-import { Ticket, TicketType } from '../../models/ticket.model';
-import { Event } from '../../models/event.model';
-import { ReservationService } from '../../services/reservation.service';
-import { TicketReservation } from '../../models/ticketReservation.model';
-import { AuthServiceService } from '../../../../account/auth/services/auth-service.service'; // Use this instead of AuthService
-@Component({
-  selector: 'app-event-tickets-front-office',
-  standalone: true,
-  imports: [CommonModule, SharedModule],
-  templateUrl: './event-tickets-front-office.component.html',
-  styleUrl: './event-tickets-front-office.component.scss'
-})
-export class EventTicketsFrontOfficeComponent implements OnInit {
-  eventId: number | null = null;
-  event: Event | null = null;
-  tickets: Ticket[] = [];
-  loading = true;
+  import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+  import { EventService } from '../../services/event.service';
+  import { TicketService } from '../../services/ticket.service';
+  import { ReservationService } from '../../services/reservation.service';
+  import { Event } from '../../models/event.model';
+  import { Ticket } from '../../models/ticket.model';
+  import { TicketReservation } from '../../models/ticketReservation.model';
+  import { CommonModule } from '@angular/common';
+  import { SharedModule } from '../../../../shared/shared.module';
 
+  @Component({
+    selector: 'app-event-tickets-front-office',
+    standalone: true,
+    imports: [
+      CommonModule,
+      RouterLink,
+      SharedModule
+    ],
+    templateUrl: './event-tickets-front-office.component.html',
+    styleUrls: ['./event-tickets-front-office.component.scss']
+  })
+  export class EventTicketsFrontOfficeComponent implements OnInit {
+    event: Event | null = null;
+    tickets: Ticket[] = [];
+    loading: boolean = true;
+    userId: number | null = null;
+    userReservations: TicketReservation[] = [];
+    reservationCounts: Map<number, number> = new Map();
 
-  constructor(
-    private route: ActivatedRoute,
-    private ticketService: TicketService,
-    private eventService: EventService,
-    private reservationService: ReservationService,
-    private authService: AuthServiceService
-  ) {}
+    // Toast properties
+    showToast: boolean = false;
+    toastMessage: string = '';
+    toastType: 'success' | 'warning' | 'danger' | 'primary' = 'primary';
 
-  ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const id = Number(params.get('id'));
-      if (id) {
-        this.eventId = id;
-        this.loadEventDetails(id);
-        this.loadEventTickets(id);
-      }
-    });
-  }
+    constructor(
+      private route: ActivatedRoute,
+      private router: Router,
+      private eventService: EventService,
+      private ticketService: TicketService,
+      private reservationService: ReservationService
+    ) { }
 
-  loadEventDetails(eventId: number): void {
-    this.eventService.getEventById(eventId).subscribe({
-      next: (event) => {
-        this.event = event;
-      },
-      error: (error) => {
-        console.error('Error loading event details:', error);
-      }
-    });
-  }
-
-  loadEventTickets(eventId: number): void {
-    this.loading = true;
-    this.ticketService.getTicketsByEventId(eventId).subscribe({
-      next: (tickets) => {
-        this.tickets = tickets;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading tickets:', error);
-        this.loading = false;
-      }
-    });
-  }
-
-  getColorClass(ticketType: TicketType): string {
-    switch (ticketType) {
-      case TicketType.VIP: return 'danger';
-      case TicketType.PREMIUM: return 'success';
-      case TicketType.REGULAR: return 'secondary';
-      case TicketType.STUDENT: return 'info';
-      default: return 'secondary';
-    }
-  }
-
-  reserveTicket(ticket: Ticket): void {
-    // Get current user ID from auth service
+    ngOnInit(): void {
+      // Get current user from localStorage
       const currentUser = JSON.parse(localStorage.getItem('user')!);
-      const userId = currentUser ? currentUser.id  : null;
-      if (!userId) {
-      // Handle not logged in
+      this.userId = currentUser ? currentUser.id : null;
 
-      alert('Please login to reserve tickets');
-      return;
+      // Get event ID from route params
+      this.route.paramMap.subscribe(params => {
+        const eventId = Number(params.get('id'));
+        if (eventId) {
+          this.loadEvent(eventId);
+          this.loadTickets(eventId);
+          if (this.userId) {
+            this.loadUserReservations();
+          }
+        }
+      });
+      // Load user reservations if user is logged in
+      if (this.userId) {
+        this.loadUserReservations();
+      }
     }
 
-    console.log("current user is",currentUser);
-    const reservation: TicketReservation = {
-      userId: userId,
-      ticketId: ticket.id
-    };
 
-    this.reservationService.createReservation(reservation).subscribe({
-      next: (result) => {
-        alert('Ticket reserved successfully!');
-        // Refresh tickets to update availability
-        this.loadEventTickets(this.eventId!);
+    loadEvent(eventId: number): void {
+      this.eventService.getEventById(eventId).subscribe({
+        next: (event) => {
+          this.event = event;
+        },
+        error: (error) => {
+          console.error('Error loading event:', error);
+          this.showToastNotification('Failed to load event details', 'danger');
+        }
+      });
+    }
+
+    loadTickets(eventId: number): void {
+      this.loading = true;
+      this.ticketService.getTicketsByEventId(eventId).subscribe({
+        next: (tickets) => {
+          this.tickets = tickets;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading tickets:', error);
+          this.showToastNotification('Failed to load tickets', 'danger');
+          this.loading = false;
+        }
+      });
+    }
+
+loadUserReservations(): void {
+  if (this.userId) {
+    this.reservationService.getReservationsByUserId(this.userId).subscribe({
+      next: (reservations) => {
+        this.userReservations = reservations;
+        console.log('Loaded reservations:', this.userReservations);
       },
       error: (error) => {
-        console.error('Error reserving ticket:', error);
-        alert('Failed to reserve ticket. Please try again.');
+        console.error('Error loading user reservations:', error);
       }
     });
   }
-
-
 }
+
+
+    getColorClass(ticketType: string): string {
+      switch (ticketType) {
+        case 'VIP':
+          return 'primary';
+        case 'PREMIUM':
+          return 'warning';
+        case 'STUDENT':
+          return 'info';
+        case 'REGULAR':
+        default:
+          return 'success';
+      }
+    }
+
+
+    getReservationCount(ticketId: number): number {
+      if (!this.userReservations || this.userReservations.length === 0) {
+        return 0;
+      }
+
+      const count = this.userReservations.filter(reservation => {
+        // Check if the reservation has a ticket object with matching ID
+        return reservation.ticket && reservation.ticket.id === ticketId;
+      }).length;
+
+      return count;
+    }
+
+
+    hasReachedPurchaseLimit(ticket: Ticket): boolean {
+      if (!ticket.id) return false;
+      const count = this.getReservationCount(ticket.id);
+      return count >= ticket.purchaseLimit;
+    }
+
+
+reserveTicket(ticket: Ticket): void {
+  if (!this.userId) {
+    this.router.navigate(['/auth/login']);
+    return;
+  }
+
+  // Use the backend check instead of local check
+  this.reservationService.checkReservationLimit(this.userId, ticket.id!).subscribe({
+    next: (response) => {
+      if (response.canReserve) {
+        const reservation = new TicketReservation({
+          ticketId: ticket.id,
+          userId: this.userId ?? undefined,  // Convert null to undefined
+        });
+
+        this.reservationService.createReservation(reservation).subscribe({
+          next: (response) => {
+            // Update local reservation counts
+            const currentCount = this.reservationCounts.get(ticket.id!) || 0;
+            this.reservationCounts.set(ticket.id!, currentCount + 1);
+
+            // Update available tickets
+            ticket.availableTickets--;
+
+            this.showToastNotification('Ticket reserved successfully!', 'success');
+          },
+          error: (error) => {
+            this.showToastNotification('Failed to reserve ticket. Please try again.', 'danger');
+          }
+        });
+      } else {
+        this.showToastNotification(`You've reached the purchase limit (${response.limit}) for this ticket type`, 'warning');
+      }
+    },
+    error: (error) => {
+      this.showToastNotification('Failed to check reservation limit. Please try again.', 'danger');
+    }
+  });
+}
+
+
+    showToastNotification(message: string, type: 'success' | 'warning' | 'danger' | 'primary'): void {
+      this.toastMessage = message;
+      this.toastType = type;
+      this.showToast = true;
+
+      // Auto-hide toast after 3 seconds
+      setTimeout(() => {
+        this.showToast = false;
+      }, 3000);
+    }
+
+    closeToast(): void {
+      this.showToast = false;
+    }
+  }
