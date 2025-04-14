@@ -242,7 +242,8 @@ export class CheckoutComponent implements OnInit {
                             console.log('Products loaded:', products);
 
                             return lignes.map(ligne => {
-                                let product = products.find(p => p.prixProduit === ligne.prix);
+                                let product = products.find(p => p.idProduit === ligne.idProduit);
+
 
                                 if (!product) {
                                     product = products.reduce<Product | undefined>((closest, current) => {
