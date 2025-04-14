@@ -6,7 +6,9 @@ import { TicketService } from '../../services/ticket.service';
 import { EventService } from '../../services/event.service';
 import { Ticket, TicketType } from '../../models/ticket.model';
 import { Event } from '../../models/event.model';
-
+import { ReservationService } from '../../services/reservation.service';
+import { TicketReservation } from '../../models/ticketReservation.model';
+import { AuthServiceService } from '../../../../account/auth/services/auth-service.service'; // Use this instead of AuthService
 @Component({
   selector: 'app-event-tickets-front-office',
   standalone: true,
@@ -20,10 +22,13 @@ export class EventTicketsFrontOfficeComponent implements OnInit {
   tickets: Ticket[] = [];
   loading = true;
 
+
   constructor(
     private route: ActivatedRoute,
     private ticketService: TicketService,
-    private eventService: EventService
+    private eventService: EventService,
+    private reservationService: ReservationService,
+    private authService: AuthServiceService
   ) {}
 
   ngOnInit(): void {
@@ -71,4 +76,36 @@ export class EventTicketsFrontOfficeComponent implements OnInit {
       default: return 'secondary';
     }
   }
+
+  reserveTicket(ticket: Ticket): void {
+    // Get current user ID from auth service
+      const currentUser = JSON.parse(localStorage.getItem('user')!);
+      const userId = currentUser ? currentUser.id  : null;
+      if (!userId) {
+      // Handle not logged in
+
+      alert('Please login to reserve tickets');
+      return;
+    }
+
+    console.log("current user is",currentUser);
+    const reservation: TicketReservation = {
+      userId: userId,
+      ticketId: ticket.id
+    };
+
+    this.reservationService.createReservation(reservation).subscribe({
+      next: (result) => {
+        alert('Ticket reserved successfully!');
+        // Refresh tickets to update availability
+        this.loadEventTickets(this.eventId!);
+      },
+      error: (error) => {
+        console.error('Error reserving ticket:', error);
+        alert('Failed to reserve ticket. Please try again.');
+      }
+    });
+  }
+
+
 }

@@ -70,7 +70,11 @@
                 No discount available
               </li>
             </ul>
-            <button type="button" class="btn btn-{{getColorClass(ticket.type)}} w-100">Buy Now</button>
+            <button type="button" class="btn btn-{{getColorClass(ticket.type)}} w-100"
+              [disabled]="ticket.availableTickets <= 0"
+              (click)="reserveTicket(ticket)">
+              {{ ticket.availableTickets > 0 ? 'Reserve Now' : 'Sold Out' }}
+            </button>
           </div>
         </div>
       </div>
