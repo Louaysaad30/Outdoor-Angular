@@ -21,7 +21,7 @@ export class CartComponent implements OnInit {
   subtotal: number = 0;
   flatFee: number = 1; // Add flat fee property
   totalprice: number = 0;
-  userId: number = 1;
+  currentUser: any ;
 
   constructor(
     private ligneCommandeService: LignedecommandeService,
@@ -30,74 +30,154 @@ export class CartComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user')!);
     this.loadCartData();
   }
 
+  /**
+   * Loads cart data for the current user, including product details
+   */
   loadCartData(): void {
-    this.panierService.getPanierByUser(this.userId).pipe(
-      tap(panier => console.log('Panier received:', panier)),
+    // Step 1: Get the user's cart (panier)
+    this.panierService.getPanierByUser(this.currentUser.id).pipe(
+      catchError(error => {
+        console.error('Error fetching user cart:', error);
+        return of(null);
+      }),
+
+      // Step 2: Get ligne commandes associated with the cart
       switchMap(panier => {
         if (!panier?.idPanier) {
+          console.log('No cart found for user or empty cart');
           return of([] as LigneCommande[]);
         }
 
         return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).pipe(
-          tap(lignes => {
-            console.log('Raw lignes:', lignes);
-            lignes.forEach(ligne => console.log('Ligne details:', ligne));
+          catchError(error => {
+            console.error(`Error fetching ligne commandes for panier ${panier.idPanier}:`, error);
+            return of([] as LigneCommande[]);
           }),
-          switchMap(lignes => this.productService.getAllProducts().pipe(
-            map(products => {
-              console.log('Products loaded:', products);
 
-              return lignes.map(ligne => {
-                // First try exact price match
-                let product = products.find(p => p.prixProduit === ligne.prix);
+          // Step 3: Load product data to enrich the cart items
+          switchMap(lignes => {
+            if (lignes.length === 0) {
+              return of([] as LigneCommande[]);
+            }
 
-                if (!product) {
-                  // If no exact match, try finding closest price match
-                  product = products.reduce<Product | undefined>((closest, current) => {
-                    const currentDiff = Math.abs(current.prixProduit - ligne.prix);
-                    const closestDiff = closest ? Math.abs(closest.prixProduit - ligne.prix) : Infinity;
-                    return currentDiff < closestDiff ? current : closest;
-                  }, undefined);
-                }
+            return this.productService.getAllProducts().pipe(
+              catchError(error => {
+                console.error('Error fetching products:', error);
+                return of([] as Product[]);
+              }),
 
-                console.log(`Found product for ligne ${ligne.idLigneCommande}:`, product);
-
-                if (!product) {
-                  console.warn(`No product found for ligne ${ligne.idLigneCommande}`);
-                  return null;
-                }
-
-                const mappedLigne = new LigneCommande();
-                mappedLigne.idLigneCommande = ligne.idLigneCommande;
-                mappedLigne.quantite = ligne.quantite;
-                mappedLigne.prix = ligne.prix;
-                mappedLigne.produit = product;
-                mappedLigne.panier = panier;
-                mappedLigne.idProduit = product.idProduit;
-
-                console.log('Mapped ligne with product:', mappedLigne);
-                return mappedLigne;
-              }).filter((ligne): ligne is LigneCommande => ligne !== null);
-            })
-          )),
-          tap(mappedLignes => console.log('Final mapped lignes:', mappedLignes))
+              // Step 4: Map ligne commandes to include product details
+              map(products => this.mapLigneCommandesToProducts(lignes, products, panier))
+            );
+          })
         );
       })
     ).subscribe({
-      next: (lignes: LigneCommande[]) => {
-        this.cartData = lignes;
-        console.log('Final cart data:', this.cartData);
+      next: (enrichedCartItems: LigneCommande[]) => {
+        this.cartData = enrichedCartItems;
         this.calculateTotals();
+        console.log('Cart loaded successfully with', enrichedCartItems.length, 'items');
       },
       error: (error) => {
-        console.error('Error loading cart:', error);
+        console.error('Unexpected error in cart data loading:', error);
         this.cartData = [];
         this.calculateTotals();
       }
     });
+  }
+
+  /**
+   * Maps ligne commande objects to include their associated product data
+   */
+  private mapLigneCommandesToProducts(
+    lignes: LigneCommande[],
+    products: Product[],
+    panier: any
+  ): LigneCommande[] {
+    return lignes
+      .map(ligne => {
+        // Create a new ligne commande with basic information
+        const mappedLigne = new LigneCommande();
+        mappedLigne.idLigneCommande = ligne.idLigneCommande;
+        mappedLigne.quantite = ligne.quantite;
+        mappedLigne.prix = ligne.prix;
+        mappedLigne.panier = panier;
+
+        // Find associated product using different strategies
+        const product = this.findProductForLigne(ligne, products);
+
+        if (product) {
+          mappedLigne.produit = product;
+          mappedLigne.idProduit = product.idProduit;
+          return mappedLigne;
+        }
+
+        console.error(`Could not associate a product with ligne ${ligne.idLigneCommande}`);
+        return null;
+      })
+      .filter((ligne): ligne is LigneCommande => ligne !== null);
+  }
+
+  /**
+   * Finds the corresponding product for a ligne commande using multiple strategies
+   */
+  private findProductForLigne(ligne: any, products: Product[]): Product | null {
+    // Strategy 1: Use embedded product if available
+    if (ligne.produit) {
+      console.log(`Using embedded product for ligne ${ligne.idLigneCommande}`);
+      return ligne.produit;
+    }
+
+    // Strategy 2: Match by product ID if available
+    if (ligne.idProduit) {
+      const productById = products.find(p => p.idProduit === ligne.idProduit);
+      if (productById) {
+        console.log(`Found product for ligne ${ligne.idLigneCommande} by ID`);
+        return productById;
+      }
+    }
+
+    // Strategy 3: Check for product ID in nested product object
+    if (ligne.produit?.idProduit) {
+      const productByNestedId = products.find(p => p.idProduit === ligne.produit.idProduit);
+      if (productByNestedId) {
+        console.log(`Found product by nested product ID for ligne ${ligne.idLigneCommande}`);
+        return productByNestedId;
+      }
+    }
+
+    // Strategy 4: Multi-attribute matching as last resort
+    const potentialMatches = products.filter(p => {
+      let matchScore = 0;
+
+      // Price match (weight: medium)
+      if (p.prixProduit === ligne.prix) matchScore += 2;
+
+      // Name match if available (weight: high)
+      if (ligne.nomProduit && p.nomProduit &&
+          p.nomProduit.toLowerCase().includes(ligne.nomProduit.toLowerCase())) {
+        matchScore += 3;
+      }
+
+      // Description match if available (weight: medium)
+      if (ligne.descriptionProduit && p.descriptionProduit &&
+          p.descriptionProduit.toLowerCase().includes(ligne.descriptionProduit.toLowerCase())) {
+        matchScore += 2;
+      }
+
+      return matchScore >= 2; // Lower threshold for better matching chance
+    });
+
+    if (potentialMatches.length > 0) {
+      console.log(`Found product for ligne ${ligne.idLigneCommande} using attribute matching`);
+      return potentialMatches[0];
+    }
+
+    return null;
   }
 
   calculateQty(type: string, currentQty: number, index: number): void {

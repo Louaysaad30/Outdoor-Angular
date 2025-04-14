@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
+import { Component, ViewChild, OnInit, ChangeDetectorRef } from '@angular/core';
 import { SlickCarouselComponent } from 'ngx-slick-carousel';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
@@ -7,7 +7,13 @@ import { HttpClient } from '@angular/common/http';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { Product } from '../../models/product';
 import { ProductService } from '../../services/product.service';
-
+import { PanierService } from '../../services/panier.service';
+import { ToastrService } from 'ngx-toastr';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { AuthServiceService } from 'src/app/account/auth/services/auth-service.service';
+import { FavorisService } from '../../services/favoris.service';
+import { Favoris } from '../../models/Favoris';
 
 @Component({
   selector: 'app-product-details',
@@ -26,6 +32,8 @@ export class ProductDetailsComponent implements OnInit {
   loading: boolean = true;
   error: string | null = null;
   productId: number = 0;
+  currentUser: any ;
+
 
   // Image gallery handling
   currentImageIndex: number = 0;
@@ -36,37 +44,44 @@ export class ProductDetailsComponent implements OnInit {
 
   @ViewChild('slickModal') slickModal!: SlickCarouselComponent;
 
+  isAddingToCart: boolean = false;
+  userId: number | null = null;
+
+  // Add these properties
+  isProductFavorited: boolean = false;
+
   constructor(
     private formBuilder: UntypedFormBuilder,
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
-    private productService: ProductService
+    private productService: ProductService,
+    private panierService: PanierService,
+    private authService: AuthServiceService,
+    private toastr: ToastrService,
+    private favorisService: FavorisService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    /**
-     * BreadCrumb
-     */
-    this.breadCrumbItems = [
-      { label: 'Marketplace' },
-      { label: 'Product Details', active: true }
-    ];
+    // Récupérer l'utilisateur actuel
+    this.currentUser = JSON.parse(localStorage.getItem('user')!);
+    
 
-    // Get the product ID from the route parameters
+    // Charger les détails du produit
     this.route.params.subscribe(params => {
-      const id = params['id'];
-      if (id) {
-        this.productId = +id; // Convert to number
-        this.loadProductDetails(this.productId);
-      } else {
-        this.error = 'Product ID not found';
-        this.loading = false;
-      }
-    });
+      const productId = +params['id'];
+      this.loadProductDetails(productId);
 
-    // Initialize your review form here if needed
-    this.initReviewForm();
+      // Vérifier explicitement si le produit est dans les favoris après un court délai
+      // pour s'assurer que currentUser est bien chargé
+      setTimeout(() => {
+        if (this.currentUser && this.currentUser.id) {
+          console.log('Checking favorites for product:', productId);
+          this.checkIfFavorited(productId);
+        }
+      }, 100);
+    });
   }
 
   /**
@@ -78,6 +93,12 @@ export class ProductDetailsComponent implements OnInit {
     this.productService.getProductById(id).subscribe({
       next: (product) => {
         this.productdetail = product;
+        console.log("Product loaded:", product);
+        console.log("Main image URL:", product.imageProduit);
+        if (product.imageGallery) {
+          console.log("Gallery images:", product.imageGallery);
+        }
+
         // Update breadcrumb with product name
         this.breadCrumbItems = [
           { label: 'Marketplace', link: '/marketplace' },
@@ -104,27 +125,40 @@ export class ProductDetailsComponent implements OnInit {
 
     this.imageGallery = [];
 
-    // Add main product image first
+    // Add main product image first if available (directly using Cloudinary URL)
     if (this.productdetail.imageProduit) {
-      this.imageGallery.push(this.baseImageUrl + this.productdetail.imageProduit);
+      // Si l'URL est déjà complète (commence par http), l'utiliser directement
+      if (this.productdetail.imageProduit.startsWith('http')) {
+        this.imageGallery.push(this.productdetail.imageProduit);
+      } else {
+        // Sinon, utiliser l'URL comme identifiant Cloudinary
+        this.imageGallery.push(this.productdetail.imageProduit);
+      }
+      console.log("Added main image:", this.imageGallery[this.imageGallery.length - 1]);
     }
 
     // Add gallery images if available
     if (this.productdetail.imageGallery && this.productdetail.imageGallery.length > 0) {
       this.productdetail.imageGallery.forEach(img => {
         if (img.imageUrl) {
-          this.imageGallery.push(this.baseImageUrl + img.imageUrl);
+          // Même logique que pour l'image principale
+          if (img.imageUrl.startsWith('http')) {
+            this.imageGallery.push(img.imageUrl);
+          } else {
+            this.imageGallery.push(img.imageUrl);
+          }
+          console.log("Added gallery image:", this.imageGallery[this.imageGallery.length - 1]);
         }
       });
     }
 
-    // If no images available, add a placeholder
+    // Si aucune image n'est disponible, ajouter une image par défaut
     if (this.imageGallery.length === 0) {
       this.imageGallery.push('assets/images/placeholder-product.jpg');
+      console.log("No images found, using placeholder");
     }
 
-    // Update the slide config to reflect the current gallery
-    this.updateSlideConfig();
+    console.log("Image gallery initialized with", this.imageGallery.length, "images");
   }
 
   /**
@@ -202,5 +236,219 @@ export class ProductDetailsComponent implements OnInit {
   // File Remove
   removeFile(event: any) {
     this.uploadedFiles.splice(this.uploadedFiles.indexOf(event), 1);
+  }
+
+  /**
+   * Handle image loading errors
+   */
+  handleImageError(event: any): void {
+    // Remplacer l'image non chargée par une image par défaut
+    event.target.src = 'assets/images/placeholder-product.jpg';
+    console.log('Image failed to load, replaced with placeholder');
+  }
+
+  /**
+   * Augmenter la quantité
+   */
+  incrementQuantity(): void {
+    if (this.productdetail && this.quantity < this.productdetail.stockProduit) {
+      this.quantity++;
+    }
+  }
+
+  /**
+   * Diminuer la quantité
+   */
+  decrementQuantity(): void {
+    if (this.quantity > 1) {
+      this.quantity--;
+    }
+  }
+
+  /**
+   * Mettre à jour la quantité directement depuis l'input
+   */
+  updateQuantity(event: any): void {
+    const value = parseInt(event.target.value);
+    if (!isNaN(value)) {
+      if (value < 1) {
+        this.quantity = 1;
+      } else if (this.productdetail && value > this.productdetail.stockProduit) {
+        this.quantity = this.productdetail.stockProduit;
+      } else {
+        this.quantity = value;
+      }
+    } else {
+      this.quantity = 1;
+    }
+  }
+
+  // Ajoutez cette propriété à votre classe
+  quantity: number = 1;
+
+  addToCart() {
+    if (!this.currentUser.id) {
+      this.toastr.warning('Please log in to add products to cart', 'Authentication Required');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    if (this.isAddingToCart) {
+      return; // Prevent multiple clicks
+    }
+
+    this.isAddingToCart = true;
+
+    this.panierService.ajouterProduitAuPanier(
+      this.currentUser.id,
+      this.productdetail?.idProduit ?? 0,
+      this.quantity
+    )
+    .pipe(
+      catchError(error => {
+        console.error('Error adding to cart:', error);
+        this.toastr.error('Failed to add product to cart', 'Error');
+        return of(null);
+      }),
+      finalize(() => {
+        this.isAddingToCart = false;
+      })
+    )
+    .subscribe(response => {
+      if (response) {
+        this.toastr.success(`${this.quantity} ${this.productdetail?.nomProduit} added to cart`, 'Success');
+      }
+    });
+  }
+
+  // Add these methods to handle favorites functionality
+  checkIfFavorited(productId: number): void {
+    console.log('Checking if product is favorited, productId:', productId);
+
+    if (!this.currentUser || !this.currentUser.id) {
+      console.log('User not logged in, cannot check favorites');
+      this.isProductFavorited = false;
+      return;
+    }
+
+    this.favorisService.retrieveAllFavoris().subscribe({
+      next: (favoris) => {
+        console.log('All favorites received:', favoris);
+
+        // Vérifier explicitement les correspondances
+        const userFavorites = favoris.filter(f => f.idUser === this.currentUser.id);
+        console.log('User favorites:', userFavorites);
+
+        const isFavorited = userFavorites.some(f => f.idProduit === productId);
+        console.log(`Product ${productId} is favorited:`, isFavorited);
+
+        // Mettre à jour l'état et forcer le rafraîchissement de la vue
+        this.isProductFavorited = isFavorited;
+
+        // Détection de changement pour s'assurer que l'UI est mise à jour
+        if (this.cdr) {
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error('Error checking favorite status:', error);
+        this.isProductFavorited = false;
+      }
+    });
+  }
+
+  toggleFavorite(): void {
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User ID is not set. Cannot manage favorites.');
+      alert('Please log in to manage your favorites.');
+      return;
+    }
+
+    if (!this.productdetail || !this.productdetail.idProduit) {
+      console.error('Invalid product');
+      return;
+    }
+
+    if (this.isProductFavorited) {
+      // Remove from favorites
+      this.removeFavorite();
+    } else {
+      // Add to favorites
+      this.addToFavorites();
+    }
+  }
+
+  addToFavorites(): void {
+    const favoris = new Favoris();
+    favoris.idUser = this.currentUser.id;
+
+    if (this.productdetail && this.productdetail.idProduit) {
+      favoris.idProduit = this.productdetail.idProduit;
+    } else {
+      console.error('Product details are not available or invalid.');
+      return;
+    }
+
+    console.log('Adding to favorites - User ID:', this.currentUser.id);
+    console.log('Adding to favorites - Product ID:', this.productdetail.idProduit);
+
+    this.favorisService.addFavoris(favoris).subscribe({
+      next: (response) => {
+        console.log('Product added to favorites successfully:', response);
+        // Mettre à jour immédiatement l'état pour l'interface
+        this.isProductFavorited = true;
+
+      },
+      error: (error) => {
+        console.error('Error adding product to favorites:', error);
+        alert('Failed to add product to favorites. Please try again.');
+      }
+    });
+  }
+
+  removeFavorite(): void {
+    if (!this.currentUser || !this.currentUser.id || !this.productdetail || !this.productdetail.idProduit) {
+      return;
+    }
+
+    console.log('Removing from favorites - User ID:', this.currentUser.id);
+    console.log('Removing from favorites - Product ID:', this.productdetail.idProduit);
+
+    // First, find the favorite ID by querying all favorites
+    this.favorisService.retrieveAllFavoris().subscribe({
+      next: (favoris) => {
+        console.log('All favorites for removal:', favoris);
+
+        // Find the favorite entry for this product and user
+        const favorite = favoris.find(f =>
+          f.idUser === this.currentUser.id &&
+          f.idProduit === (this.productdetail?.idProduit ?? 0)
+        );
+
+        console.log('Found favorite to remove:', favorite);
+
+        if (favorite && favorite.idFavoris) {
+          // Remove the favorite
+          this.favorisService.removeFavoris(favorite.idFavoris).subscribe({
+            next: () => {
+              console.log('Removed from favorites successfully');
+              // Mettre à jour immédiatement l'état pour l'interface
+              this.isProductFavorited = false;
+
+            },
+            error: (err) => {
+              console.error('Error removing from favorites:', err);
+              alert('Failed to remove from favorites. Please try again.');
+            }
+          });
+        } else {
+          console.error('Favorite not found for removal');
+          alert('Could not find favorite to remove.');
+        }
+      },
+      error: (err) => {
+        console.error('Error finding favorite to remove:', err);
+      }
+    });
   }
 }

@@ -39,9 +39,18 @@ export class PanierService {
 
   // Add product to Panier
   ajouterProduitAuPanier(userId: number, produitId: number, quantite: number): Observable<Panier> {
+    console.log(`PanierService: Adding product ${produitId} for user ${userId} with quantity ${quantite}`);
+
+    // Ensure we're sending a proper REST request
     return this.http.put<Panier>(
       `${this.apiUrl}/ajouterProduitAuPanier/${userId}/${produitId}/${quantite}`,
       {}
+    ).pipe(
+      tap(response => console.log('Cart update response:', response)),
+      catchError(error => {
+        console.error(`Error adding product ${produitId} to cart:`, error);
+        return throwError(() => new Error(`Failed to add product ${produitId} to cart: ${error.message}`));
+      })
     );
   }
 

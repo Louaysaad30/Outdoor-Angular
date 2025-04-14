@@ -3,6 +3,8 @@ import { ProductService } from '../../services/product.service';
 import { PCategoryService } from '../../services/pcategory.service';
 import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { PanierService } from '../../services/panier.service';
+import { FavorisService } from '../../services/favoris.service';
+import { Favoris } from '../../models/Favoris';
 import { Options } from 'ng5-slider';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { Router } from '@angular/router';
@@ -41,8 +43,7 @@ export class MarketPlaceComponent implements OnInit {
   searchTerm: string = '';
   isLoading: boolean = false;
   cartItemCount: number = 0;
-  userId: number = 1; // Static user ID for now
-
+  currentUser: any;
   // Slider configuration
   minValue: number = 0;
   maxValue: number = 1000;
@@ -61,6 +62,9 @@ export class MarketPlaceComponent implements OnInit {
   // Modal reference
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
 
+  // Track favorited products
+  favoritedProducts: Set<number> = new Set();
+
   constructor(
     private productService: ProductService,
     private categoryService: PCategoryService,
@@ -68,12 +72,16 @@ export class MarketPlaceComponent implements OnInit {
     private panierService: PanierService,
     private router: Router,
     private productImageService: ProductImageService,
+    private favorisService: FavorisService,  // Add FavorisService
   ) {}
 
   ngOnInit(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user')!);
+    console.log('Current user:', this.currentUser);
     this.loadProducts();
     this.loadCategories();
     this.loadCartCount();
+    this.loadUserFavorites(); // Add this line
   }
 
   loadProducts(): void {
@@ -103,21 +111,31 @@ export class MarketPlaceComponent implements OnInit {
   }
 
   loadCartCount(): void {
-    this.panierService.getPanierByUser(this.userId).subscribe({
+    console.log('Loading cart for user ID:', this.currentUser.id);
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User ID is not set. Cannot load cart count.');
+      return;
+    }
+    this.panierService.getPanierByUser(this.currentUser.id).subscribe({
       next: (panier) => {
         console.log('Panier received:', panier);
 
         if (panier && panier.idPanier) {
           this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).subscribe({
             next: (lignes) => {
-              console.log('Lignes received:', lignes);
+              console.log('Cart items received:', lignes);
+
+              // Log each product in cart for debugging
+              lignes.forEach(ligne => {
+                console.log(`Cart item: ${ligne.produit?.nomProduit} (ID: ${ligne.produit?.idProduit}), Quantity: ${ligne.quantite}`);
+              });
 
               // Calculate total items in cart
               this.cartItemCount = lignes.reduce((total, ligne) => {
                 return total + (ligne.quantite || 0);
               }, 0);
 
-              console.log('Cart count calculated:', this.cartItemCount);
+              console.log('Final cart count:', this.cartItemCount);
             },
             error: (error) => {
               console.error('Error loading ligne commandes:', error);
@@ -132,6 +150,31 @@ export class MarketPlaceComponent implements OnInit {
       error: (error) => {
         console.error('Error loading panier:', error);
         this.cartItemCount = 0;
+      }
+    });
+  }
+
+  loadUserFavorites(): void {
+    if (!this.currentUser || !this.currentUser.id) {
+      return;
+    }
+
+    this.favorisService.retrieveAllFavoris().subscribe({
+      next: (favoris) => {
+        // Filter favorites for current user
+        const userFavorites = favoris.filter(f => f.idUser === this.currentUser.id);
+
+        // Add to tracked set
+        userFavorites.forEach(fav => {
+          if (fav.idProduit) {
+            this.favoritedProducts.add(fav.idProduit);
+          }
+        });
+
+        console.log('User favorites loaded:', this.favoritedProducts);
+      },
+      error: (error) => {
+        console.error('Error loading favorites:', error);
       }
     });
   }
@@ -175,23 +218,39 @@ export class MarketPlaceComponent implements OnInit {
   }
 
   buyProduct(product: any): void {
+    console.log('Buying product:', product);
+    console.log('User ID:', this.currentUser.id);
     if (!product || !product.idProduit) {
       console.error('Invalid product');
       return;
     }
 
-    this.panierService.ajouterProduitAuPanier(this.userId, product.idProduit, 1).subscribe({
+    // Keep track of which product is being added
+    const productBeingAdded = {
+      id: product.idProduit,
+      name: product.nomProduit
+    };
+
+    console.log(`Adding product to cart: ${productBeingAdded.name} (ID: ${productBeingAdded.id})`);
+
+    // Check if userId is set
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User ID is not set. Cannot add product to cart.');
+      return;
+    }
+    this.panierService.ajouterProduitAuPanier(this.currentUser.id, productBeingAdded.id, 1).subscribe({
       next: (response) => {
-        console.log('Add to cart response:', response);
+        console.log(`Successfully added ${productBeingAdded.name} to cart:`, response);
         if (response) {
           // Update cart count
           this.loadCartCount();
-          // Show success message or notification here if needed
+          // Show success message
+          // Add toastr notification here if you're using it
         }
       },
       error: (error) => {
-        console.error('Error adding to cart:', error);
-        // Show error message or notification here if needed
+        console.error(`Error adding ${productBeingAdded.name} to cart:`, error);
+        // Show error message
       }
     });
   }
@@ -270,5 +329,111 @@ export class MarketPlaceComponent implements OnInit {
 
   getImageCount(product: any): number {
     return product.imageGallery ? product.imageGallery.length : 1;
+  }
+
+  // Add new method for adding product to favorites
+  addToFavorites(product: any, event: Event): void {
+    event.stopPropagation(); // Prevent event bubbling
+
+    console.log('Adding product to favorites:', product);
+
+    if (!product || !product.idProduit) {
+      console.error('Invalid product');
+      return;
+    }
+
+    // Check if user is logged in
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User ID is not set. Cannot add to favorites.');
+      // You could redirect to login or show a message
+      return;
+    }
+
+    const favoris = new Favoris();
+    console.log('Current user ID:', this.currentUser.id);
+    console.log('Product ID:', product.idProduit);
+    favoris.idUser = this.currentUser.id;
+    favoris.idProduit = product.idProduit;
+
+    this.favorisService.addFavoris(favoris).subscribe({
+      next: (response) => {
+
+        console.log('Product added to favorites successfully:', response);
+        // Add to tracked favorites
+        this.favoritedProducts.add(product.idProduit);
+
+      },
+      error: (error) => {
+        console.error('Error adding product to favorites:', error);
+        alert('Failed to add product to favorites. Please try again.');
+      }
+    });
+  }
+
+  // New method to remove from favorites
+  removeFavorite(product: any): void {
+    if (!this.currentUser || !this.currentUser.id) {
+      return;
+    }
+
+    // First, find the favorite ID by querying all favorites
+    this.favorisService.retrieveAllFavoris().subscribe({
+      next: (favoris) => {
+        // Find the favorite entry for this product and user
+        const favorite = favoris.find(f =>
+          f.idUser === this.currentUser.id &&
+          f.idProduit === product.idProduit
+        );
+
+        if (favorite && favorite.idFavoris) {
+          // Remove the favorite
+          this.favorisService.removeFavoris(favorite.idFavoris).subscribe({
+            next: () => {
+              console.log('Removed from favorites successfully');
+              // Remove from tracked favorites
+              this.favoritedProducts.delete(product.idProduit);
+            },
+            error: (err) => {
+              console.error('Error removing from favorites:', err);
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error finding favorite to remove:', err);
+      }
+    });
+  }
+
+  // Check if a product is in favorites
+  isProductFavorited(productId: number): boolean {
+    return this.favoritedProducts.has(productId);
+  }
+
+  // Toggle favorites
+  toggleFavorite(product: any, event: Event): void {
+    event.stopPropagation(); // Prevent event bubbling
+
+    if (!product || !product.idProduit) {
+      console.error('Invalid product');
+      return;
+    }
+
+    // Check if user is logged in
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User ID is not set. Cannot manage favorites.');
+      alert('Please log in to manage your favorites.');
+      return;
+    }
+
+    const productId = product.idProduit;
+
+    if (this.isProductFavorited(productId)) {
+      // Product is already favorited, so remove it
+      this.removeFavorite(product);
+    } else {
+      // Product is not favorited, so add it
+      this.addToFavorites(product, event);
+    }
   }
 }
