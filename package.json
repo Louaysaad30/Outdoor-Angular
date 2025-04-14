@@ -73,6 +73,7 @@
     "ngx-mask": "^17.0.0",
     "ngx-masonry": "^14.0.1",
     "ngx-pipes": "^3.2.2",
+    "ngx-slick": "^0.2.1",
     "ngx-slick-carousel": "^17.0.0",
     "ngx-slider-v2": "^17.0.0",
     "ngx-spinner": "^16.0.2",

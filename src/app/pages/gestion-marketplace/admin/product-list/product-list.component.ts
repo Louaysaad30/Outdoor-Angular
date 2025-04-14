@@ -37,6 +37,8 @@ export class ProductListComponent implements OnInit {
   @ViewChild('deleteRecordModal') deleteRecordModal?: ModalDirective;
   // Add the missing ViewChild for addModal
   @ViewChild('addModal') addModal?: ModalDirective;
+  @ViewChild('deleteImageModal') deleteImageModal?: ModalDirective;
+  @ViewChild('setMainImageModal') setMainImageModal?: ModalDirective;
 
   productForm: FormGroup;
   products: Product[] = [];
@@ -73,6 +75,15 @@ export class ProductListComponent implements OnInit {
   newImagePreviewUrls: string[] = [];
   productGalleryImages: any[] = [];
 
+  // Ajout de ces propriétés dans votre classe
+  imageToDelete: number = 0;
+  imageUrlToSetAsMain: string = '';
+
+  // Remove duplicate declarations and keep only one of each
+  // These declarations already exist earlier in the code, so this block is removed.
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
@@ -92,23 +103,51 @@ export class ProductListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Initialiser des tableaux vides pour éviter les erreurs
+    this.allproducts = [];
+    this.products = [];
+    this.categories = [];
+
+    // Charger les données
     this.loadCategories();
     this.loadProducts();
+
+    // Initialiser le formulaire avec validation
+    this.initProductForm();
+  }
+
+  // Nouvelle méthode pour initialiser le formulaire avec validation
+  initProductForm(): void {
+    this.productForm = this.fb.group({
+      nomProduit: ['', [Validators.required]],
+      descriptionProduit: ['', [Validators.required, Validators.minLength(10)]],
+      prixProduit: ['', [Validators.required, Validators.min(0)]],
+      stockProduit: ['', [Validators.required, Validators.min(1)]],
+      categorie: [null],
+      imageProduit: [null]
+    });
+
+    // Monitor form validity changes
+    this.productForm.valueChanges.subscribe(() => {
+      this.isFormValid = this.productForm.valid;
+    });
   }
 
   loadProducts(): void {
-    // Your existing loadProducts code...
-
-    // After loading products, preload images for each product
     this.productService.getAllProducts().subscribe({
-      next: (products) => {
-        this.products = products;
-        // Preload images for each product
-        this.products.forEach(product => this.loadProductImages(product));
-        // Your existing sorting/filtering code...
+      next: (data) => {
+        this.allproducts = data;  // Stocke tous les produits
+
+        // Précharge les images pour chaque produit
+        this.allproducts.forEach(product => {
+          this.loadProductImages(product);
+        });
+
+        this.applyPagination(); // Applique la pagination
       },
       error: (error) => {
         console.error('Error loading products:', error);
+        this.allproducts = [];
         this.products = [];
       }
     });
@@ -126,30 +165,43 @@ export class ProductListComponent implements OnInit {
   }
 
   filterdata(): void {
-    if (this.term) {
-      const searchTerm = this.term.toLowerCase();
-      this.products = this.allproducts.filter(product => {
-       // console.log('Product being filtered:', product); // Debug log
-        return (
-          product.nomProduit.toLowerCase().includes(searchTerm) ||
-          product.categorie.nomCategorie.toLowerCase().includes(searchTerm) ||
-          product.prixProduit.toString().includes(searchTerm) ||
-          product.stockProduit.toString().includes(searchTerm)
-        );
-      });
-    } else {
-      this.products = this.allproducts;
+    if (!this.term) {
+      // Si le terme de recherche est vide, réinitialisez la liste paginée
+      this.applyPagination();
+      return;
     }
+
+    // Filtrer tous les produits
+    const filteredProducts = this.allproducts.filter(product =>
+      product.nomProduit.toLowerCase().includes(this.term.toLowerCase()) ||
+      (product.descriptionProduit && product.descriptionProduit.toLowerCase().includes(this.term.toLowerCase())) ||
+      product.prixProduit.toString().includes(this.term)
+    );
+
+    // Mettre à jour la liste paginée avec les résultats filtrés
+    this.products = filteredProducts;
+
+    // Réinitialiser la pagination
+    this.currentPage = 1;
   }
 
   filterByCategory(): void {
     if (!this.selectedCategory) {
-      this.products = this.allproducts;
-    } else {
-      this.products = this.allproducts.filter(product =>
-        product.categorie?.idCategorie?.toString() === this.selectedCategory
-      );
+      // Si aucune catégorie n'est sélectionnée, affichez tous les produits
+      this.applyPagination();
+      return;
     }
+
+    // Filtrer par ID de catégorie
+    const filteredProducts = this.allproducts.filter(product =>
+      product.categorie?.idCategorie?.toString() === this.selectedCategory.toString()
+    );
+
+    // Mettre à jour la liste paginée
+    this.products = filteredProducts;
+
+    // Réinitialiser la pagination
+    this.currentPage = 1;
   }
 
   onSort(column: string): void {
@@ -199,10 +251,10 @@ export class ProductListComponent implements OnInit {
   editList(index: number): void {
     const product = this.products[index];
     if (product) {
-      this.currentProduct = product;
+      this.currentProduct = { ...product }; // Clone to avoid direct reference
       this.currentImage = product.imageProduit;
 
-      // Reset
+      // Reset image properties
       this.selectedFiles = [];
       this.newImagePreviewUrls = [];
 
@@ -214,13 +266,18 @@ export class ProductListComponent implements OnInit {
         error: (error) => console.error('Error loading product images:', error)
       });
 
+      // Update form with current product values - after the form is created
       this.productForm.patchValue({
-        nomProduit: product.nomProduit,
-        descriptionProduit: product.descriptionProduit,
-        prixProduit: product.prixProduit,
-        stockProduit: product.stockProduit,
-        categorie: product.categorie
+        nomProduit: product.nomProduit || '',
+        descriptionProduit: product.descriptionProduit || '',
+        prixProduit: product.prixProduit || 0,
+        stockProduit: product.stockProduit || 0,
+        categorie: product.categorie || null
       });
+
+      // Mark form as pristine and untouched after setting initial values
+      this.productForm.markAsPristine();
+      this.productForm.markAsUntouched();
 
       this.showModal?.show();
     }
@@ -265,52 +322,74 @@ export class ProductListComponent implements OnInit {
   }
 
   // Ajouter méthode pour enlever une image existante
-  removeGalleryImage(imageId: number): void {
-    if (confirm('Are you sure you want to remove this image?')) {
-      // Use productImageService instead of productService
-      this.productImageService.deleteProductImage(imageId).subscribe({
-        next: () => {
-          this.productGalleryImages = this.productGalleryImages.filter(img => img.idImage !== imageId);
-        },
-        error: (error) => console.error('Error deleting image:', error)
-      });
-    }
+  showRemoveImageConfirm(imageId: number): void {
+    this.imageToDelete = imageId;
+    this.deleteImageModal?.show();
+  }
+
+  // Ajouter cette méthode pour effectuer la suppression après confirmation
+  confirmRemoveImage(): void {
+    this.productImageService.deleteProductImage(this.imageToDelete).subscribe({
+      next: () => {
+        this.productGalleryImages = this.productGalleryImages.filter(img => img.idImage !== this.imageToDelete);
+        this.deleteImageModal?.hide();
+      },
+      error: (error) => {
+        console.error('Error deleting image:', error);
+        this.deleteImageModal?.hide();
+      }
+    });
   }
 
   // Ajouter méthode pour définir une image comme principale
-  setAsMainImage(imageUrl: string): void {
-    if (confirm('Set this image as the main product image?')) {
-      if (!this.currentProduct) return;
+  showSetMainImageConfirm(imageUrl: string): void {
+    this.imageUrlToSetAsMain = imageUrl;
+    this.setMainImageModal?.show();
+  }
 
-      // Find the image in the gallery to get its ID
-      const imageToSet = this.productGalleryImages.find(img => img.imageUrl === imageUrl);
-      if (imageToSet) {
-        // Use productImageService to set as main
-        this.productImageService.setMainProductImage(this.currentProduct.idProduit, imageToSet.idImage).subscribe({
-          next: () => {
-            // Update local data
-            this.currentImage = imageUrl;
-            if (this.currentProduct) {
-              this.currentProduct.imageProduit = imageUrl;
-            }
-          },
-          error: (error) => console.error('Error setting main image:', error)
-        });
-      } else {
-        // Fallback to the old approach if needed
-        const updateData = {
-          ...this.currentProduct,
-          imageProduit: imageUrl
-        };
+  // Ajouter cette méthode pour définir l'image principale après confirmation
+  confirmSetMainImage(): void {
+    if (!this.currentProduct) {
+      this.setMainImageModal?.hide();
+      return;
+    }
 
-        this.productService.updateProduct(this.currentProduct.idProduit, updateData).subscribe({
-          next: (response) => {
-            this.currentImage = imageUrl;
-            this.currentProduct = response;
-          },
-          error: (error) => console.error('Error updating main image:', error)
-        });
-      }
+    // Find the image in the gallery to get its ID
+    const imageToSet = this.productGalleryImages.find(img => img.imageUrl === this.imageUrlToSetAsMain);
+    if (imageToSet) {
+      // Use productImageService to set as main
+      this.productImageService.setMainProductImage(this.currentProduct.idProduit, imageToSet.idImage).subscribe({
+        next: () => {
+          // Update local data
+          this.currentImage = this.imageUrlToSetAsMain;
+          if (this.currentProduct) {
+            this.currentProduct.imageProduit = this.imageUrlToSetAsMain;
+          }
+          this.setMainImageModal?.hide();
+        },
+        error: (error) => {
+          console.error('Error setting main image:', error);
+          this.setMainImageModal?.hide();
+        }
+      });
+    } else {
+      // Fallback to the old approach if needed
+      const updateData = {
+        ...this.currentProduct,
+        imageProduit: this.imageUrlToSetAsMain
+      };
+
+      this.productService.updateProduct(this.currentProduct.idProduit, updateData).subscribe({
+        next: (response) => {
+          this.currentImage = this.imageUrlToSetAsMain;
+          this.currentProduct = response;
+          this.setMainImageModal?.hide();
+        },
+        error: (error) => {
+          console.error('Error updating main image:', error);
+          this.setMainImageModal?.hide();
+        }
+      });
     }
   }
 
@@ -320,15 +399,20 @@ export class ProductListComponent implements OnInit {
       return;
     }
 
-    // Get form values
-    const formValues = this.productForm.value;
+    // Mark all form controls as touched to trigger validation display
+    Object.keys(this.productForm.controls).forEach(key => {
+      const control = this.productForm.get(key);
+      control?.markAsTouched();
+    });
 
-    // Check required fields only
-    if (!formValues.nomProduit || !formValues.descriptionProduit ||
-        !formValues.prixProduit || !formValues.stockProduit) {
-      console.error('Required fields are missing');
+    // Check if form is valid
+    if (this.productForm.invalid) {
+      console.error('Form is invalid. Please check all fields.');
       return;
     }
+
+    // Get form values
+    const formValues = this.productForm.value;
 
     const updateData = {
       idProduit: this.currentProduct.idProduit,
@@ -430,9 +514,8 @@ export class ProductListComponent implements OnInit {
   }
 
   pageChanged(event: any): void {
-    const startItem = (event.page - 1) * event.itemsPerPage;
-    const endItem = event.page * event.itemsPerPage;
-    this.products = this.allproducts.slice(startItem, endItem);
+    this.currentPage = event.page;
+    this.applyPagination();
   }
 
   navigateToAddProduct() {
@@ -516,5 +599,41 @@ export class ProductListComponent implements OnInit {
         }
       });
     }
+  }
+
+  getImageToDeleteUrl(): string | undefined {
+    if (!this.imageToDelete || !this.productGalleryImages) return undefined;
+    const image = this.productGalleryImages.find(img => img.idImage === this.imageToDelete);
+    return image?.imageUrl;
+  }
+
+  hideDeleteModal(): void {
+    this.deleteImageModal?.hide();
+  }
+
+  hideSetMainModal(): void {
+    this.setMainImageModal?.hide();
+  }
+
+  // Méthode pour appliquer la pagination
+  applyPagination(): void {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    let endIndex = startIndex + this.itemsPerPage;
+
+    if (endIndex > this.allproducts.length) {
+      endIndex = this.allproducts.length;
+    }
+
+    this.products = this.allproducts.slice(startIndex, endIndex);
+  }
+
+  initForm(): void {
+    // Add your form initialization logic here
+    // For example:
+    this.productForm = this.fb.group({
+      name: ['', Validators.required],
+      price: [0, Validators.min(0)],
+      // Add other form controls
+    });
   }
 }

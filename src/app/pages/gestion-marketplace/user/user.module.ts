@@ -18,9 +18,11 @@ import { CheckoutComponent } from './checkout/checkout.component';
 import { AlertModule } from 'ngx-bootstrap/alert';
 import { OrderOverviewComponent } from './order-overview/order-overview.component';
 import { saveAs } from 'file-saver';
+import { ProductDetailsComponent } from './product-details/product-details.component';
+import { SlickCarouselModule } from 'ngx-slick-carousel';
 
 @NgModule({
-  declarations: [MarketPlaceComponent,CartComponent,CheckoutComponent,OrderOverviewComponent],
+  declarations: [MarketPlaceComponent,CartComponent,CheckoutComponent,OrderOverviewComponent,ProductDetailsComponent],
   imports: [
     CommonModule,
     UserRoutingModule,
@@ -35,7 +37,9 @@ import { saveAs } from 'file-saver';
     ModalModule.forRoot(),
     AccordionModule.forRoot(),
     NgxSliderModule,
-    AlertModule.forRoot()
+    AlertModule.forRoot(),
+    SlickCarouselModule
+
 
   ]
 })

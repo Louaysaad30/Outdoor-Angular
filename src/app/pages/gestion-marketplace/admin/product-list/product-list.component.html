@@ -166,12 +166,18 @@
                   <div class="row mt-3 align-items-center" id="pagination-element">
                       <div class="col-sm">
                           <div class="text-muted text-center text-sm-start">
-                              Showing <span class="fw-semibold">{{products?.length}}</span> of <span class="fw-semibold">{{allproducts?.length}}</span> Results
+                              Showing <span class="fw-semibold">{{ products?.length || 0 }}</span> of <span class="fw-semibold">{{ allproducts?.length || 0 }}</span> Results
                           </div>
                       </div>
 
                       <div class="col-sm-auto mt-3 mt-sm-0">
-                          <pagination class="pagination-wrap hstack gap-2 justify-content-center" [totalItems]="allproducts.length" [itemsPerPage]="10" (pageChanged)="pageChanged($event)"></pagination>
+                          <pagination
+                              class="pagination-wrap hstack gap-2 justify-content-center"
+                              [totalItems]="allproducts?.length || 0"
+                              [itemsPerPage]="itemsPerPage"
+                              [(ngModel)]="currentPage"
+                              (pageChanged)="pageChanged($event)">
+                          </pagination>
                       </div>
                   </div>
                   <!-- end pagination-element -->
@@ -220,8 +226,9 @@
                 <div class="modal-body p-4">
                     <!-- Product Name -->
                     <div class="mb-3">
-                        <label class="form-label">Product Name</label>
+                        <label class="form-label" for="product-name">Product Name <span class="text-danger">*</span></label>
                         <input type="text"
+                               id="product-name"
                                class="form-control"
                                formControlName="nomProduit"
                                [ngClass]="{'is-invalid': productForm.get('nomProduit')?.touched && productForm.get('nomProduit')?.invalid}">
@@ -232,26 +239,30 @@
 
                     <!-- Description -->
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control"
+                        <label class="form-label" for="product-description">Description <span class="text-danger">*</span></label>
+                        <textarea id="product-description"
+                                  class="form-control"
+                                  rows="4"
                                   formControlName="descriptionProduit"
-                                  [ngClass]="{'is-invalid': productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid}">
-                        </textarea>
+                                  [ngClass]="{'is-invalid': productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid}"></textarea>
                         <div class="invalid-feedback" *ngIf="productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid">
                             <span *ngIf="productForm.get('descriptionProduit')?.errors?.['required']">Description is required</span>
                             <span *ngIf="productForm.get('descriptionProduit')?.errors?.['minlength']">Description must be at least 10 characters</span>
                         </div>
                     </div>
 
-
-
-
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
-                                <label class="form-label">Price</label>
-                                <input type="number" class="form-control" formControlName="prixProduit"
-                                       [ngClass]="{'is-invalid': productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid}">
+                                <label class="form-label" for="product-price">Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number"
+                                           id="product-price"
+                                           class="form-control"
+                                           formControlName="prixProduit"
+                                           [ngClass]="{'is-invalid': productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid}">
+                                </div>
                                 <div class="invalid-feedback" *ngIf="productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid">
                                     <span *ngIf="productForm.get('prixProduit')?.errors?.['required']">Price is required</span>
                                     <span *ngIf="productForm.get('prixProduit')?.errors?.['min']">Price must be greater than 0</span>
@@ -260,8 +271,11 @@
                         </div>
                         <div class="col-lg-6">
                             <div class="mb-3">
-                                <label class="form-label">Stock</label>
-                                <input type="number" class="form-control" formControlName="stockProduit"
+                                <label class="form-label" for="product-stock">Stock <span class="text-danger">*</span></label>
+                                <input type="number"
+                                       id="product-stock"
+                                       class="form-control"
+                                       formControlName="stockProduit"
                                        [ngClass]="{'is-invalid': productForm.get('stockProduit')?.touched && productForm.get('stockProduit')?.invalid}">
                                 <div class="invalid-feedback" *ngIf="productForm.get('stockProduit')?.touched && productForm.get('stockProduit')?.invalid">
                                     <span *ngIf="productForm.get('stockProduit')?.errors?.['required']">Stock is required</span>
@@ -272,8 +286,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-control" formControlName="categorie">
+                        <label class="form-label" for="product-category">Category</label>
+                        <select id="product-category"
+                               class="form-control"
+                               formControlName="categorie"
+                               [ngClass]="{'is-invalid': productForm.get('categorie')?.touched && productForm.get('categorie')?.invalid}">
                             <option [ngValue]="null">Select Category</option>
                             <option *ngFor="let cat of categories" [ngValue]="cat">{{cat.nomCategorie}}</option>
                         </select>
@@ -297,14 +314,16 @@
       <img [src]="image.imageUrl"
           class="rounded"
           style="height: 100px; width: 100px; object-fit: cover;">
+      <!-- Remplacer le bouton de suppression d'image -->
       <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
               style="width: 25px; height: 25px; padding: 0 !important;"
-              (click)="removeGalleryImage(image.idImage)">
+              (click)="showRemoveImageConfirm(image.idImage)">
         <i class="bi bi-x"></i>
       </button>
+      <!-- Remplacer le bouton pour définir l'image principale -->
       <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 p-1"
               style="width: 25px; height: 25px; padding: 0 !important;"
-              (click)="setAsMainImage(image.imageUrl)">
+              (click)="showSetMainImageConfirm(image.imageUrl)">
         <i class="bi bi-star"></i>
       </button>
     </div>
@@ -336,9 +355,11 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" (click)="showModal.hide()">Close</button>
-                    <button type="submit" class="btn btn-primary">
-                        Update
+                    <button type="button" class="btn btn-light" (click)="showModal.hide()">Cancel</button>
+                    <button type="submit"
+                            class="btn btn-primary"
+                            [disabled]="productForm.invalid && productForm.touched">
+                        <i class="bi bi-save me-1"></i> Update Product
                     </button>
                 </div>
             </form>
@@ -358,5 +379,53 @@
 
           <app-add-product (productAdded)="refreshProducts()"></app-add-product>
       </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression d'image -->
+<div bsModal #deleteImageModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Image Deletion</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="hideDeleteModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove this image?</p>
+        <div class="text-center">
+          <img *ngIf="imageToDelete && getImageToDeleteUrl()"
+               [src]="getImageToDeleteUrl()"
+               class="img-thumbnail" style="max-height: 150px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="hideDeleteModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmRemoveImage()">Delete Image</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation pour définir l'image principale -->
+<div bsModal #setMainImageModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Set as Main Product Image</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="hideSetMainModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p>Do you want to set this image as the main product image?</p>
+        <div class="text-center">
+          <img *ngIf="imageUrlToSetAsMain"
+               [src]="imageUrlToSetAsMain"
+               class="img-thumbnail" style="max-height: 150px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="hideSetMainModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="confirmSetMainImage()">Set as Main</button>
+      </div>
+    </div>
   </div>
 </div>

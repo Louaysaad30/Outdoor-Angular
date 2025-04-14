@@ -104,7 +104,13 @@
                     <div class="col-xxl-3 col-lg-4 col-md-6 mb-4">
                         <div class="card h-100"> <!-- Utilise h-100 de Bootstrap pour une hauteur fixe -->
                             @if (product.stockProduit === 0) {
-                                <div class="ribbon ribbon-danger">Sold Out</div>
+                                <div class="position-absolute w-100 h-100 top-0 start-0 d-flex align-items-center justify-content-center"
+                                     style="background-color: rgba(0,0,0,0.5); z-index: 1; border-radius: inherit;">
+                                    <span class="badge bg-danger px-3 py-2"
+                                          style="font-size: 1rem; letter-spacing: 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                        SOLD OUT
+                                    </span>
+                                </div>
                             }
                             <div class="card-body d-flex flex-column"> <!-- d-flex et flex-column pour la mise en page -->
                                 <!-- Image container with ratio -->
@@ -145,7 +151,19 @@
                                 <div class="flex-grow-1"> <!-- flex-grow-1 pour l'espace restant -->
                                     <h5 class="fs-5 mb-2">${{product.prixProduit}}</h5>
                                     <h6 class="text-truncate mb-1">{{product.nomProduit}}</h6>
-                                    <p class="text-muted small mb-3">{{product.categorie?.nomCategorie}}</p>
+                                    <p class="text-muted small mb-2">{{product.categorie?.nomCategorie}}</p>
+
+                                    <!-- Stock indicator -->
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="me-2 small">Stock:</span>
+                                        @if (product.stockProduit > 10) {
+                                            <span class="badge bg-success">In Stock ({{product.stockProduit}})</span>
+                                        } @else if (product.stockProduit > 0) {
+                                            <span class="badge bg-warning text-dark">Limited Stock ({{product.stockProduit}})</span>
+                                        } @else {
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        }
+                                    </div>
                                 </div>
 
                                 <!-- Boutons d'action -->
@@ -156,7 +174,7 @@
                                         <i class="ri-shopping-cart-plus-line me-1"></i>Add
                                     </button>
                                     <button class="btn btn-secondary flex-grow-1"
-                                            [routerLink]="['/products', product.idProduit]">
+                                            [routerLink]="['/marketplacefront/user/product-details', product.idProduit]">
                                         View
                                     </button>
                                 </div>
