@@ -2,16 +2,16 @@ import { Component } from '@angular/core';
 import { SharedModule } from "../../../../shared/shared.module";
 import { TabsModule } from 'ngx-bootstrap/tabs';
 
-import { SimplebarAngularModule } from "simplebar-angular";
-import { BreadcrumbsComponent } from 'src/app/shared/breadcrumbs/breadcrumbs.component';
 import { AuthServiceService } from 'src/app/account/auth/services/auth-service.service';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-profil-details',
   standalone: true,
  imports: [
     TabsModule,
     SharedModule,
+    CommonModule
   ],
      templateUrl: './profil-details.component.html',
   styleUrl: './profil-details.component.scss'
@@ -39,7 +39,9 @@ export class ProfilDetailsComponent {
       { label: 'Profile', active: true }
     ];
   }
-
+  isAgence(): boolean {
+    return this.currentUser?.authorities?.[0]?.authority === 'AGENCE';
+  }
   // follow button toggle
   Followbtn(ev: any) {
     ev.target.closest('button').classList.toggle('active')
