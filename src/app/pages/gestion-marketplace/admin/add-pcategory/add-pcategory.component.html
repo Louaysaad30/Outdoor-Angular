@@ -1,0 +1,41 @@
+<div class="row">
+          <div class="col-xxl-4">
+            <h5 class="card-title mb-3">Add Category</h5>
+            <p class="text-muted">Enter the category information below</p>
+          </div>
+
+          <!-- Success Message -->
+          <div class="alert alert-success alert-dismissible fade show" role="alert" *ngIf="showSuccessMessage">
+            Category added successfully!
+          </div>
+
+          <!-- Error Message -->
+          <div class="alert alert-danger alert-dismissible fade show" role="alert" *ngIf="showErrorMessage">
+            {{ errorMessage }}
+          </div>
+
+          <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+            <!-- Category Name -->
+            <div class="mb-3">
+              <label for="categoryName" class="form-label">Category Name <span class="text-danger">*</span></label>
+              <input type="text"
+                     class="form-control"
+                     id="nomCategorie"
+                     formControlName="nomCategorie"
+                     placeholder="Enter category name"
+                     [ngClass]="{'is-invalid': categoryForm.get('nomCategorie')?.invalid && categoryForm.get('nomCategorie')?.touched}">
+              <div class="invalid-feedback" *ngIf="categoryForm.get('nomCategorie')?.errors?.['required'] && categoryForm.get('nomCategorie')?.touched">
+                Category name is required
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mb-3">
+              <button type="submit"
+                      class="btn btn-primary"
+                      [disabled]="categoryForm.invalid">Submit</button>
+            </div>
+          </form>
+        </div>
+
+<hr>

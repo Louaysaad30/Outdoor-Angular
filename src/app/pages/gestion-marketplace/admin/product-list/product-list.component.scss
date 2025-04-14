@@ -1,0 +1,18 @@
+/* Add this to your component's CSS or in a global stylesheet */
+.product-image-transition {
+  transition: all 0.3s ease;
+}
+
+.product-image-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.image-navigation-button {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.product-image-container:hover .image-navigation-button {
+  opacity: 1;
+}

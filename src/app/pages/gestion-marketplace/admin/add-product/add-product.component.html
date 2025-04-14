@@ -1,0 +1,137 @@
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+
+          <app-add-pcategory></app-add-pcategory>
+
+        <div class="row">
+
+          <div class="col-xxl-4">
+            <h5 class="card-title mb-3">ADD Product </h5>
+            <p class="text-muted">Enter the basic product information below</p>
+          </div>
+          <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="nomProduit">Product Name</label>
+              <input type="text" id="nomProduit" formControlName="nomProduit" class="form-control"
+                     [ngClass]="{'is-invalid': formControls['nomProduit'].touched && formControls['nomProduit'].invalid}">
+              <div *ngIf="formControls['nomProduit'].touched && formControls['nomProduit'].invalid" class="invalid-feedback">
+                <div *ngIf="formControls['nomProduit'].errors?.['required']">Product name is required</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="descriptionProduit">Description</label>
+              <textarea id="descriptionProduit" formControlName="descriptionProduit" class="form-control"
+                        [ngClass]="{'is-invalid': formControls['descriptionProduit'].touched && formControls['descriptionProduit'].invalid}">
+              </textarea>
+              <div *ngIf="formControls['descriptionProduit'].touched && formControls['descriptionProduit'].invalid" class="invalid-feedback">
+                <div *ngIf="formControls['descriptionProduit'].errors?.['required']">Description is required</div>
+                <div *ngIf="formControls['descriptionProduit'].errors?.['minlength']">Description must be at least 10 characters</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="prixProduit">Price</label>
+              <input type="number" id="prixProduit" formControlName="prixProduit" class="form-control"
+                     [ngClass]="{'is-invalid': formControls['prixProduit'].touched && formControls['prixProduit'].invalid}">
+              <div *ngIf="formControls['prixProduit'].touched && formControls['prixProduit'].invalid" class="invalid-feedback">
+                <div *ngIf="formControls['prixProduit'].errors?.['required']">Price is required</div>
+                <div *ngIf="formControls['prixProduit'].errors?.['min']">Price cannot be negative</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="stockProduit">Stock</label>
+              <input type="number" id="stockProduit" formControlName="stockProduit" class="form-control"
+                     [ngClass]="{'is-invalid': formControls['stockProduit'].touched && formControls['stockProduit'].invalid}">
+              <div *ngIf="formControls['stockProduit'].touched && formControls['stockProduit'].invalid" class="invalid-feedback">
+                <div *ngIf="formControls['stockProduit'].errors?.['required']">Stock is required</div>
+                <div *ngIf="formControls['stockProduit'].errors?.['min']">Stock must be greater than 0</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="categorie">Category</label>
+              <select id="categorie" formControlName="categorie" class="form-control"
+                      [ngClass]="{'is-invalid': formControls['categorie'].touched && formControls['categorie'].invalid}">
+                <option value="">Select Category</option>
+                <option *ngFor="let category of categories" [ngValue]="category">{{category.nomCategorie}}</option>
+              </select>
+              <div *ngIf="formControls['categorie'].touched && formControls['categorie'].invalid" class="invalid-feedback">
+                <div *ngIf="formControls['categorie'].errors?.['required']">Category is required</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="codeProduit">Product Code</label>
+              <select
+                id="codeProduit"
+                formControlName="codeProduit"
+                class="form-control"
+                [ngClass]="{'is-invalid': formControls['codeProduit'].touched && formControls['codeProduit'].invalid}"
+              >
+              <option value="">Select Product Code</option>
+                <option *ngFor="let code of productCodes" [ngValue]="code">
+                  {{code.code}}
+                </option>
+              </select>
+              <div *ngIf="formControls['codeProduit'].touched && formControls['codeProduit'].invalid" class="invalid-feedback">
+                <div *ngIf="formControls['codeProduit'].errors?.['required']">Product code is required</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Product Images</label>
+
+              <!-- Aperçu des images sélectionnées -->
+              <div class="d-flex flex-wrap gap-2 mt-2 mb-2">
+                <div *ngFor="let preview of imagePreviewUrls; let i = index" class="position-relative">
+                  <img [src]="preview" class="rounded" style="height: 100px; width: 100px; object-fit: cover;">
+                  <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
+                          style="width: 25px; height: 25px; padding: 0 !important;"
+                          (click)="removeSelectedImage(i)">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input file multiple -->
+              <input
+                type="file"
+                id="imageProduit"
+                (change)="onFileSelected($event)"
+                class="form-control"
+                accept="image/*"
+                multiple
+                [ngClass]="{'is-invalid': selectedFiles.length === 0 && formControls['imageProduit'].touched}"
+              >
+              <div class="invalid-feedback" *ngIf="selectedFiles.length === 0 && formControls['imageProduit'].touched">
+                Please select at least one image
+              </div>
+              <small class="form-text text-muted">
+                Maximum file size: 5MB per image. Supported formats: JPG, PNG, GIF. You can select multiple images.
+              </small>
+              <div *ngIf="selectedFiles.length > 0" class="mt-2">
+                <small class="text-success">Selected: {{selectedFiles.length}} image(s)</small>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+              {{ isLoading ? 'Adding Product...' : 'Add Product' }}
+            </button>
+          </form>
+
+          <div *ngIf="showSuccessMessage" class="alert alert-success mt-3">
+            Product added successfully!
+          </div>
+
+          <div *ngIf="showErrorMessage" class="alert alert-danger mt-3">
+            {{errorMessage}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
