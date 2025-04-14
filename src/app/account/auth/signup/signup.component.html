@@ -186,13 +186,16 @@
                                             <option value="OWNER">Owner</option>
                                             <option value="FORMATEUR">Formateur</option>
                                             <option value="EVENT_MANAGER">Event Manager</option>
+                                            <option value="LIVREUR">Livreur</option>
                                           </select>
                                         </div>
 
                                         <!-- Location Field, only show if role is AGENT -->
+                                        <div class="mb-3">
                                         <div class="form-group" *ngIf="registrationForm.get('role')?.value === 'AGENCE'">
                                           <label for="location">Location</label>
                                           <input id="location" class="form-control" formControlName="location" />
+                                        </div>
                                         </div>
                                       
                                         <!-- Submit Button -->
