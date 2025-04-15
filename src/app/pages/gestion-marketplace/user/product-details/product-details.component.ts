@@ -14,6 +14,11 @@ import { of } from 'rxjs';
 import { AuthServiceService } from 'src/app/account/auth/services/auth-service.service';
 import { FavorisService } from '../../services/favoris.service';
 import { Favoris } from '../../models/Favoris';
+import { Panier } from '../../models/Panier';
+import { LigneCommande } from '../../models/LigneCommande';
+import { UpdateQuantiteDTO } from '../../models/DTO/UpdateQuantiteDTO';
+import { LignedecommandeService } from '../../services/lignedecommande.service';
+import { CartUpdateService } from '../../services/cart-update.service';
 
 @Component({
   selector: 'app-product-details',
@@ -50,6 +55,10 @@ export class ProductDetailsComponent implements OnInit {
   // Add these properties
   isProductFavorited: boolean = false;
 
+  // Add these properties to your component class
+  isHovered: boolean = false;
+  hoveredIndex: number = -1;
+
   constructor(
     private formBuilder: UntypedFormBuilder,
     private http: HttpClient,
@@ -60,7 +69,10 @@ export class ProductDetailsComponent implements OnInit {
     private authService: AuthServiceService,
     private toastr: ToastrService,
     private favorisService: FavorisService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ligneCommandeService: LignedecommandeService,
+    private cartUpdateService: CartUpdateService,
+    private cartService: CartUpdateService // Add this if not already present
   ) { }
 
   ngOnInit(): void {
@@ -287,36 +299,162 @@ export class ProductDetailsComponent implements OnInit {
   quantity: number = 1;
 
   addToCart() {
-    if (!this.currentUser.id) {
+    if (!this.currentUser || !this.currentUser.id) {
       this.toastr.warning('Please log in to add products to cart', 'Authentication Required');
       this.router.navigate(['/auth/login']);
       return;
     }
 
-    if (this.isAddingToCart) {
-      return; // Prevent multiple clicks
+    // Check if product exists
+    if (!this.productdetail || !this.productdetail.idProduit) {
+      this.toastr.error('Product details not available', 'Error');
+      return;
+    }
+
+    // Check if product is in stock
+    if (this.productdetail.stockProduit <= 0) {
+      this.toastr.error('This product is out of stock', 'Error');
+      return;
+    }
+
+    // Check if requested quantity is valid
+    if (this.quantity <= 0) {
+      this.toastr.error('Please select a valid quantity', 'Error');
+      return;
+    }
+
+    // Check if requested quantity exceeds available stock
+    if (this.quantity > this.productdetail.stockProduit) {
+      this.toastr.warning(
+        `Only ${this.productdetail.stockProduit} units available. Your quantity has been adjusted.`,
+        'Limited Stock'
+      );
+      this.quantity = this.productdetail.stockProduit;
     }
 
     this.isAddingToCart = true;
 
-    this.panierService.ajouterProduitAuPanier(
-      this.currentUser.id,
-      this.productdetail?.idProduit ?? 0,
-      this.quantity
-    )
-    .pipe(
-      catchError(error => {
-        console.error('Error adding to cart:', error);
-        this.toastr.error('Failed to add product to cart', 'Error');
-        return of(null);
-      }),
-      finalize(() => {
+    // Get all paniers for the user and filter for non-validated ones
+    this.panierService.getAllPaniersByUserId(this.currentUser.id).subscribe({
+      next: (paniers) => {
+        // Filter for paniers that are not validated (validated=false or undefined)
+        const activePaniers = paniers.filter(p => p.validated !== true);
+
+        if (activePaniers.length === 0) {
+          // Create a new panier if no active panier exists
+          console.log('No active panier found, creating a new one');
+          const newPanier = new Panier();
+          newPanier.userId = this.currentUser.id;
+          newPanier.total = 0; // Initialize total to 0
+          newPanier.validated = false;
+
+          this.panierService.addPanier(newPanier).subscribe({
+            next: (createdPanier) => {
+              console.log('New panier created:', createdPanier);
+              this.addProductToCart(this.productdetail!, createdPanier);
+            },
+            error: (err) => {
+              console.error('Error creating panier:', err);
+              this.toastr.error('Failed to create shopping cart', 'Error');
+              this.isAddingToCart = false;
+            }
+          });
+        } else {
+          // Use the first active panier
+          const panier = activePaniers[0];
+          console.log('Using existing panier:', panier);
+
+          // Check if product already exists in the panier
+          this.checkAndUpdateExistingProduct(this.productdetail!, panier);
+        }
+      },
+      error: (err) => {
+        console.error('Error getting user paniers:', err);
+        this.toastr.error('Failed to retrieve your cart information', 'Error');
         this.isAddingToCart = false;
-      })
-    )
-    .subscribe(response => {
-      if (response) {
-        this.toastr.success(`${this.quantity} ${this.productdetail?.nomProduit} added to cart`, 'Success');
+      }
+    });
+  }
+
+  private checkAndUpdateExistingProduct(product: any, panier: Panier): void {
+    // Get all ligne commandes for this panier
+    this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier!).subscribe({
+      next: (lignes) => {
+        // Find if this product already exists in the cart (and not in a commande)
+        const existingLine = lignes.find(
+          ligne => ligne.idProduit === product.idProduit && ligne.commande === null
+        );
+
+        if (existingLine && existingLine.idLigneCommande && panier.idPanier) {
+          // Product exists in cart, update quantity
+          console.log('Product already in cart, updating quantity');
+
+          // Calculate the new total for this line
+          const newQuantity = existingLine.quantite + this.quantity;
+          const lineTotal = newQuantity * existingLine.prix;
+
+          const updateDto: UpdateQuantiteDTO = {
+            idLigneCommande: existingLine.idLigneCommande,
+            quantite: newQuantity,
+            idPanier: panier.idPanier,
+            total: lineTotal
+          };
+
+          this.ligneCommandeService.updateLigneCommande(updateDto).subscribe({
+            next: (response) => {
+              console.log('Product quantity updated successfully', response);
+              this.toastr.success(
+                `Added ${this.quantity} ${product.nomProduit} to your cart`,
+                'Success'
+              );
+              this.isAddingToCart = false;
+              this.loadCartCount();
+              this.cartUpdateService.triggerCartUpdate(); // Ajouter cette ligne
+            },
+            error: (err) => {
+              console.error('Error updating product quantity:', err);
+              this.toastr.error('Failed to update product quantity', 'Error');
+              this.isAddingToCart = false;
+            }
+          });
+        } else {
+          // Product not in cart, add as new item
+          console.log('Product not in cart, adding as new item');
+          this.addProductToCart(product, panier);
+        }
+      },
+      error: (err) => {
+        console.error('Error checking cart items:', err);
+        this.toastr.error('Failed to check cart items', 'Error');
+        this.isAddingToCart = false;
+      }
+    });
+  }
+
+  private addProductToCart(product: any, panier: Panier): void {
+    const newLine = {
+      quantite: this.quantity,
+      prix: product.prixProduit,
+      idProduit: product.idProduit,
+      produit: product,
+      panier: panier
+    };
+
+    this.ligneCommandeService.addLigneCommande(newLine).subscribe({
+      next: (response) => {
+        console.log('Product added to cart successfully', response);
+        this.toastr.success(
+          `Added ${this.quantity} ${product.nomProduit} to your cart`,
+          'Success'
+        );
+        this.isAddingToCart = false;
+        this.loadCartCount();
+        this.cartUpdateService.triggerCartUpdate(); // Ajouter cette ligne
+      },
+      error: (err) => {
+        console.error('Error adding product to cart:', err);
+        this.toastr.error('Failed to add product to cart', 'Error');
+        this.isAddingToCart = false;
       }
     });
   }
@@ -450,5 +588,37 @@ export class ProductDetailsComponent implements OnInit {
         console.error('Error finding favorite to remove:', err);
       }
     });
+  }
+
+  loadCartCount(): void {
+    if (this.currentUser && this.currentUser.id) {
+      this.panierService.getAllPaniersByUserId(this.currentUser.id).subscribe({
+        next: (paniers: Panier[]) => {
+          const activePaniers = paniers.filter(p => !p.validated);
+
+          if (activePaniers.length > 0 && activePaniers[0].idPanier) {
+            this.ligneCommandeService.getLigneCommandesByPanierId(activePaniers[0].idPanier).subscribe({
+              next: (lignes: LigneCommande[]) => {
+                const activeItems = lignes.filter(ligne => ligne.commande === null);
+                this.cartUpdateService.updateCartCount(activeItems.length);
+                this.cartUpdateService.triggerCartUpdate();
+              },
+              error: (err: any) => {
+                console.error('Error loading cart items:', err);
+                this.cartUpdateService.updateCartCount(0);
+              }
+            });
+          } else {
+            this.cartUpdateService.updateCartCount(0);
+          }
+        },
+        error: (err: any) => {
+          console.error('Error loading cart:', err);
+          this.cartUpdateService.updateCartCount(0);
+        }
+      });
+    } else {
+      this.cartUpdateService.updateCartCount(0);
+    }
   }
 }

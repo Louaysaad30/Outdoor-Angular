@@ -12,6 +12,8 @@ import { ProductImageService } from '../../services/product-image.service';
 import { ProductImage } from '../../models/ProductImage';
 import { Panier } from '../../models/Panier';
 import { UpdateQuantiteDTO } from '../../models/DTO/UpdateQuantiteDTO';
+import { ToastrService } from 'ngx-toastr';
+import { CartUpdateService } from '../../services/cart-update.service';
 
 @Component({
   selector: 'app-market-place',
@@ -75,6 +77,8 @@ export class MarketPlaceComponent implements OnInit {
     private router: Router,
     private productImageService: ProductImageService,
     private favorisService: FavorisService,  // Add FavorisService
+    private toastr: ToastrService,
+    private cartUpdateService: CartUpdateService // Ajouter cette ligne
   ) {}
 
   ngOnInit(): void {
@@ -331,7 +335,12 @@ export class MarketPlaceComponent implements OnInit {
           this.ligneCommandeService.updateLigneCommande(updateDto).subscribe({
             next: (response) => {
               console.log('Product quantity updated successfully', response);
+              this.toastr.success(
+                `Added 1 ${product.nomProduit} to your cart`,
+                'Success'
+              );
               this.loadCartCount(); // Refresh cart count
+              this.cartUpdateService.triggerCartUpdate(); // Signaler la mise à jour
             },
             error: (err) => console.error('Error updating product quantity:', err)
           });
@@ -357,12 +366,16 @@ export class MarketPlaceComponent implements OnInit {
     this.ligneCommandeService.addLigneCommande(newLine).subscribe({
       next: (response) => {
         console.log('Product added to cart successfully', response);
+        this.toastr.success(
+          `Added 1 ${product.nomProduit} to your cart`,
+          'Success'
+        );
         this.loadCartCount(); // Refresh cart count
+        this.cartUpdateService.triggerCartUpdate(); // Signaler la mise à jour
       },
       error: (err) => console.error('Error adding product to cart:', err)
     });
   }
-
 
   navigateToCart(): void {
     if (this.cartItemCount > 0) {

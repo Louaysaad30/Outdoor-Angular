@@ -34,14 +34,18 @@
           >
             <div
               class="p-4 mx-4 d-flex align-items-center justify-content-center"
-              style="height: 300px"
+              style="height: 300px; overflow: hidden;"
             >
               <img
                 [src]="image"
                 [alt]="productdetail.nomProduit"
                 class="img-fluid d-block"
-                style="max-height: 100%; object-fit: contain"
+                style="max-height: 100%; object-fit: contain; transition: transform 0.3s ease;"
+                [style.transform]="isHovered ? 'scale(1.15)' : 'scale(1)'"
+                (mouseenter)="isHovered = true"
+                (mouseleave)="isHovered = false"
                 (error)="handleImageError($event)"
+               
               />
             </div>
           </div>
@@ -59,12 +63,15 @@
             *ngFor="let image of imageGallery; let i = index"
             (click)="slidePreview(i, $event)"
           >
-            <div class="nav-slide-item">
+            <div class="nav-slide-item" style="overflow: hidden;">
               <img
                 [src]="image"
                 [alt]="'Thumbnail ' + i"
                 class="img-fluid d-block"
-                style="height: 80px; object-fit: cover"
+                style="height: 80px; object-fit: cover; transition: transform 0.3s ease;"
+                [style.transform]="hoveredIndex === i ? 'scale(1.15)' : 'scale(1)'"
+                (mouseenter)="hoveredIndex = i"
+                (mouseleave)="hoveredIndex = -1"
               />
             </div>
           </div>
