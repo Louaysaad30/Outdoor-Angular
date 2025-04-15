@@ -71,10 +71,24 @@
             </div>
         </div>
     </div><!--end col-->
+    
 
     <div class="col-xxl-9">
         <div class="row align-items-center mb-4 g-3">
             <div class="col-xxl-2 col-lg-4 col-sm-6 me-auto">
+                <div class="flex justify-end mt-4 mb-3 mr-6">
+                    <button 
+                        style="background-color: #007bff; 
+                               color: white; 
+                               padding: 8px 16px; 
+                               border: none; 
+                               border-radius: 4px; 
+                               font-size: 14px; 
+                               cursor: pointer; 
+                               transition: background-color 0.3s;">
+                        <a style="color: white; text-decoration: none;" routerLink="/transportfront/user/reservations">Mes Réservations</a>
+                    </button>
+                </div>
                 <h5 class="mb-0">Vehicles <span class="badge bg-secondary-subtle text-secondary align-middle ms-1">{{filteredVehicules.length}}</span></h5>
             </div>
         </div>
@@ -97,7 +111,7 @@
                         <span class="badge bg-warning-subtle text-warning float-end">
                             <i class="bi bi-star-fill align-baseline me-1"></i> {{vehicule.rating}}
                         </span>
-                        <h5 class="fs-lg mb-3">${{vehicule.prixParJour}}</h5>
+                        <h5 class="fs-lg mb-3">{{vehicule.prixParJour}}TND</h5>
                         <a routerLink="/detail-vehicule/{{vehicule.id}}">
                             <h6 class="fs-md text-truncate">{{vehicule.modele}}</h6>
                         </a>
@@ -116,6 +130,7 @@
                 </div>
             </div>
         </div><!--end row-->
+        
 
         <div class="row mb-4 align-items-center">
             <div class="col-sm">
@@ -123,6 +138,9 @@
                     Showing <span class="fw-semibold">{{filteredVehicules.length}}</span> of <span class="fw-semibold">{{vehicules.length}}</span> Results
                 </div>
             </div>
-        </div><!-- end pagination -->
+            
+        </div>
+        
+      
     </div><!--end col-->
 </div><!--end row-->

@@ -13,7 +13,7 @@
                 <label class="form-label">Modèle <span class="text-danger">*</span></label>
                 <input formControlName="modele" type="text" class="form-control" placeholder="Ex: Clio 4">
               </div>
-
+            
               <div class="mb-3">
                 <label class="form-label">Type <span class="text-danger">*</span></label>
                 <select formControlName="type" class="form-select">
@@ -25,41 +25,47 @@
                   <option value="MINIBUS">Minibus</option>
                 </select>
               </div>
-
+            
               <div class="mb-3">
                 <label class="form-label">Nombre de places <span class="text-danger">*</span></label>
                 <input formControlName="nbPlace" type="number" class="form-control" placeholder="Ex: 5">
               </div>
-
+            
               <div class="mb-3">
                 <label class="form-label">Prix par jour (TND) <span class="text-danger">*</span></label>
                 <input formControlName="prixParJour" type="number" class="form-control" placeholder="Ex: 120">
               </div>
-
+            
               <div class="mb-3">
                 <label class="form-label">Localisation <span class="text-danger">*</span></label>
                 <input formControlName="localisation" type="text" class="form-control" placeholder="Ex: Tunis, Centre-ville">
               </div>
-
+            
+              <!-- ✅ Nouveau champ ajouté ici -->
+              <div class="mb-3">
+                <label class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea formControlName="description" class="form-control" rows="4" placeholder="Ex: Véhicule confortable, idéal pour les longs trajets."></textarea>
+              </div>
+            
               <div class="mb-3">
                 <label class="form-label">Statut</label>
                 <select formControlName="statut" class="form-select">
-                  <option value="DISPONIBLE"> DISPONIBLE</option>
+                  <option value="DISPONIBLE">DISPONIBLE</option>
                   <option value="EN_MAINTENANCE">EN_MAINTENANCE</option>
-                  
                 </select>
               </div>
-
+            
               <div class="mb-3">
                 <label class="form-label">Image <span class="text-danger">*</span></label>
                 <input type="file" class="form-control" (change)="onFileChange($event)">
               </div>
-
+            
               <div class="hstack gap-2 justify-content-end mt-4">
                 <button class="btn btn-danger" type="button"><i class="ph-x align-middle"></i> Annuler</button>
                 <button class="btn btn-primary" type="submit" [disabled]="vehiculeForm.invalid">Ajouter</button>
-              </div>
-            </form>
+                <button class="btn btn-info" type="button" (click)="generateVehicule()">Générer</button>
+              </div>              
+            </form>            
           </div><!--end col-->
         </div><!--end row-->
       </div>

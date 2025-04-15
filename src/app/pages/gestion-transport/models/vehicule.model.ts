@@ -11,6 +11,7 @@ export interface Vehicule {
   nbPlace: number;
   image?: string;
   rating?: number; 
+  description?: string;
   reviews?: Review[]; 
   agence: {
     id: number;

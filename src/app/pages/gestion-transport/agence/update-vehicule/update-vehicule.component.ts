@@ -37,6 +37,7 @@ export class UpdateVehiculeComponent implements OnInit {
       prixParJour: ['', [Validators.required, Validators.min(0)]],
       localisation: ['', Validators.required],
       statut: ['', Validators.required],
+      description: ['', Validators.required],
       disponible: [true],
       rating: [0],
       agenceId: [1] // Statique temporairement
@@ -54,6 +55,7 @@ export class UpdateVehiculeComponent implements OnInit {
           prixParJour: vehicule.prixParJour,
           localisation: vehicule.localisation,
           statut: vehicule.statut,
+          description: vehicule.description, 
           disponible: vehicule.disponible,
           rating: vehicule.rating,
           agenceId: vehicule.agence?.id
