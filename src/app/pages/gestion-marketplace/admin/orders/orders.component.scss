@@ -1,0 +1,157 @@
+// Modern Product Name styling with enhanced hover effects
+.product-name-container {
+  cursor: default;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 8px;
+  padding: 0.35rem 0.75rem;
+  margin: -0.35rem -0.75rem;
+
+  .product-text {
+    position: relative;
+    overflow: hidden;
+
+    // Interactive underline for multi-product items
+    .hover-indicator {
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      height: 2px;
+      width: 0;
+      background: linear-gradient(90deg, var(--tb-primary) 0%, rgba(var(--tb-primary-rgb), 0.4) 100%);
+      transition: width 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+      border-radius: 2px;
+    }
+  }
+
+  // Badge container for animations
+  .badge-container {
+    position: relative;
+    display: inline-flex;
+
+    // Pulsing ring animation
+    .pulse-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: rgba(var(--tb-info-rgb), 0.15);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .badge {
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      width: 22px;
+      padding: 0;
+      box-shadow: 0 2px 5px rgba(var(--tb-info-rgb), 0.15);
+    }
+  }
+
+  // Enhanced hover styling
+  &.cursor-pointer {
+    cursor: pointer;
+
+    &:hover {
+      color: var(--tb-primary);
+      background: linear-gradient(135deg,
+                 rgba(var(--tb-primary-rgb), 0.08) 0%,
+                 rgba(var(--tb-primary-rgb), 0.03) 100%);
+      box-shadow: 0 3px 10px rgba(var(--tb-primary-rgb), 0.08);
+      transform: translateY(-1px);
+
+      .product-text .hover-indicator {
+        width: 100%;
+      }
+
+      .badge-container {
+        .badge {
+          transform: scale(1.15);
+          background-color: rgba(var(--tb-info-rgb), 0.25);
+          box-shadow: 0 3px 8px rgba(var(--tb-info-rgb), 0.25);
+        }
+
+        .pulse-ring {
+          animation: pulse-expand 1.5s infinite;
+        }
+      }
+
+      .ri-information-line {
+        animation: glow 1.5s infinite alternate;
+      }
+    }
+  }
+}
+
+// Animation for the info icon glow effect
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 0 rgba(var(--tb-info-rgb), 0);
+    opacity: 0.8;
+  }
+  100% {
+    text-shadow: 0 0 8px rgba(var(--tb-info-rgb), 0.6);
+    opacity: 1;
+  }
+}
+
+// Animation for the pulse ring
+@keyframes pulse-expand {
+  0% {
+    width: 24px;
+    height: 24px;
+    opacity: 0.6;
+  }
+  70% {
+    width: 32px;
+    height: 32px;
+    opacity: 0;
+  }
+  100% {
+    width: 24px;
+    height: 24px;
+    opacity: 0;
+  }
+}
+
+/* Enhanced tooltip styling */
+::ng-deep .product-tooltip {
+  max-width: 350px !important;
+  opacity: 1 !important;
+  z-index: 1090 !important;
+
+  .tooltip-inner {
+    max-width: 100%;
+    padding: 0;
+    background-color: white;
+    color: #495057;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12),
+                0 5px 10px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    animation: tooltipEntrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+@keyframes tooltipEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

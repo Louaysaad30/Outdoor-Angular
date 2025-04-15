@@ -95,4 +95,16 @@ export class CheckoutService {
       })
     );
   }
+
+  // Ajouter cette méthode à votre CheckoutService
+getProductNamesByCommandeId(commandeId: number): Observable<string[]> {
+  return this.http.get<string[]>(`${this.baseUrl}/getProductNamesByCommandeId/${commandeId}`)
+    .pipe(
+      tap(productNames => console.log(`Found ${productNames.length} products for order ${commandeId}`)),
+      catchError(error => {
+        console.error(`Error fetching product names for order ${commandeId}:`, error);
+        throw error;
+      })
+    );
+}
 }

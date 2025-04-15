@@ -12,6 +12,7 @@ import { Product } from '../../models/product';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { Router } from '@angular/router';
+import { Status } from '../../models/Status';
 
 @Component({
     selector: 'app-checkout',
@@ -147,7 +148,7 @@ export class CheckoutComponent implements OnInit {
         newOrder.gouvernement = formValues.gouvernorate;
         newOrder.adresse = formValues.address;
         newOrder.userId = this.userId; // Static user ID for testing
-        newOrder.etat = 'exist';
+        newOrder.etat = Status.IN_PROGRESS; // Set initial status to IN_PROGRESS
         newOrder.OrderNumber = this.generateComplexOrderNumber(this.userId); // Complex order number to avoid duplication
 
         // Shipping Method

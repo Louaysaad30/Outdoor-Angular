@@ -226,7 +226,7 @@
                                             <div class="col-sm-6 col-lg-6 col-xl-3">
                                                 <div class="text-center border border-dashed p-3 rounded">
                                                     <p class="text-muted mb-2">Order Status</p>
-                                                    <span class="badge" [ngClass]="{'bg-success': order.etat === 'delivered', 'bg-warning': order.etat === 'shipped' || order.etat === 'processing', 'bg-info': order.etat === 'out_for_delivery'}">
+                                                    <span class="badge" >
                                                         {{ order.etat }}
                                                     </span>
                                                 </div>
@@ -332,7 +332,6 @@
                                                 <i class="ph-bag align-baseline me-1 d-none d-lg-inline-block"></i> Order Placed
                                             </a>
                                             <a href="javascript:void(0);"
-                                               [ngClass]="{'active': ['shipped', 'delivered', 'out_for_delivery'].includes(order.etat), 'pending': order.etat === 'processing'}"
                                                class="progress-bar d-none d-xxl-inline-block"
                                                role="progressbar"
                                                style="width: 100%"
@@ -342,7 +341,6 @@
                                                 <i class="ph-package align-middle me-1"></i> Processing
                                             </a>
                                             <a href="javascript:void(0);"
-                                               [ngClass]="{'active': ['delivered', 'out_for_delivery'].includes(order.etat), 'pending': order.etat === 'shipped'}"
                                                class="progress-bar d-none d-md-inline-block"
                                                role="progressbar"
                                                style="width: 100%"
@@ -352,7 +350,6 @@
                                                 <i class="ph-truck align-baseline me-1 d-none d-lg-inline-block"></i> Shipped
                                             </a>
                                             <a href="javascript:void(0);"
-                                               [ngClass]="{'active': order.etat === 'delivered', 'pending': order.etat === 'out_for_delivery'}"
                                                class="progress-bar d-none d-md-inline-block"
                                                role="progressbar"
                                                style="width: 100%"
@@ -362,7 +359,6 @@
                                                 <i class="ph-bicycle align-baseline me-1 d-none d-lg-inline-block"></i> Out For Delivery
                                             </a>
                                             <a href="javascript:void(0);"
-                                               [ngClass]="{'active': order.etat === 'delivered'}"
                                                class="progress-bar"
                                                role="progressbar"
                                                style="width: 100%"

@@ -8,6 +8,7 @@ import { forkJoin } from 'rxjs';
 import { tap, switchMap, map } from 'rxjs/operators';
 import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product';
+import { Status } from '../../models/Status';
 
 interface OrderWithItems extends Commande {
   orderItems?: LigneCommande[];
@@ -70,7 +71,7 @@ export class OrderOverviewComponent implements OnInit {
         next: (allOrders: Commande[]) => {
           // Filter orders that belong to the current user and have 'exist' status
           this.orders = allOrders
-            .filter(order => order.userId === this.userId && order.etat === 'exist')
+            .filter(order => order.userId === this.userId && order.etat === Status.IN_PROGRESS)
             .map(order => ({
               ...order,
               orderItems: [],

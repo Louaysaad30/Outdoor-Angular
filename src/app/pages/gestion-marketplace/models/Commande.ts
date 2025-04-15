@@ -1,3 +1,4 @@
+import { Status } from "./Status";
 import { LigneCommande } from "./LigneCommande";
 import { Livraison } from "./Livraison";
 
@@ -15,7 +16,7 @@ export class Commande {
     AdditionalService: number;
     ligneCommande!: LigneCommande[];
     userId!: number;
-    etat!: string;
+    etat!: Status;
     OrderNumber!: string;
 
 
@@ -31,7 +32,7 @@ export class Commande {
         this.city = '';
         this.shippingMethod = '';
         this.AdditionalService = 0;
-        this.etat='exist'
+        this.etat=Status.IN_PROGRESS;
         this.OrderNumber='';
 
     }
