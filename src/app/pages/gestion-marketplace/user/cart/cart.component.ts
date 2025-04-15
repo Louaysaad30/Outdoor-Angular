@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { LigneCommande } from '../../models/LigneCommande';
 import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { ProductService } from '../../services/product.service';
-import { PanierService } from '../../services/panier.service';
+import { PanierService } from '../../services/panier/panier.service';
 import { of, EMPTY } from 'rxjs';
 import { map, switchMap, tap, catchError } from 'rxjs/operators';
 import { Product } from '../../models/product';
@@ -38,29 +38,48 @@ export class CartComponent implements OnInit {
    * Loads cart data for the current user, including product details
    */
   loadCartData(): void {
-    // Step 1: Get the user's cart (panier)
-    this.panierService.getPanierByUser(this.currentUser.id).pipe(
+    // Step 1: Get all paniers for the user
+    this.panierService.getAllPaniersByUserId(this.currentUser.id).pipe(
       catchError(error => {
-        console.error('Error fetching user cart:', error);
-        return of(null);
+        console.error('Error fetching user carts:', error);
+        return of([]);
       }),
 
-      // Step 2: Get ligne commandes associated with the cart
-      switchMap(panier => {
-        if (!panier?.idPanier) {
-          console.log('No cart found for user or empty cart');
+      switchMap(paniers => {
+        // Filter for non-validated paniers
+        const activePaniers = paniers.filter(p => p.validated !== true);
+
+        if (!activePaniers || activePaniers.length === 0) {
+          console.log('No active cart found for user');
           return of([] as LigneCommande[]);
         }
 
-        return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).pipe(
+        // Use the first active panier
+        const panier = activePaniers[0];
+
+        // Vérifier que le panier appartient bien à l'utilisateur courant
+        if (panier.userId !== this.currentUser.id) {
+          console.error('Security issue: Cart does not belong to current user');
+          return of([] as LigneCommande[]);
+        }
+
+        return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier!).pipe(
           catchError(error => {
             console.error(`Error fetching ligne commandes for panier ${panier.idPanier}:`, error);
             return of([] as LigneCommande[]);
           }),
 
+          // Filtrer pour ne garder que les lignes sans commandeId
+          map(lignes => {
+            // Filtrer les lignes qui ne sont pas déjà associées à une commande
+            const filteredLignes = lignes.filter(ligne => !ligne.commande);
+            console.log(`Filtered ${lignes.length - filteredLignes.length} items already in orders`);
+            return filteredLignes;
+          }),
+
           // Step 3: Load product data to enrich the cart items
-          switchMap(lignes => {
-            if (lignes.length === 0) {
+          switchMap(filteredLignes => {
+            if (filteredLignes.length === 0) {
               return of([] as LigneCommande[]);
             }
 
@@ -71,7 +90,7 @@ export class CartComponent implements OnInit {
               }),
 
               // Step 4: Map ligne commandes to include product details
-              map(products => this.mapLigneCommandesToProducts(lignes, products, panier))
+              map(products => this.mapLigneCommandesToProducts(filteredLignes, products, panier))
             );
           })
         );

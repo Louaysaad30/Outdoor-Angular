@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { Product } from '../../models/product';
 import { ProductService } from '../../services/product.service';
-import { PanierService } from '../../services/panier.service';
+import { PanierService } from '../../services/panier/panier.service';
 import { ToastrService } from 'ngx-toastr';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -66,7 +66,7 @@ export class ProductDetailsComponent implements OnInit {
   ngOnInit(): void {
     // Récupérer l'utilisateur actuel
     this.currentUser = JSON.parse(localStorage.getItem('user')!);
-    
+
 
     // Charger les détails du produit
     this.route.params.subscribe(params => {

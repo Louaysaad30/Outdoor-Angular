@@ -105,35 +105,58 @@ export class OrderOverviewComponent implements OnInit {
             map(products => {
               console.log('Products loaded:', products);
 
-              // Map lignes to include full product details, similar to cart component
+              // Replace the existing mapping logic with this improved version
               return lignes.map(ligne => {
-                // First try exact price match
-                let product = products.find(p => p.prixProduit === ligne.prix);
-
-                if (!product) {
-                  // If no exact match, try finding closest price match
-                  product = products.reduce<Product | undefined>((closest, current) => {
-                    const currentDiff = Math.abs(current.prixProduit - ligne.prix);
-                    const closestDiff = closest ? Math.abs(closest.prixProduit - ligne.prix) : Infinity;
-                    return currentDiff < closestDiff ? current : closest;
-                  }, undefined);
-                }
-
-                console.log(`Found product for ligne ${ligne.idLigneCommande}:`, product);
-
-                if (!product) {
-                  console.warn(`No product found for ligne ${ligne.idLigneCommande}`);
-                  return null;
-                }
-
-                // Create new ligne commande with full product info
+                // Create new ligne commande with basic data
                 const mappedLigne = new LigneCommande();
                 mappedLigne.idLigneCommande = ligne.idLigneCommande || ligne.id;
                 mappedLigne.quantite = ligne.quantite;
                 mappedLigne.prix = ligne.prix;
-                mappedLigne.produit = product;
                 mappedLigne.commande = order;
-                mappedLigne.idProduit = product.idProduit;
+
+                let matchedProduct = null;
+
+                // Strategy 1: Use embedded product if available (your backend seems to provide this)
+                if (ligne.produit) {
+                  console.log(`Using embedded product for ligne ${ligne.idLigneCommande}:`, ligne.produit);
+                  matchedProduct = ligne.produit;
+                }
+                // Strategy 2: Match by product ID if available
+                else if (ligne.idProduit) {
+                  matchedProduct = products.find(p => p.idProduit === ligne.idProduit);
+                  if (matchedProduct) {
+                    console.log(`Found product for ligne ${ligne.idLigneCommande} by ID`);
+                  }
+                }
+                // Strategy 3: Match by price as last resort
+                else {
+                  const priceMatches = products.filter(p => Math.abs(p.prixProduit - ligne.prix) < 0.001);
+                  if (priceMatches.length === 1) {
+                    matchedProduct = priceMatches[0];
+                    console.log(`Found product for ligne ${ligne.idLigneCommande} by unique price match`);
+                  } else if (priceMatches.length > 1) {
+                    // Multiple products with same price, log and pick the first one
+                    console.warn(`Multiple products with price ${ligne.prix} for ligne ${ligne.idLigneCommande}`, priceMatches);
+                    matchedProduct = priceMatches[0];
+                  }
+                }
+
+                // If we didn't find a product, create a placeholder
+                if (!matchedProduct) {
+                  console.warn(`No product found for ligne ${ligne.idLigneCommande || ligne.id}`);
+                  matchedProduct = {
+                    idProduit: -1 * (ligne.idLigneCommande || 0),
+                    nomProduit: `Item (${ligne.prix} €)`,
+                    prixProduit: ligne.prix,
+                    descriptionProduit: 'Product information not available',
+                    stockProduit: 0,
+                    imageProduit: 'assets/images/placeholder-product.jpg'
+                  } as Product;
+                }
+
+                // Assign the matched or placeholder product
+                mappedLigne.produit = matchedProduct;
+                mappedLigne.idProduit = matchedProduct.idProduit;
 
                 return mappedLigne;
               }).filter((ligne): ligne is LigneCommande => ligne !== null);

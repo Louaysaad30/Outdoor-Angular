@@ -3,7 +3,7 @@ import { countries } from '../country-data';
 import { LigneCommande } from '../../models/LigneCommande';
 import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { ProductService } from '../../services/product.service';
-import { PanierService } from '../../services/panier.service';
+import { PanierService } from '../../services/panier/panier.service';
 import { Commande } from '../../models/Commande';
 import { CheckoutService } from '../../services/checkout.service';
 import { of, EMPTY } from 'rxjs';
@@ -150,8 +150,6 @@ export class CheckoutComponent implements OnInit {
         newOrder.etat = 'exist';
         newOrder.OrderNumber = this.generateComplexOrderNumber(this.userId); // Complex order number to avoid duplication
 
-
-
         // Shipping Method
         newOrder.shippingMethod = this.expressDelivery ? 'ExpressDelivery' : 'FreeDelivery';
 
@@ -173,8 +171,6 @@ export class CheckoutComponent implements OnInit {
         // Set ligne commande
         newOrder.ligneCommande = this.cartData;
 
-
-
         this.checkoutService.addCommande(newOrder).subscribe({
             next: (response) => {
                 console.log('Order created successfully:', response);
@@ -186,6 +182,21 @@ export class CheckoutComponent implements OnInit {
                         response.idCommande!
                     ).toPromise()
                 );
+
+                // Find the panier ID from the cart data
+                if (this.cartData.length > 0 && this.cartData[0].panier && this.cartData[0].panier.idPanier) {
+                    const panierId = this.cartData[0].panier.idPanier;
+                    console.log('Panier ID:', panierId);
+                    // Mark the panier as validated using the existping validatePanier method
+                    this.panierService.validatePanier(panierId).subscribe({
+                        next: (validatedPanier) => {
+                            console.log('Panier marked as validated:', validatedPanier);
+                        },
+                        error: (error) => {
+                            console.error('Error validating panier:', error);
+                        }
+                    });
+                }
 
                 // Wait for all affectations to complete
                 Promise.all(affectationPromises)
@@ -225,12 +236,27 @@ export class CheckoutComponent implements OnInit {
     }
 
     loadCartData(): void {
-        this.panierService.getPanierByUser(this.userId).pipe(
-            tap(panier => console.log('Panier received:', panier)),
-            switchMap(panier => {
-                if (!panier?.idPanier) {
+        this.panierService.getAllPaniersByUserId(this.userId).pipe(
+            tap(paniers => console.log('All paniers received:', paniers)),
+            switchMap(paniers => {
+                // Filter for non-validated paniers
+                const activePaniers = paniers.filter(p => p.validated !== true);
+                console.log('Active (non-validated) paniers:', activePaniers);
+
+                if (!activePaniers || activePaniers.length === 0) {
+                    console.log('No active paniers found');
                     return of([] as LigneCommande[]);
                 }
+
+                // Use the first active panier
+                const panier = activePaniers[0];
+
+                if (!panier.idPanier) {
+                    console.log('Active panier has no ID');
+                    return of([] as LigneCommande[]);
+                }
+
+                console.log('Using panier with ID:', panier.idPanier);
 
                 return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier).pipe(
                     tap(lignes => {
@@ -242,8 +268,13 @@ export class CheckoutComponent implements OnInit {
                             console.log('Products loaded:', products);
 
                             return lignes.map(ligne => {
-                                let product = products.find(p => p.idProduit === ligne.idProduit);
+                                // Filter out lignes that are already associated with a commande
+                                if (ligne.commande) {
+                                    console.log(`Ligne ${ligne.idLigneCommande} already has a commande, skipping`);
+                                    return null;
+                                }
 
+                                let product = products.find(p => p.idProduit === ligne.idProduit);
 
                                 if (!product) {
                                     product = products.reduce<Product | undefined>((closest, current) => {
