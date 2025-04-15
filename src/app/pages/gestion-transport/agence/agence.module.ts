@@ -6,21 +6,23 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AddVehiculeComponent } from './add-vehicule/add-vehicule.component';
 import { ListVehiculeAgenceComponent } from './list-vehicule-agence/list-vehicule-agence.component';
 import { UpdateVehiculeComponent } from './update-vehicule/update-vehicule.component';
+import { AgenceReservationsComponent } from './agence-reservations/agence-reservations.component';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
   declarations: [
     AddVehiculeComponent,
     ListVehiculeAgenceComponent,
-    UpdateVehiculeComponent
+    UpdateVehiculeComponent,
+    AgenceReservationsComponent
   ],
   imports: [
     CommonModule,
     AgenceRoutingModule, 
     FormsModule,
-    ReactiveFormsModule,
-    
-    
+    ReactiveFormsModule, 
+    HttpClientModule,
   ]
 })
 export class AgenceModule {

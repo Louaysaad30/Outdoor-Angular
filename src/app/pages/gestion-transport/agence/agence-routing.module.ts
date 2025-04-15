@@ -3,12 +3,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { AddVehiculeComponent } from './add-vehicule/add-vehicule.component'; 
 import { ListVehiculeAgenceComponent } from './list-vehicule-agence/list-vehicule-agence.component';
 import { UpdateVehiculeComponent } from './update-vehicule/update-vehicule.component';
+import { AgenceReservationsComponent } from './agence-reservations/agence-reservations.component';
 
 const routes: Routes = [
   { path: 'vehicules/add', component: AddVehiculeComponent },
   { path: 'vehicules/list/agences/:agenceId', component: ListVehiculeAgenceComponent },
   { path: 'update-vehicule/:id', component: UpdateVehiculeComponent },
-
+  { path: 'reservations', component: AgenceReservationsComponent },
 
 
 ];

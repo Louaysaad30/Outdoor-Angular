@@ -1,0 +1,75 @@
+<div class="container">
+  <h2>Réservations reçues</h2>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="reservations.length > 0; else noData">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Véhicule</th>
+          <th>Client</th>
+          <th>Prix Total</th>
+          <th>Début</th>
+          <th>Fin</th>
+          <th>Lieu</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let res of reservations">
+          <!-- Véhicule (marque et modèle) -->
+          <td>{{ res.vehicule.modele }} ({{ res.vehicule.type }})</td>
+
+          <!-- Client (nom complet) -->
+          <td>{{ res.fullName }}</td>
+
+          <!-- Prix total -->
+          <td>{{ res.prixTotal }} DT</td>
+
+          <!-- Dates -->
+          <td>{{ res.debutLocation }}</td>
+          <td>{{ res.finLocation }}</td>
+
+          <!-- Lieu de récupération -->
+          <td>{{ res.pickupLocation }}</td>
+
+          <!-- Statut -->
+          <td>
+            <span [ngClass]="{
+              'badge bg-warning': res.statut === 'EN_ATTENTE',
+              'badge bg-success': res.statut === 'APPROUVÉE',
+              'badge bg-danger': res.statut === 'REJETÉE'
+            }">
+              {{ res.statut }}
+            </span>
+          </td>
+
+          <!-- Actions (Approving or Rejecting) -->
+          <td>
+            <div *ngIf="res.statut === 'EN_ATTENTE'">
+              <button class="btn btn-success btn-sm me-2" (click)="changerStatut(res, 'APPROUVÉE')">
+                Approuver
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="changerStatut(res, 'REJETÉE')">
+                Rejeter
+              </button>
+            </div>
+            <div *ngIf="res.statut === 'APPROUVÉE' || res.statut === 'REJETÉE'">
+              <button class="btn btn-warning btn-sm" (click)="changerStatut(res, 'EN_ATTENTE')">
+                Réinitialiser
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #noData>
+    <p>Aucune réservation trouvée.</p>
+  </ng-template>
+</div>

@@ -1,18 +1,20 @@
+import { Vehicule } from "./vehicule.model";
+
 export interface Reservation {
     id?: number;
     fullName: string;
     phone: string;
-    vehicule: { id: number }; // Modify this to be an object with 'id'
+    //vehicule: { id: number }; 
+    vehicule: Vehicule;
     debutLocation: string;
     finLocation: string;
     pickupLocation: string;
     pickupLatitude: number;
     pickupLongitude: number;
-    dropOffLocation: string;
-    dropOffLatitude: number;
-    dropOffLongitude: number;
     prixTotal: number;
-    statut: string; // "EN_ATTENTE" par défaut
+    //statut: string; 
+    statut: 'EN_ATTENTE' | 'APPROUVÉE' | 'REJETÉE';
+    causeRejet?: string;
     userId: number;
   }
   

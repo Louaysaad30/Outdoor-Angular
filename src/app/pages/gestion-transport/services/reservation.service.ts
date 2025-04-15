@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Reservation } from '../models/reservation.model';
 
@@ -35,9 +35,17 @@ export class ReservationService {
     return this.http.get(`${this.apiUrl}/by-user/${userId}`);
   }
 
-  // Method to check vehicle availability
-  checkAvailability(vehicleId: string, startDate: string, endDate: string): Observable<boolean> {
-    const url = `${this.apiUrl}/check-availability?vehicleId=${vehicleId}&startDate=${startDate}&endDate=${endDate}`;
-    return this.http.get<boolean>(url);
+  getReservationsByAgence(agenceId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/by-agence/${agenceId}`);
+  }
+
+  updateStatut(id: number, statut: string): Observable<any> {
+    const params = new HttpParams().set('statut', statut);
+    return this.http.put(`${this.apiUrl}/${id}/statut`, null, { params });
+  }
+
+  rejectReservation(id: number, cause: string): Observable<any> {
+    const params = new HttpParams().set('cause', cause);
+    return this.http.put(`${this.apiUrl}/${id}/rejeter`, null, { params });
   }
 }
