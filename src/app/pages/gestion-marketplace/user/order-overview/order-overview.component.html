@@ -1,0 +1,387 @@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">My Orders</h4>
+            </div>
+            <div class="card-body">
+                <!-- Loading and Error States -->
+                <div *ngIf="isLoading" class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <div *ngIf="errorMessage" class="alert alert-danger">
+                    {{ errorMessage }}
+                </div>
+
+                <div *ngIf="!isLoading && !errorMessage && orders.length === 0" class="text-center p-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>You don't have any orders yet.</h5>
+                            <p class="text-muted">Start exploring our products and add items to your cart!</p>
+                            <a routerLink="/marketplacefront/products" class="btn btn-primary">Shop Now</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Display - Template Design -->
+                <div *ngIf="!isLoading && orders.length > 0">
+                    <!-- For each order, create a section -->
+                    <div *ngFor="let order of orders" class="mb-5">
+                        <!-- Order Header -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-body d-flex align-items-center flex-wrap gap-3">
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-2">Order Number</p>
+                                            <h6 class="fs-md mb-0">{{ order.OrderNumber }}</h6>
+                                        </div>
+                                        <div class="flex-shrink-0 text-end">
+                                            <h6 class="fs-md mb-2">{{ order.dateCommande | date:'MMM d, yyyy' }} <i class="bi bi-calendar4-event align-baseline ms-1"></i></h6>
+                                            <p class="text-muted mb-0">{{ order.dateCommande | date:'h:mm a' }} <i class="bi bi-clock align-baseline ms-1"></i></p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <button class="btn btn-primary" *ngIf="order.idCommande !== undefined" (click)="downloadInvoice(order.idCommande)">
+                                                <i class="ph-download-simple align-middle me-1"></i> Download Facture
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div><!--end card-->
+                            </div><!--end col-->
+                        </div><!--end row-->
+
+                        <!-- Order Information Cards - Reorganized to match the target layout -->
+                        <div class="row">
+                            <!-- Customer Info -->
+                            <div class="col-xxl-3 col-md-6">
+                                <div class="card border-bottom border-2 border-secondary">
+                                    <div class="card-body d-flex gap-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-3">Customer Info</h6>
+                                            <p class="fw-medium fs-md mb-1">{{ order.nom }}</p>
+                                            <p class="text-muted mb-1">{{ order.email }}</p>
+                                            <p class="text-muted mb-0">{{ order.phone }}</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <img src="assets/images/users/48/avatar-1.jpg" alt="" class="avatar-sm rounded img-thumbnail">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+
+                            <!-- Shipping Info -->
+                            <div class="col-xxl-3 col-md-6">
+                                <div class="card border-bottom border-2 border-primary">
+                                    <div class="card-body d-flex gap-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-3">Shipping Info</h6>
+                                            <p class="fw-medium fs-md mb-1">{{ order.nom }}</p>
+                                            <p class="text-muted mb-1">{{ order.adresse }}</p>
+                                            <p class="text-muted mb-0">{{ order.city }}, {{ order.gouvernement }}</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title bg-primary-subtle text-primary fs-3 rounded">
+                                                    <i class="ph-truck"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+
+                            <!-- Order Details -->
+                            <div class="col-xxl-3 col-md-6">
+                                <div class="card border-bottom border-2 border-info">
+                                    <div class="card-body d-flex gap-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-3">Order Details</h6>
+                                            <p class="fw-medium fs-md mb-1">ID: {{ order.idCommande }}</p>
+                                            <p class="text-muted mb-1">Status: <b>{{ order.etat }}</b></p>
+                                            <p class="text-muted mb-0">Shipping: <b>{{ order.shippingMethod }}</b></p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title bg-info-subtle text-info fs-3 rounded">
+                                                    <i class="ph-file-text"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+
+                            <!-- Payment Info -->
+                            <div class="col-xxl-3 col-md-6">
+                                <div class="card border-bottom border-2 border-light">
+                                    <div class="card-body d-flex gap-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-3">Payment Info</h6>
+                                            <p class="fw-medium fs-md mb-1">ID: {{ order.OrderNumber }}</p>
+                                            <p class="text-muted mb-1">Payment Method: <b>Cash On Delivery</b></p>
+                                            <p class="text-muted mb-0">Status: <b>Pending</b></p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title bg-light text-body fs-3 rounded">
+                                                    <i class="ph-currency-circle-dollar"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+                        </div><!--end row-->
+
+                        <!-- Product Items and Summary Section -->
+                        <div class="row mt-4">
+                            <div class="col-xxl-9">
+                                <div class="card">
+                                    <div class="card-header d-flex align-items-center gap-3">
+                                        <h6 class="card-title mb-0 flex-grow-1">Product Items</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Loading State -->
+                                        <div *ngIf="order.isLoadingItems" class="text-center p-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading items...</span>
+                                            </div>
+                                            <p class="mt-2">Loading order items...</p>
+                                        </div>
+
+                                        <!-- Empty State -->
+                                        <div *ngIf="!order.isLoadingItems && (!order.orderItems || order.orderItems.length === 0)" class="text-center p-4">
+                                            <p class="mb-0">No items found for this order.</p>
+                                        </div>
+
+                                        <!-- Items Table -->
+                                        <div *ngIf="!order.isLoadingItems && order.orderItems && order.orderItems.length > 0" class="table-responsive">
+                                            <table class="table align-middle table-nowrap table-borderless">
+                                                <thead class="table-active">
+                                                    <tr>
+                                                        <th>Product Items</th>
+                                                        <th>Item Price</th>
+                                                        <th>Quantity</th>
+                                                        <th class="text-end">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngFor="let item of order.orderItems">
+                                                        <td>
+                                                            <div class="product-item d-flex align-items-center gap-2">
+                                                                <div class="avatar-sm flex-shrink-0">
+                                                                    <div class="avatar-title bg-light rounded">
+                                                                        <img [src]="item.produit?.imageProduit || 'assets/images/products/32/img-1.png'"
+                                                                             alt="" class="avatar-xs">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <h6 class="fs-md">
+                                                                        <a [routerLink]="['/marketplacefront/products', item.produit?.idProduit]"
+                                                                           class="text-reset">
+                                                                            {{ item.produit?.nomProduit || 'Product Item' }}
+                                                                        </a>
+                                                                    </h6>
+                                                                    <p class="text-muted mb-0">
+                                                                        <a href="javascript:void(0);" class="text-reset">
+                                                                            {{ item.produit?.categorie?.nomCategorie || 'Category' }}
+                                                                        </a>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>{{ item.prix | currency }}</td>
+                                                        <td>{{ item.quantite }}</td>
+                                                        <td class="fw-medium text-end">{{ calculateItemTotal(item.prix, item.quantite) | currency }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Order Summary Information -->
+                                        <div class="row gy-3 mt-4">
+                                            <div class="col-sm-6 col-lg-6 col-xl-3">
+                                                <div class="text-center border border-dashed p-3 rounded">
+                                                    <p class="text-muted mb-2">Order Date</p>
+                                                    <h6 class="fs-md mb-0">{{ order.dateCommande | date:'MMM d, yyyy' }}</h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-lg-6 col-xl-3">
+                                                <div class="text-center border border-dashed p-3 rounded">
+                                                    <p class="text-muted mb-2">Estimated Delivery</p>
+                                                    <h6 class="fs-md mb-0">
+                                                        {{ (order.dateCommande | date:'M/d/yyyy') | date:'MMM d, yyyy':'+7d' }}
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-lg-6 col-xl-3">
+                                                <div class="text-center border border-dashed p-3 rounded">
+                                                    <p class="text-muted mb-2">Order Amount</p>
+                                                    <h6 class="fs-md mb-0">{{ order.montantCommande | currency }}</h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6 col-lg-6 col-xl-3">
+                                                <div class="text-center border border-dashed p-3 rounded">
+                                                    <p class="text-muted mb-2">Order Status</p>
+                                                    <span class="badge" [ngClass]="{'bg-success': order.etat === 'delivered', 'bg-warning': order.etat === 'shipped' || order.etat === 'processing', 'bg-info': order.etat === 'out_for_delivery'}">
+                                                        {{ order.etat }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div><!--end card-->
+                            </div><!--end col-->
+
+                            <div class="col-xxl-3">
+                                <div class="row">
+                                    <!-- Total Order Amount Card -->
+                                    <div class="col-xxl-12 col-lg-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="card-title mb-0">Total order amount</h6>
+                                            </div>
+                                            <div class="card-body pt-4">
+                                                <div class="table-responsive table-card">
+                                                    <table class="table table-borderless mb-0">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>Products Subtotal :</td>
+                                                                <td class="text-end">{{ (order.montantCommande - 1 - (order.shippingMethod === 'ExpressDelivery' ? 10 : 0) - (order.AdditionalService === 1 ? 15 : order.AdditionalService === 2 ? 15 : order.AdditionalService === 3 ? 30 : 0)) | currency }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Shipping :</td>
+                                                                <td class="text-end">{{ order.shippingMethod === 'ExpressDelivery' ? '$10.00' : '$0.00' }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Service Fee :</td>
+                                                                <td class="text-end">$1.00</td>
+                                                            </tr>
+                                                            <tr *ngIf="order.AdditionalService === 1">
+                                                                <td>Env. Friendly :</td>
+                                                                <td class="text-end">$15.00</td>
+                                                            </tr>
+                                                            <tr *ngIf="order.AdditionalService === 2">
+                                                                <td>Care Package :</td>
+                                                                <td class="text-end">$15.00</td>
+                                                            </tr>
+                                                            <tr *ngIf="order.AdditionalService === 3">
+                                                                <td>Env. Friendly :</td>
+                                                                <td class="text-end">$15.00</td>
+                                                            </tr>
+                                                            <tr *ngIf="order.AdditionalService === 3">
+                                                                <td>Care Package :</td>
+                                                                <td class="text-end">$15.00</td>
+                                                            </tr>
+                                                            <tr class="border-top border-top-dashed">
+                                                                <th scope="row">Total :</th>
+                                                                <th class="text-end">{{ order.montantCommande | currency }}</th>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div><!--end col-->
+
+                                    <!-- Logistics Details Card -->
+                                    <div class="col-xxl-12 col-lg-6">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <h5 class="card-title flex-grow-1 mb-0">Logistics Details</h5>
+                                                    <div class="flex-shrink-0">
+                                                        <a href="javascript:void(0);" class="badge bg-secondary-subtle text-secondary">Track Order</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body border-top border-dashed">
+                                                <div>
+                                                    <h6 class="text-muted float-end mb-0">ID: {{ order.OrderNumber }}</h6>
+                                                    <h5 class="fs-lg clearfix"><a href="javascript:void(0);" class="text-reset">Outdoor Delivery</a></h5>
+                                                    <p class="text-muted mb-2 mb-md-0">Scan barcode to track </p>
+                                                    <div class="text-center p-3 pb-0">
+                                                        <img alt="Scan Me!" src="assets/images/barcode.svg" class="img-fluid">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div><!--end col-->
+                                </div><!--end row-->
+                            </div><!--end col-->
+                        </div><!--end row-->
+
+                        <!-- Order Status Section -->
+                        <div class="row mt-4">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-header d-flex align-items-center flex-wrap gap-2">
+                                        <h6 class="card-title flex-grow-1 mb-0">Order Status</h6>
+                                        <div class="flex-shrink-0">
+                                            <button class="btn btn-primary btn-sm" (click)="order.idCommande ? downloadInvoice(order.idCommande) : null">
+                                                <i class="ph-download-simple align-middle"></i> Download Facture
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="progress progress-step-arrow progress-info mb-4">
+                                            <a href="javascript:void(0);" class="progress-bar active" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                                                <i class="ph-bag align-baseline me-1 d-none d-lg-inline-block"></i> Order Placed
+                                            </a>
+                                            <a href="javascript:void(0);"
+                                               [ngClass]="{'active': ['shipped', 'delivered', 'out_for_delivery'].includes(order.etat), 'pending': order.etat === 'processing'}"
+                                               class="progress-bar d-none d-xxl-inline-block"
+                                               role="progressbar"
+                                               style="width: 100%"
+                                               aria-valuenow="30"
+                                               aria-valuemin="0"
+                                               aria-valuemax="100">
+                                                <i class="ph-package align-middle me-1"></i> Processing
+                                            </a>
+                                            <a href="javascript:void(0);"
+                                               [ngClass]="{'active': ['delivered', 'out_for_delivery'].includes(order.etat), 'pending': order.etat === 'shipped'}"
+                                               class="progress-bar d-none d-md-inline-block"
+                                               role="progressbar"
+                                               style="width: 100%"
+                                               aria-valuenow="30"
+                                               aria-valuemin="0"
+                                               aria-valuemax="100">
+                                                <i class="ph-truck align-baseline me-1 d-none d-lg-inline-block"></i> Shipped
+                                            </a>
+                                            <a href="javascript:void(0);"
+                                               [ngClass]="{'active': order.etat === 'delivered', 'pending': order.etat === 'out_for_delivery'}"
+                                               class="progress-bar d-none d-md-inline-block"
+                                               role="progressbar"
+                                               style="width: 100%"
+                                               aria-valuenow="20"
+                                               aria-valuemin="0"
+                                               aria-valuemax="100">
+                                                <i class="ph-bicycle align-baseline me-1 d-none d-lg-inline-block"></i> Out For Delivery
+                                            </a>
+                                            <a href="javascript:void(0);"
+                                               [ngClass]="{'active': order.etat === 'delivered'}"
+                                               class="progress-bar"
+                                               role="progressbar"
+                                               style="width: 100%"
+                                               aria-valuenow="20"
+                                               aria-valuemin="0"
+                                               aria-valuemax="100">
+                                                <i class="ph-house-line align-baseline me-1 d-none d-lg-inline-block"></i> Delivered
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--end col-->
+                        </div><!--end row-->
+
+                        <hr class="my-4" *ngIf="orders.indexOf(order) !== orders.length - 1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

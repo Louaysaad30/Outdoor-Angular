@@ -1,0 +1,42 @@
+::ng-deep {
+        // Make all events look consistent
+        .fc-event {
+          transition: all 0.2s ease-in-out;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1) !important;
+          }
+        }
+
+        // Ensure custom events fit properly
+        .custom-event {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        // Remove external rectangle for multi-day events
+        .fc-daygrid-block-event .fc-event-main {
+          background-color: transparent !important;
+          border: none !important;
+        }
+
+        // Remove the outer container background for multi-day events
+        .fc-daygrid-block-event {
+          background-color: transparent !important;
+          border: none !important;
+        }
+
+        // Make single-day events transparent on hover - day grid view
+        .fc-daygrid-dot-event:hover {
+          background-color: transparent !important;
+        }
+
+        // Make single-day events transparent on hover - time grid view
+        .fc-timegrid-event:hover {
+          background-color: transparent !important;
+        }
+      }

@@ -75,43 +75,66 @@
                                     </div>
 
                                     <div class="p-2">
-                                        <form action="/auth/signin">
+                                        <form (ngSubmit)="onResetPassword()" [formGroup]="resetForm">
                                             <div class="mb-3">
-                                                <label class="form-label" for="password-input">Password</label>
-                                                <div class="position-relative auth-pass-inputgroup">
-                                                    <input [type]="fieldTextType ? 'text' : 'password'" class="form-control pe-5 password-input" onpaste="return false" placeholder="Enter password" id="password-input" aria-describedby="passwordInput" required />
-                                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle" [ngClass]="{'mdi-eye-off-outline': !fieldTextType, 'mdi-eye-outline': fieldTextType
-                                                    }" (click)="toggleFieldTextType()"></i></button>
-                                                </div>
-                                                <div id="passwordInput" class="form-text">Your password must be 8-20 characters long.</div>
+                                              <label class="form-label" for="password-input">Password</label>
+                                              <div class="position-relative auth-pass-inputgroup">
+                                                <input
+                                                  [type]="fieldTextType ? 'text' : 'password'"
+                                                  class="form-control pe-5"
+                                                  formControlName="password"
+                                                  placeholder="Enter new password"
+                                                  id="password-input"
+                                                  required
+                                                />
+                                                <button
+                                                  class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
+                                                  type="button"
+                                                  (click)="toggleFieldTextType()"
+                                                >
+                                                  <i
+                                                    class="ri-eye-fill align-middle"
+                                                    [ngClass]="{
+                                                      'mdi-eye-off-outline': !fieldTextType,
+                                                      'mdi-eye-outline': fieldTextType
+                                                    }"
+                                                  ></i>
+                                                </button>
+                                              </div>
                                             </div>
-
+                                          
                                             <div class="mb-3">
-                                                <label class="form-label" for="confirm-password-input">Confirm Password</label>
-                                                <div class="position-relative auth-pass-inputgroup mb-3">
-                                                    <input [type]="fieldTextType1 ? 'text' : 'password'" class="form-control pe-5 password-input" onpaste="return false" placeholder="Confirm password" id="confirm-password-input" required />
-                                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle" [ngClass]="{'mdi-eye-off-outline': !fieldTextType1, 'mdi-eye-outline': fieldTextType1
-                                                    }" (click)="toggleFieldTextType1()"></i></button>
-                                                </div>
+                                              <label class="form-label" for="confirm-password-input">Confirm Password</label>
+                                              <div class="position-relative auth-pass-inputgroup mb-3">
+                                                <input
+                                                  [type]="fieldTextType1 ? 'text' : 'password'"
+                                                  class="form-control pe-5"
+                                                  formControlName="confirmPassword"
+                                                  placeholder="Confirm password"
+                                                  id="confirm-password-input"
+                                                  required
+                                                />
+                                                <button
+                                                  class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
+                                                  type="button"
+                                                  (click)="toggleFieldTextType1()"
+                                                >
+                                                  <i
+                                                    class="ri-eye-fill align-middle"
+                                                    [ngClass]="{
+                                                      'mdi-eye-off-outline': !fieldTextType1,
+                                                      'mdi-eye-outline': fieldTextType1
+                                                    }"
+                                                  ></i>
+                                                </button>
+                                              </div>
                                             </div>
-
-                                            <div id="password-contain" class="p-3 bg-light mb-2 rounded">
-                                                <h5 class="fs-sm">Password must contain:</h5>
-                                                <p id="pass-length" class="invalid fs-xs mb-2">Minimum <b>8 characters</b></p>
-                                                <p id="pass-lower" class="invalid fs-xs mb-2">At <b>lowercase</b> letter (a-z)</p>
-                                                <p id="pass-upper" class="invalid fs-xs mb-2">At least <b>uppercase</b> letter (A-Z)</p>
-                                                <p id="pass-number" class="invalid fs-xs mb-0">A least <b>number</b> (0-9)</p>
-                                            </div>
-
-                                            <div class="form-check form-check-primary">
-                                                <input class="form-check-input" type="checkbox" value="" id="auth-remember-check" />
-                                                <label class="form-check-label" for="auth-remember-check">Remember me</label>
-                                            </div>
-
+                                          
                                             <div class="mt-4">
-                                                <button class="btn btn-primary w-100" type="submit">Reset Password</button>
+                                              <button class="btn btn-primary w-100" type="submit">Reset Password</button>
                                             </div>
-                                        </form>
+                                          </form>
+                                          
                                     </div>
                                     <div class="mt-4 text-center">
                                         <p class="mb-0">Wait, I remember my password... <a routerLink="/auth/signin" class="fw-semibold text-primary text-decoration-underline"> Click here </a></p>

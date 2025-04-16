@@ -2463,16 +2463,16 @@ const dynamicLoadedChart: ChartOptions = {
   colors: colors,
   states: {
     hover: {
-      filter: {
-        type: "desaturate",
-      }
+        filter: {
+            type: "desaturate",
+        },
     },
     active: {
-      allowMultipleDataPointsSelection: true,
-      filter: {
-        type: "darken",
-        value: 1,
-      } as FilterOptions,
+        allowMultipleDataPointsSelection: true,
+        filter: {
+            type: "darken",
+
+        },
 
     },
   },

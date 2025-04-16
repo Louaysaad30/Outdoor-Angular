@@ -7,14 +7,13 @@ export const environment = {
   production: false,
   defaultauth: 'fakebackend',
   firebaseConfig: {
-    apiKey: "AIzaSyCqS9cSPrDCNSQ-Ku2kZf5DBWjPPv7hvcA",
-    authDomain: "test-demo-774f8.firebaseapp.com",
-    databaseURL: "https://test-demo-774f8-default-rtdb.firebaseio.com",
-    projectId: "test-demo-774f8",
-    storageBucket: "test-demo-774f8.appspot.com",
-    messagingSenderId: "916438010670",
-    appId: "1:916438010670:web:c70cf404da6c0fe7b048bf",
-    measurementId: "G-1N6FB2GG55"
+    apiKey: "AIzaSyDgSt3xuZKXXyw3QSTCQrH7Ws1gSMFV4gE",
+    authDomain: "picloud-f0de8.firebaseapp.com",
+    projectId: "picloud-f0de8",
+    storageBucket: "picloud-f0de8.firebasestorage.app",
+    messagingSenderId: "32442881641",
+    appId: "1:32442881641:web:ce41dcb0fce2daafa534f8",
+    measurementId: "G-BLMYF1XFJZ"
   }
 };
 
@@ -26,4 +25,4 @@ export const environment = {
  * This import should be commented out in production mode because it will have a negative impact
  * on performance if an error is thrown.
  */
-import 'zone.js/plugins/zone-error';  // Included with Angular CLI.
+import 'zone.js/plugins/zone-error';  // Included with Angular CLI.-

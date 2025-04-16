@@ -10,7 +10,6 @@ import { LockscreenComponent } from './lockscreen/lockscreen.component';
 import { LogoutComponent } from './logout/logout.component';
 import { SuccessMsgComponent } from './success-msg/success-msg.component';
 import { TwostepComponent } from './twostep/twostep.component';
-
 const routes: Routes = [
   {
     path: 'signin',
@@ -43,10 +42,12 @@ const routes: Routes = [
   {
     path: 'twostep',
     component: TwostepComponent,
-  },
+  }, 
   {
     path: 'errors', loadChildren: () => import('./errors/errors.module').then(m => m.ErrorsModule)
   },
+
+
 ];
 
 @NgModule({
