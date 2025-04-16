@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-  import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+  import {ActivatedRoute, Router, RouterLink, RouterLinkActive} from '@angular/router';
   import { EventService } from '../../services/event.service';
   import { TicketService } from '../../services/ticket.service';
   import { ReservationService } from '../../services/reservation.service';
@@ -15,7 +15,8 @@ import { Component, OnInit } from '@angular/core';
     imports: [
       CommonModule,
       RouterLink,
-      SharedModule
+      SharedModule,
+      RouterLinkActive
     ],
     templateUrl: './event-tickets-front-office.component.html',
     styleUrls: ['./event-tickets-front-office.component.scss']
@@ -91,7 +92,7 @@ import { Component, OnInit } from '@angular/core';
       });
     }
 
-loadUserReservations(): void {
+    loadUserReservations(): void {
   if (this.userId) {
     this.reservationService.getReservationsByUserId(this.userId).subscribe({
       next: (reservations) => {
@@ -158,13 +159,25 @@ reserveTicket(ticket: Ticket): void {
         });
 
         this.reservationService.createReservation(reservation).subscribe({
-          next: (response) => {
+          next: (newReservation) => {
             // Update local reservation counts
             const currentCount = this.reservationCounts.get(ticket.id!) || 0;
             this.reservationCounts.set(ticket.id!, currentCount + 1);
 
             // Update available tickets
             ticket.availableTickets--;
+
+            if (newReservation) {
+              // Create a complete reservation object with ticket info
+              const completeReservation = {
+                ...newReservation,
+                ticket: ticket // Include the ticket information
+              };
+
+              // Add to userReservations array to update UI immediately
+              this.userReservations.push(completeReservation);
+            }
+
 
             this.showToastNotification('Ticket reserved successfully!', 'success');
           },

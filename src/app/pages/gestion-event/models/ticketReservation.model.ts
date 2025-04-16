@@ -5,6 +5,7 @@ export class TicketReservation {
   userId?: number;
   ticketId?: number; // Add this field
   ticket?: Ticket;
+  reservationCode?: string;
 
   constructor(reservation?: Partial<TicketReservation>) {
     if (reservation) {

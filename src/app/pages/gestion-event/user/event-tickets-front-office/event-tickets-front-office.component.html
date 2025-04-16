@@ -30,8 +30,33 @@
                 <div class="text-center mb-4 pb-2">
                   <h4 class="fw-semibold fs-4xl">{{ event?.title }} Tickets</h4>
                   <p class="text-muted mb-4 fs-base">Choose the ticket type that suits your needs</p>
-                </div>
-              </div>
+                  <a routerLink="/eventfront/user/reservations" routerLinkActive="active"
+                     class="btn btn-lg position-relative overflow-hidden text-white px-4 py-2 border-0"
+                     style="background: linear-gradient(45deg, #000000, #1a1a1a);
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+                            transition: all 0.3s ease;">
+                     <span class="position-relative z-2 d-flex align-items-center">
+                       <i class="bi bi-ticket-perforated-fill me-2 fs-5"></i>
+                       <span class="fw-semibold">View My Reservations</span>
+                     </span>
+                     <div class="position-absolute top-0 start-0 w-100 h-100 z-1"
+                          style="background: linear-gradient(45deg, #1a1a1a, #000000);
+                                 opacity: 0;
+                                 transition: opacity 0.3s ease;"></div>
+                     <style>
+                       a:hover {
+                         transform: translateY(-3px);
+                         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+                       }
+                       a:hover .position-absolute {
+                         opacity: 1;
+                       }
+                       a:active {
+                         transform: translateY(0);
+                         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+                       }
+                     </style>
+                  </a>              </div>
             </div>
 
             <!-- Loading spinner -->
@@ -126,7 +151,4 @@
                 </div>
               </div>
             </div>
-<!-- For debugging - add this temporarily -->
-<div *ngIf="userId && userReservations.length > 0" class="small text-muted mt-2">
-  Debug: Found {{ userReservations.length }} total reservations for user
-</div>
+          </div>
