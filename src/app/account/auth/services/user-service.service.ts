@@ -8,6 +8,8 @@ import { User } from '../models/User';
 })
 export class UserServiceService {
   private apiUrl = 'http://localhost:9096/user'; // adjust your backend URL
+  private apiUrl1 = 'http://localhost:9096/ws'; // adjust your backend URL
+
 
   constructor(private http: HttpClient) {}
 
@@ -15,6 +17,11 @@ export class UserServiceService {
   getAllUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/all`);
   }
+
+  getUsersWithConversations(userId: string) {
+    return this.http.get<any[]>(`${this.apiUrl1}/all/${userId}`);
+  }
+  
 
   // Get user by ID
   getUserById(id: number): Observable<User> {
