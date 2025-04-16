@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+  import { RouterModule, Routes } from '@angular/router';
 
 // Component
 import { LayoutComponent } from './layouts/layout.component';
@@ -29,11 +29,8 @@ const routes: Routes = [
   { path: 'transportfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule)  },
 
 
-
-];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }
+  @NgModule({
+    imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
+    exports: [RouterModule]
+  })
+  export class AppRoutingModule { }

@@ -809,6 +809,196 @@ video.img-fluid {
   color: #65676B;
 }
 
+.comment-time {
+  color: #65676b;
+}
+
+/* Dropdown styling */
+.dropdown-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.dropdown-toggle::after {
+  display: none;
+}
+
+.dropdown-menu {
+  min-width: 120px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f2f5;
+}
+
+.edit-comment-form {
+  width: 100%;
+}
+
+.edit-comment-form .input-group {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.edit-comment-form .form-control {
+  border-top-left-radius: 18px;
+  border-bottom-left-radius: 18px;
+  background-color: #f0f2f5;
+}
+
+.edit-comment-form .btn-primary {
+  padding: 0.25rem 0.75rem;
+}
+
+.edit-comment-form .btn-light {
+  padding: 0.25rem 0.75rem;
+  background-color: #e4e6eb;
+  border-color: #e4e6eb;
+}
+/* Facebook-like comment styling for long comments */
+.fb-comment-container {
+  max-width: calc(100% - 40px);
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  border-radius: 18px;
+  padding: 8px 12px;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-left: 12px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.comment-action {
+  color: #65676b;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.comment-action:hover {
+  text-decoration: underline;
+}
+
+.action-dot {
+  padding: 0 4px;
+  color: #65676b;
+}
+
+.comment-time {
+  color: #65676b;
+}
+
+/* Edit comment form styling */
+.edit-comment-form {
+  width: 100%;
+}
+
+.edit-comment-form textarea.form-control {
+  border-radius: 18px;
+  background-color: #f0f2f5;
+  padding: 8px 12px;
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  min-width: 120px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f2f5;
+}
+
+/* Fix for dropdown toggle */
+.dropdown-toggle::after {
+  display: none;
+}
+
+/* Add these styles to your component's CSS file */
+.nested-replies {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+    border-radius: 1px;
+  }
+}
+
+.reply-bubble {
+  background-color: #f8f9fa;
+  border-radius: 16px;
+}
+
+.comment-bubble {
+  background-color: #f0f2f5;
+  border-radius: 18px;
+  padding: 8px 12px;
+}
+
+.comment-actions {
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.comment-action {
+  color: #65676B;
+  text-decoration: none;
+}
+
+.comment-action:hover {
+  text-decoration: underline;
+}
+
+.action-dot {
+  margin: 0 4px;
+  color: #65676B;
+}
+
 /* forum-post.component.scss */
 .modal-dialog1 {
   max-width: 500px !important;
@@ -974,48 +1164,6 @@ video.img-fluid {
   color: #BCC0C4;
   cursor: not-allowed;
 }
-/* Facebook-style sidebar */
-.sidebar-wrapper {
-  z-index: 10;
-}
-
-.fb-icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-.list-group-item-action {
-  transition: background-color 0.2s ease;
-  border-radius: 8px;
-  margin: 2px 8px;
-}
-
-.list-group-item-action:hover {
-  background-color: #f0f2f5;
-}
-
-.list-group-item-action:hover .fb-icon-container {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.active-link {
-  background-color: #e7f3ff !important;
-}
-
-.active-link .fb-icon-container {
-  background-color: rgba(24, 119, 242, 0.1);
-}
-
-.text-blue { color: #1877f2; }
-.text-purple { color: #8c72cb; }
-.text-teal { color: #36b9cc; }
-.text-orange { color: #f5533d; }
-
 
 .alert-custom {
   position: relative;
@@ -1090,3 +1238,6 @@ video.img-fluid {
   background-color: #f57c00;
   border-color: #f57c00;
 }
+
+
+
