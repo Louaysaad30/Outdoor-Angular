@@ -131,6 +131,19 @@ loadRecentPosts(): void {
 
     this.loadCurrentDayStats();
 
+
+    // Initialize charts with default values
+    this._saleChart('["--tb-primary"]');
+    this._rentChart('["--tb-warning"]');
+    this._visitorsChart('["--tb-secondary"]');
+    this._residencypropertyChart('["--tb-success"]');
+
+    // Initialize propertysaleChart with default values
+    this._propertysaleChart('["--tb-danger"]');
+
+    // Call onCalendarDateChange with today's date to load actual data
+    this.onCalendarDateChange(new Date());
+
     // BreadCrumb
     this.breadCrumbItems = [
       { label: 'Dashboards' },
@@ -165,6 +178,8 @@ loadRecentPosts(): void {
     this.loadTotalStats();
     this.loadWeeklyTrends();
     this.loadTopRatedPosts();
+
+
 
 
 

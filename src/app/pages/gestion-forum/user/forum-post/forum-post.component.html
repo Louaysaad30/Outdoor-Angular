@@ -856,27 +856,37 @@
           <div class="modal-content">
             <div class="modal-header px-4 pt-4">
               <h5 class="modal-title">Créer une publication</h5>
-              <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+              <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal() "></button>
             </div>
 
             <div class="modal-body p-4">
 <!-- Replace the existing error alert with this -->
-              <div *ngIf=toxicContentDetected class="alert"
-                   [ngClass]="{
-                     'alert-danger': !toxicContentDetected,
-                     'alert-warning': toxicContentDetected
-                   }">
-                <div class="d-flex align-items-center">
-                  <i class="bi" [ngClass]="{
-                       'bi-exclamation-triangle-fill me-2': toxicContentDetected,
-                       'bi-x-circle-fill me-2': !toxicContentDetected
-                     }"></i>
-                  <div>
-                    <strong>{{ error.split(':')[0] }}</strong>
-                    <p class="mb-0">{{ error.split(':')[1] }}</p>
-
-                    <div *ngIf="toxicContentDetected" class="mt-2 small">
-                      <strong>Tip:</strong> Please review your content and remove any inappropriate language or themes.
+              <div *ngIf="toxicContentDetected" class="alert-custom shadow-sm animate__animated animate__fadeIn">
+  <div class="alert-ribbon"></div>
+  <div class="alert-wrapper">
+    <div class="alert-icon">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+    <div class="alert-content">
+      <h6 class="alert-title">Content Warning</h6>
+      <p class="alert-message">Our system has detected potentially inappropriate content in your post.</p>
+      <div class="alert-details">
+        <p>Please review your content and remove any language that may violate our community guidelines.</p>
+      </div>
+    </div>
+  </div>
+</div>
+              <div *ngIf="toxicImageDetected" class="alert-custom shadow-sm animate__animated animate__fadeIn">
+                <div class="alert-ribbon"></div>
+                <div class="alert-wrapper">
+                  <div class="alert-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                  </div>
+                  <div class="alert-content">
+                    <h6 class="alert-title">Inappropriate Image Detected</h6>
+                    <p class="alert-message">Our content moderation system has flagged the uploaded image as potentially inappropriate.</p>
+                    <div class="alert-details">
+                      <p>Please remove or replace any media that contains sensitive, explicit, or prohibited visual content according to our community standards.</p>
                     </div>
                   </div>
                 </div>

@@ -40,7 +40,7 @@ import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
 })
 export class MesPostsComponent implements OnInit {
   // Constants
-  readonly USER_ID = 20; // Current user ID - should be retrieved from auth service in a real app
+  readonly USER_ID = 10; // Current user ID - should be retrieved from auth service in a real app
 
   // State variables
   posts: Post[] = [];
@@ -54,6 +54,9 @@ export class MesPostsComponent implements OnInit {
   // UI state
   isDetailModalOpen = false;
   newComment = '';
+
+  toxicImageDetected=false;// Reset toxicity flag
+
 
   // Enums
   ReactionType = ReactionType;
@@ -295,26 +298,40 @@ export class MesPostsComponent implements OnInit {
   }
 
   addDetailComment(): void {
-    if (!this.selectedPost || !this.newDetailComment.trim()) return;
+    if (!this.newDetailComment.trim() || !this.selectedPost) return;
 
     this.commentService.addComment(this.selectedPost.id!, this.newDetailComment, this.USER_ID).subscribe({
       next: (comment: ForumComment) => {
-        // Find the post in the main posts array only
-        const post = this.posts.find(p => p.id === this.selectedPost!.id);
-        if (post) {
-          if (!post.comments) {
-            post.comments = [];
-          }
-          post.comments.push(comment);
-
-          // Update selectedPost to reference the same array
-          this.selectedPost = post;
+        // Update the post's comments array
+        if (this.selectedPost && this.selectedPost.comments) {
+          this.selectedPost.comments.push(comment);
         }
 
+        // Update the topLevelComments collection which is displayed in the modal
+        if (this.selectedPost && this.selectedPost.id) {
+          if (!this.topLevelComments[this.selectedPost.id]) {
+            this.topLevelComments[this.selectedPost.id] = [];
+          }
+          this.topLevelComments[this.selectedPost.id].push(comment);
+
+          // Create a new array reference to trigger change detection
+          this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
+        }
+
+        // Clear the input field
         this.newDetailComment = '';
       },
-      error: (error) => {
-        console.error('Error adding comment:', error);
+
+      error: (errorObj) => {
+        this.isSubmitting = false; // Reset submission state
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError()
+        }
+        else {
+          // Handle other errors if needed
+          this.error = errorObj.message || 'An error occurred';
+        }
       }
     });
   }
@@ -497,6 +514,7 @@ editPost(post: Post): void {
     this.mediaToDelete = [];
     this.isModalOpen = true;
   }
+
   publishPost() {
     this.submitted1 = true;
 
@@ -552,10 +570,20 @@ editPost(post: Post): void {
           next: (createdPost) => {
             console.log('Post created successfully', createdPost);
             this.handlePostSuccess();
+            this.toxicContentDetected = false; // Reset toxic content state
+            this.toxicImageDetected=false;// Reset toxicity flag
+
           },
-          error: (error) => {
-            console.error('Error creating post', error);
+          error: (errorObj) => {
             this.isSubmitting = false;
+            console.log('alooo', errorObj?.message);
+            if (errorObj === 'TOXIC_CONTENT') {
+              this.toxicContentDetected = true;
+            } else if (errorObj === 'TOXIC_IMAGE') {
+              this.toxicImageDetected = true;
+            } else {
+              this.error = errorObj.message || 'An error occurred';
+            }
           }
         });
       }
@@ -585,6 +613,11 @@ closePostModal() {
   this.formData.reset();
   this.submitted1 = false;
   this.mediaToDelete = [];
+  this.showEmojiPicker = false;
+  this.showFileUpload = false;
+  this.reactionBarVisible.clear();
+  this.toxicContentDetected = false;
+  this.toxicImageDetected=false;// Reset toxicity flag
 }
 
 // Media management
@@ -622,7 +655,6 @@ getAllMedia(): Media[] {
 
 getOnlyVideos(): Media[] {
   // Logging for debugging
-  console.log('All media items:', this.mediaItems.length);
 
   const videos = this.mediaItems.filter(media =>
     this.isVideo(media.mediaUrl!) &&
@@ -630,7 +662,6 @@ getOnlyVideos(): Media[] {
     media.post.id
   );
 
-  console.log('Filtered videos:', videos.length);
   return videos;
 }  isImage(url: string): boolean {
     return url.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null;

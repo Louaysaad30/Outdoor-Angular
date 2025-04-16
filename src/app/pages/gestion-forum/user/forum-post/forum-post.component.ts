@@ -36,12 +36,13 @@ export class ForumPostComponent {
 
 
   toxicContentDetected: boolean = false; // Added property
+  toxicImageDetected:boolean = false; // Added property
 
   profileImage: string = 'assets/profile-pic.png';
   isModalOpen: boolean = false;
   postContent: string = '';
   isSubmitting: boolean = false;
-  USER_ID=10;
+  USER_ID=20;
 
   // Emoji Picker
   showEmojiPicker = false;
@@ -171,7 +172,6 @@ addDetailComment(): void {
         const post = this.posts.find(p => p.id === postId);
         if (post) {
           post.reactions = reactions;
-console.log('Reactions:', reactions);
           // Store the user's reaction (if any) for easy access
           const userReaction = reactions.find(r => r.userId === this.USER_ID); // Using static user ID 10
           if (userReaction) {
@@ -398,6 +398,8 @@ reactToPost(postId: string, reactionType: ReactionType) {
     this.postContent = '';
     this.formData.reset();
     this.submitted1 = false;
+    this.toxicContentDetected = false; // Reset toxicity flag
+    this.toxicImageDetected = false; // Reset toxicity flag
   }
 
   /*** Emoji Picker ***/
@@ -448,6 +450,7 @@ publishPost() {
     this.submitted1 = true;
     this.error = ''; // Clear previous errors
     this.toxicContentDetected = false; // Reset toxicity flag
+    this.toxicImageDetected = false; // Reset toxicity flag
 
     if (this.formData.invalid && !this.uploadedFiles.length) {
       return;
@@ -479,20 +482,25 @@ publishPost() {
         this.closePostModal();
         // Refresh posts
         this.loadPosts();
+        this.toxicContentDetected = false;
+        this.toxicImageDetected=false;// Reset toxicity flag
       },
 
       error: (errorObj) => {
-        this.isSubmitting = false; // Reset submission state
-        if (errorObj == "OK") {
+        this.isSubmitting = false;
+        console.log('alooo', errorObj?.message);
+        if (errorObj === 'TOXIC_CONTENT') {
           this.toxicContentDetected = true;
-        }
-        else {
-          // Handle other errors if needed
+        } else if (errorObj === 'TOXIC_IMAGE') {
+          this.toxicImageDetected = true;
+        } else {
           this.error = errorObj.message || 'An error occurred';
         }
       }
     });
 }
+
+
 private handlePostSuccess() {
     this.closePostModal();
     this.isSubmitting = false;

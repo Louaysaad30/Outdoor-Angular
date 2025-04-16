@@ -37,12 +37,11 @@ createPost(post: Post, mediaFiles?: File[]): Observable<Post> {
   // The API already handles content toxicity checking on the backend
   return this.http.post<Post>(`${this.apiUrl}/add`, formData).pipe(
     catchError(error => {
-
-      console.log("erreur",error)
-      // Handle specific API errors
-      if (error.status === 400 && error.error?.message?.includes('toxic')) {
-        // Content toxicity detected by backend
-        return throwError(() => new Error('Your post contains inappropriate content that violates our community guidelines.'));
+      console.error('Error creating post:', error);
+      if (error.status === 400 && error.error?.errorType === 'TOXIC_CONTENT') {
+        return throwError(() => new Error('TOXIC_CONTENT'));
+      } else if (error.status === 400 && error.error?.errorType === 'TOXIC_IMAGE') {
+        return throwError(() => new Error('TOXIC_IMAGE'));
       }
       return throwError(() => error);
     })

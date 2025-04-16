@@ -477,15 +477,35 @@
           </div>
         </ng-template>
 
-        <div class="d-flex">
-          <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="32" height="32">
-          <div class="flex-grow-1">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Write a comment..." [(ngModel)]="newDetailComment">
-              <button class="btn btn-primary" type="button" (click)="addDetailComment()" [disabled]="!newDetailComment.trim()">
-                <i class="bi bi-send"></i>
-              </button>
+        <div class="comment-input-section mt-3">
+          <div class="d-flex align-items-start">
+            <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="36" height="36">
+            <div class="flex-grow-1 reply-input-wrapper">
+              <input
+                type="text"
+                class="form-control fb-reply-input w-100"
+                placeholder="Write a comment..."
+                [(ngModel)]="newDetailComment"
+                (keyup.enter)="addDetailComment()">
+
+              <div class="reply-actions">
+                <button
+                  class="btn-reply-submit"
+                  type="button"
+                  (click)="addDetailComment()"
+                  [disabled]="!newDetailComment.trim() || isSubmitting">
+                  <i class="bi bi-send-fill"></i>
+                </button>
+              </div>
             </div>
+          </div>
+
+          <!-- Loading indicator (optional) -->
+          <div class="reply-loading ms-5 mt-2" *ngIf="isSubmitting">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>Sending comment...</span>
           </div>
         </div>
       </div>
@@ -1311,12 +1331,44 @@
                    aria-modal="true"
                    role="dialog">
 
+
                 <div class="modal-dialog modal-dialog-centered">
                   <div class="modal-content">
                     <div class="modal-header px-4 pt-4">
                       <h5 class="modal-title">{{ isEditMode ? 'Modifier la publication' : 'Créer une publication' }}</h5>
                       <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
                     </div>
+                    <div *ngIf="toxicContentDetected" class="alert-custom shadow-sm animate__animated animate__fadeIn">
+                      <div class="alert-ribbon"></div>
+                      <div class="alert-wrapper">
+                        <div class="alert-icon">
+                          <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="alert-content">
+                          <h6 class="alert-title">Content Warning</h6>
+                          <p class="alert-message">Our system has detected potentially inappropriate content in your post.</p>
+                          <div class="alert-details">
+                            <p>Please review your content and remove any language that may violate our community guidelines.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="toxicImageDetected" class="alert-custom shadow-sm animate__animated animate__fadeIn">
+                      <div class="alert-ribbon"></div>
+                      <div class="alert-wrapper">
+                        <div class="alert-icon">
+                          <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div class="alert-content">
+                          <h6 class="alert-title">Inappropriate Image Detected</h6>
+                          <p class="alert-message">Our content moderation system has flagged the uploaded image as potentially inappropriate.</p>
+                          <div class="alert-details">
+                            <p>Please remove or replace any media that contains sensitive, explicit, or prohibited visual content according to our community standards.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div class="modal-body p-4">
                       <div class="d-flex align-items-center mb-3">
                         <img [src]="profileImage" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px;">
@@ -1406,12 +1458,15 @@
                       </div>
                     </div>
 
+
+
                     <div class="modal-footer px-4 pb-4">
                       <button type="button" class="btn btn-primary w-100 rounded-pill" [disabled]="isSubmitting" (click)="publishPost()">
                         <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
                         {{ isEditMode ? 'Mettre à jour' : 'Publier' }}
                       </button>
-                    </div>        </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

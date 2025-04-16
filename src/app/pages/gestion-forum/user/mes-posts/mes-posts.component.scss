@@ -1165,5 +1165,79 @@ video.img-fluid {
   cursor: not-allowed;
 }
 
+.alert-custom {
+  position: relative;
+  background-color: #fff8e6;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.alert-ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: #ff9800;
+}
+
+.alert-wrapper {
+  display: flex;
+  padding: 16px 16px 16px 20px;
+}
+
+.alert-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background-color: rgba(255, 152, 0, 0.15);
+  border-radius: 50%;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.alert-icon i {
+  color: #ff9800;
+  font-size: 20px;
+}
+
+.alert-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #e65100;
+}
+
+.alert-message {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.alert-details {
+  margin-bottom: 12px;
+  color: #555;
+  font-size: 14px;
+}
+
+.alert-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn-warning {
+  background-color: #ff9800;
+  border-color: #ff9800;
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #f57c00;
+  border-color: #f57c00;
+}
+
 
 
