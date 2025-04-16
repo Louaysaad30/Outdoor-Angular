@@ -268,9 +268,20 @@
             <input type="number" class="form-control" formControlName="purchaseLimit" min="1">
           </div>
 
+          <!-- Add to the ticket modal after purchase limit field -->
           <div class="mb-3">
             <label class="form-label">Discount Code</label>
             <input type="text" class="form-control" formControlName="discountCode" placeholder="Optional">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Discount Percentage (%)</label>
+            <input type="number" class="form-control" formControlName="discountPercentage" min="0" max="100" placeholder="Optional">
+          </div>
+
+          <div class="form-text text-muted mb-3" *ngIf="ticketForm.get('discountCode')?.value">
+            With this discount code, the final price will be:
+            ${{ calculateDiscountedPreview(ticketForm.get('price')?.value, ticketForm.get('discountPercentage')?.value) }}
           </div>
         </form>
       </div>

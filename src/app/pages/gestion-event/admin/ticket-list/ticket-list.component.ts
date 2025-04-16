@@ -73,7 +73,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
         price: ['', [Validators.required, Validators.min(0)]],
         availableTickets: ['', [Validators.required, Validators.min(0)]],
         purchaseLimit: [1, [Validators.required, Validators.min(1)]],
-        discountCode: ['']
+        discountCode: [''],
+        discountPercentage: [0, [Validators.min(0), Validators.max(100)]]
+
       });
 
       // Load data
@@ -189,13 +191,24 @@ import { Component, OnInit, ViewChild } from '@angular/core';
       this.isEditing = true;
       this.selectedTicketId = ticket.id!;
 
+      // Extract discount code and percentage if available
+      let discountCode = '';
+      let discountPercentage = 0;
+
+      if (ticket.discountCode && ticket.discountCode.includes(':')) {
+        const parts = ticket.discountCode.split(':');
+        discountCode = parts[0];
+        discountPercentage = parseFloat(parts[1]);
+      }
+
       this.ticketForm.patchValue({
         eventId: ticket.event?.id,
         type: ticket.type,
         price: ticket.price,
         availableTickets: ticket.availableTickets,
         purchaseLimit: ticket.purchaseLimit,
-        discountCode: ticket.discountCode || ''
+        discountCode: discountCode,
+        discountPercentage: discountPercentage
       });
 
       this.ticketModal?.show();
@@ -205,35 +218,58 @@ import { Component, OnInit, ViewChild } from '@angular/core';
       if (this.ticketForm.invalid) return;
 
       const formData = this.ticketForm.value;
+      const discountCode = formData.discountCode;
+      const discountPercentage = formData.discountPercentage;
 
       const ticketData: Ticket = {
         type: formData.type,
         price: formData.price,
         availableTickets: formData.availableTickets,
         purchaseLimit: formData.purchaseLimit,
-        discountCode: formData.discountCode || null,
+        discountCode: null, // We'll handle this separately
         event: {
           id: formData.eventId
         }
       };
 
-      if (this.isEditing && this.selectedTicketId) {
-        this.ticketService.updateTicket(this.selectedTicketId, ticketData).subscribe({
-          next: (updatedTicket) => {
+      // Create or update the ticket first
+      const saveOperation = this.isEditing && this.selectedTicketId
+        ? this.ticketService.updateTicket(this.selectedTicketId, ticketData)
+        : this.ticketService.createTicket(ticketData);
+
+      saveOperation.subscribe({
+        next: (ticket) => {
+          // If discount code and percentage are provided, apply the discount
+          if (discountCode && discountPercentage > 0) {
+            this.applyDiscount(ticket.id!, discountCode, discountPercentage);
+          } else {
             this.loadTickets();
             this.ticketModal?.hide();
-          },
-          error: (error) => console.error('Error updating ticket:', error)
-        });
-      } else {
-        this.ticketService.createTicket(ticketData).subscribe({
-          next: (newTicket) => {
-            this.loadTickets();
-            this.ticketModal?.hide();
-          },
-          error: (error) => console.error('Error creating ticket:', error)
-        });
-      }
+          }
+        },
+        error: (error) => console.error('Error saving ticket:', error)
+      });
+    }
+
+    applyDiscount(ticketId: number, code: string, percentage: number): void {
+      this.ticketService.applyDiscount(ticketId, code, percentage).subscribe({
+        next: () => {
+          this.loadTickets();
+          this.ticketModal?.hide();
+        },
+        error: (error) => {
+          console.error('Error applying discount:', error);
+          // Still close and reload, as the ticket was created/updated
+          this.loadTickets();
+          this.ticketModal?.hide();
+        }
+      });
+    }
+
+
+    calculateDiscountedPreview(price: number, percentage: number): number {
+      if (!price || !percentage) return price || 0;
+      return Number((price * (1 - percentage / 100)).toFixed(2));
     }
 
     removeTicket(id: number): void {

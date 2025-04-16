@@ -8,6 +8,7 @@ import { Component, OnInit } from '@angular/core';
   import { TicketReservation } from '../../models/ticketReservation.model';
   import { CommonModule } from '@angular/common';
   import { SharedModule } from '../../../../shared/shared.module';
+import {FormsModule} from "@angular/forms";
 
   @Component({
     selector: 'app-event-tickets-front-office',
@@ -16,7 +17,8 @@ import { Component, OnInit } from '@angular/core';
       CommonModule,
       RouterLink,
       SharedModule,
-      RouterLinkActive
+      RouterLinkActive,
+      FormsModule
     ],
     templateUrl: './event-tickets-front-office.component.html',
     styleUrls: ['./event-tickets-front-office.component.scss']
@@ -33,6 +35,13 @@ import { Component, OnInit } from '@angular/core';
     showToast: boolean = false;
     toastMessage: string = '';
     toastType: 'success' | 'warning' | 'danger' | 'primary' = 'primary';
+
+    // Discount properties
+    discountCode: string = '';
+    showDiscountForm: boolean = false;
+    selectedTicketId: number | null = null;
+    discountValidated: boolean = false;
+    discountedPrice: number = 0;
 
     constructor(
       private route: ActivatedRoute,
@@ -143,58 +152,62 @@ import { Component, OnInit } from '@angular/core';
     }
 
 
-reserveTicket(ticket: Ticket): void {
-  if (!this.userId) {
-    this.router.navigate(['/auth/login']);
-    return;
-  }
-
-  // Use the backend check instead of local check
-  this.reservationService.checkReservationLimit(this.userId, ticket.id!).subscribe({
-    next: (response) => {
-      if (response.canReserve) {
-        const reservation = new TicketReservation({
-          ticketId: ticket.id,
-          userId: this.userId ?? undefined,  // Convert null to undefined
-        });
-
-        this.reservationService.createReservation(reservation).subscribe({
-          next: (newReservation) => {
-            // Update local reservation counts
-            const currentCount = this.reservationCounts.get(ticket.id!) || 0;
-            this.reservationCounts.set(ticket.id!, currentCount + 1);
-
-            // Update available tickets
-            ticket.availableTickets--;
-
-            if (newReservation) {
-              // Create a complete reservation object with ticket info
-              const completeReservation = {
-                ...newReservation,
-                ticket: ticket // Include the ticket information
-              };
-
-              // Add to userReservations array to update UI immediately
-              this.userReservations.push(completeReservation);
-            }
-
-
-            this.showToastNotification('Ticket reserved successfully!', 'success');
-          },
-          error: (error) => {
-            this.showToastNotification('Failed to reserve ticket. Please try again.', 'danger');
-          }
-        });
-      } else {
-        this.showToastNotification(`You've reached the purchase limit (${response.limit}) for this ticket type`, 'warning');
+    reserveTicket(ticket: Ticket): void {
+      if (!this.userId) {
+        this.router.navigate(['/auth/login']);
+        return;
       }
-    },
-    error: (error) => {
-      this.showToastNotification('Failed to check reservation limit. Please try again.', 'danger');
-    }
-  });
-}
 
+      // Use the backend check instead of local check
+      this.reservationService.checkReservationLimit(this.userId, ticket.id!).subscribe({
+        next: (response) => {
+          if (response.canReserve) {
+            const reservation = new TicketReservation({
+              ticketId: ticket.id,
+              userId: this.userId ?? undefined,
+            });
+
+            // Pass the discount code if validated
+            const discountCodeToApply =
+              (this.discountValidated && this.selectedTicketId === ticket.id)
+                ? this.discountCode
+                : null;
+
+            this.reservationService.createReservationWithDiscount(
+              reservation,
+              discountCodeToApply
+            ).subscribe({
+              next: (newReservation) => {
+                // Update available tickets
+                ticket.availableTickets--;
+
+                if (newReservation) {
+                  // Create a complete reservation object with ticket info
+                  const completeReservation = {
+                    ...newReservation,
+                    ticket: ticket
+                  };
+
+                  // Add to userReservations array to update UI immediately
+                  this.userReservations.push(completeReservation);
+                }
+
+                this.resetDiscountState();
+                this.showToastNotification('Ticket reserved successfully!', 'success');
+              },
+              error: (error) => {
+                this.showToastNotification('Failed to reserve ticket. Please try again.', 'danger');
+              }
+            });
+          } else {
+            this.showToastNotification(`You've reached the purchase limit (${response.limit}) for this ticket type`, 'warning');
+          }
+        },
+        error: (error) => {
+          this.showToastNotification('Failed to check reservation limit. Please try again.', 'danger');
+        }
+      });
+    }
 
     showToastNotification(message: string, type: 'success' | 'warning' | 'danger' | 'primary'): void {
       this.toastMessage = message;
@@ -209,5 +222,51 @@ reserveTicket(ticket: Ticket): void {
 
     closeToast(): void {
       this.showToast = false;
+    }
+
+
+
+    toggleDiscountForm(ticket: Ticket): void {
+      if (this.selectedTicketId === ticket.id) {
+        this.showDiscountForm = !this.showDiscountForm;
+        if (!this.showDiscountForm) {
+          this.resetDiscountState();
+        }
+      } else {
+        this.selectedTicketId = ticket.id!;
+        this.showDiscountForm = true;
+        this.resetDiscountState();
+      }
+    }
+
+    resetDiscountState(): void {
+      this.discountCode = '';
+      this.discountValidated = false;
+      this.discountedPrice = 0;
+    }
+
+    applyDiscount(ticket: Ticket): void {
+      if (!this.discountCode.trim()) {
+        this.showToastNotification('Please enter a discount code', 'warning');
+        return;
+      }
+
+      // Check if discount code is valid by extracting from ticket.discountCode
+      if (ticket.discountCode && ticket.discountCode.includes(':')) {
+        const [storedCode, percentageStr] = ticket.discountCode.split(':');
+
+        if (storedCode === this.discountCode.trim()) {
+          const percentage = parseFloat(percentageStr);
+          this.discountedPrice = parseFloat((ticket.price * (1 - percentage / 100)).toFixed(2));
+          this.discountValidated = true;
+          this.showToastNotification(`Discount of ${percentage}% applied!`, 'success');
+        } else {
+          this.showToastNotification('Invalid discount code', 'warning');
+          this.discountValidated = false;
+        }
+      } else {
+        this.showToastNotification('No discount available for this ticket', 'warning');
+        this.discountValidated = false;
+      }
     }
   }

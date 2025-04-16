@@ -12,4 +12,7 @@ export class TicketReservation {
       Object.assign(this, reservation);
     }
   }
+
+  appliedDiscountCode ?: string;
+  finalPrice ?: number;
 }

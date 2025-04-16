@@ -62,4 +62,17 @@ import { Injectable } from '@angular/core';
           return this.http.get<any>(`${this.apiUrl}/check-limit?userId=${userId}&ticketId=${ticketId}`)
             .pipe(catchError(this.handleError));
         }
+
+
+        // reservation.service.ts - Add this method
+        createReservationWithDiscount(reservation: TicketReservation, discountCode: string | null): Observable<TicketReservation> {
+          return this.http.post<TicketReservation>(
+            `${this.apiUrl}`,
+            {
+              userId: reservation.userId,
+              ticketId: reservation.ticketId,
+              discountCode: discountCode || undefined
+            }
+          );
+        }
       }

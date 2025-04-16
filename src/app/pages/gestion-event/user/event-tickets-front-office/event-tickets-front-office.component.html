@@ -112,21 +112,34 @@
                             <i class="bi bi-check2-square text-{{getColorClass(ticket.type)}} me-1"></i>
                             Limit per order: <span class="fw-semibold">{{ ticket.purchaseLimit }}</span>
                           </li>
-                          <li *ngIf="ticket.discountCode">
-                            <i class="bi bi-check2-square text-{{getColorClass(ticket.type)}} me-1"></i>
-                            Discount code: <span class="fw-semibold">{{ ticket.discountCode }}</span>
-                          </li>
-                          <li *ngIf="!ticket.discountCode">
-                            <i class="bi bi-x-square text-{{getColorClass(ticket.type)}} me-1"></i>
-                            No discount available
-                          </li>
                         </ul>
 
-                      <div class="position-absolute top-0 end-0 m-2">
-                        <span class="badge rounded-pill bg-{{getColorClass(ticket.type)}}-subtle text-{{getColorClass(ticket.type)}}">
-                          {{ getReservationCount(ticket.id!) }} / {{ ticket.purchaseLimit }}
-                        </span>
-                      </div>
+                        <div class="my-3">
+                          <div class="d-flex align-items-center mb-2">
+                            <button class="btn btn-sm btn-outline-{{getColorClass(ticket.type)}}"
+                                    (click)="toggleDiscountForm(ticket)" type="button">
+                              <i class="bi bi-tag-fill me-1"></i> Have a discount code?
+                            </button>
+                          </div>
+
+                          <!-- Collapsible discount code form -->
+                          <div *ngIf="showDiscountForm && selectedTicketId === ticket.id" class="mt-2">
+                            <div class="input-group">
+                              <input type="text" class="form-control"
+                                     placeholder="Enter discount code"
+                                     [(ngModel)]="discountCode">
+                              <button class="btn btn-{{getColorClass(ticket.type)}}"
+                                      type="button"
+                                      (click)="applyDiscount(ticket)">
+                                Apply
+                              </button>
+                            </div>
+                            <small *ngIf="discountValidated && selectedTicketId === ticket.id" class="text-success">
+                              <i class="bi bi-check-circle me-1"></i>
+                              Discount applied! New price: ${{ discountedPrice }}
+                            </small>
+                          </div>
+                        </div>
                         <!-- Dynamic button based on ticket status -->
                         <button *ngIf="ticket.availableTickets <= 0"
                                 disabled
@@ -143,7 +156,11 @@
                         <button *ngIf="ticket.availableTickets > 0 && !hasReachedPurchaseLimit(ticket)"
                                 class="btn btn-{{getColorClass(ticket.type)}} w-100"
                                 (click)="reserveTicket(ticket)">
-                          <i class="bi bi-ticket-perforated me-1"></i> Reserve Now
+                          <i class="bi bi-ticket-perforated me-1"></i>
+                          Reserve Now
+                          <span *ngIf="selectedTicketId === ticket.id && discountValidated">
+                            (${{ discountedPrice }})
+                          </span>
                         </button>
                       </div>
                     </div>
