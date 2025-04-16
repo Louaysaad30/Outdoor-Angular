@@ -1,0 +1,35 @@
+<div class="chat-message-list">
+    <ul class="list-unstyled chat-list chat-user-list" id="userList">
+      <li *ngFor="let user of users; index as i" [ngClass]="{'active bg-light rounded': selectedUser === user, 'bg-primary': selectedUser === user}" class="mb-2">
+        <a href="javascript:void(0);" class="text-decoration-none text-body" (click)="selectUser(user)">
+          <div class="d-flex align-items-center">
+            <!-- Avatar utilisateur -->
+            <div class="flex-shrink-0 chat-user-img align-self-center me-3">
+              <div class="position-relative avatar-sm">
+                <ng-container *ngIf="!user.image; else imageBlock">
+                  <div class="avatar-title rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold text-uppercase" style="width: 40px; height: 40px;">
+                    {{ user.nom?.charAt(0) || '' }}{{ user.prenom?.charAt(0) || '' }}
+                  </div>
+                </ng-container>
+                <ng-template #imageBlock>
+                  <img [src]="user.image || 'assets/images/default-avatar.jpg'" class="rounded-circle img-fluid userprofile" alt="" style="width: 40px; height: 40px;">
+                </ng-template>
+                <!-- Badge statut -->
+                <span 
+                  class="position-absolute bottom-0 end-0 border border-white rounded-circle"
+                  [ngClass]="user.etat=='ONLINE' ? 'bg-success' : 'bg-danger'" 
+                  style="width: 10px; height: 10px;">
+                </span>
+              </div>
+            </div>
+  
+            <!-- Nom utilisateur -->
+            <div class="flex-grow-1 overflow-hidden">
+              <p class="text-truncate mb-0 fw-medium">{{ user.nom }} {{ user.prenom }}</p>
+            </div>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
