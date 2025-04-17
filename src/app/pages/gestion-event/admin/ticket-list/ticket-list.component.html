@@ -356,32 +356,32 @@
 
             <div class="table-responsive table-card">
               <table class="table table-centered align-middle table-custom-effect table-nowrap mb-0">
-                <thead class="table-light">
+                <thead class="text-muted">
                   <tr>
-                    <th scope="col" class="sortable" [class.asc]="sortColumn === 'userId' && sortDirection === 'asc'"
-                        [class.desc]="sortColumn === 'userId' && sortDirection === 'desc'"
-                        (click)="sortReservations('userId')">
+                    <th class="sort cursor-pointer" (click)="sortReservations('userId')">
                       User
+                      <i *ngIf="sortColumn === 'userId'"
+                         [ngClass]="{'bi-sort-up': sortDirection === 'asc', 'bi-sort-down': sortDirection === 'desc'}"></i>
                     </th>
-                    <th scope="col" class="sortable" [class.asc]="sortColumn === 'email' && sortDirection === 'asc'"
-                        [class.desc]="sortColumn === 'email' && sortDirection === 'desc'"
-                        (click)="sortReservations('email')">
+                    <th class="sort cursor-pointer" (click)="sortReservations('email')">
                       Email
+                      <i *ngIf="sortColumn === 'email'"
+                         [ngClass]="{'bi-sort-up': sortDirection === 'asc', 'bi-sort-down': sortDirection === 'desc'}"></i>
                     </th>
-                    <th scope="col" class="sortable" [class.asc]="sortColumn === 'reservationCode' && sortDirection === 'asc'"
-                        [class.desc]="sortColumn === 'reservationCode' && sortDirection === 'desc'"
-                        (click)="sortReservations('reservationCode')">
+                    <th class="sort cursor-pointer" (click)="sortReservations('reservationCode')">
                       Reservation Code
+                      <i *ngIf="sortColumn === 'reservationCode'"
+                         [ngClass]="{'bi-sort-up': sortDirection === 'asc', 'bi-sort-down': sortDirection === 'desc'}"></i>
                     </th>
-                    <th scope="col" class="sortable" [class.asc]="sortColumn === 'finalPrice' && sortDirection === 'asc'"
-                        [class.desc]="sortColumn === 'finalPrice' && sortDirection === 'desc'"
-                        (click)="sortReservations('finalPrice')">
+                    <th class="sort cursor-pointer" (click)="sortReservations('finalPrice')">
                       Final Price
+                      <i *ngIf="sortColumn === 'finalPrice'"
+                         [ngClass]="{'bi-sort-up': sortDirection === 'asc', 'bi-sort-down': sortDirection === 'desc'}"></i>
                     </th>
-                    <th scope="col" class="sortable" [class.asc]="sortColumn === 'appliedDiscountCode' && sortDirection === 'asc'"
-                        [class.desc]="sortColumn === 'appliedDiscountCode' && sortDirection === 'desc'"
-                        (click)="sortReservations('appliedDiscountCode')">
+                    <th class="sort cursor-pointer" (click)="sortReservations('appliedDiscountCode')">
                       Discount
+                      <i *ngIf="sortColumn === 'appliedDiscountCode'"
+                         [ngClass]="{'bi-sort-up': sortDirection === 'asc', 'bi-sort-down': sortDirection === 'desc'}"></i>
                     </th>
                     <th scope="col">Actions</th>
                   </tr>
@@ -427,10 +427,12 @@
               </table>
 
               <!-- No results message -->
-              <div id="noresult" *ngIf="filteredReservations.length === 0" class="text-center py-4">
-                <i class="ph-magnifying-glass fs-1 text-primary"></i>
-                <h5 class="mt-2">Sorry! No Result Found</h5>
-                <p class="text-muted mb-0">We couldn't find any reservations matching your search criteria.</p>
+              <div class="noresult" [style.display]="filteredReservations.length === 0 ? 'block' : 'none'">
+                <div class="text-center py-4">
+                  <i class="ph-magnifying-glass fs-1 text-primary"></i>
+                  <h5 class="mt-2">Sorry! No Result Found</h5>
+                  <p class="text-muted mb-0">We couldn't find any reservations matching your search criteria.</p>
+                </div>
               </div>
             </div>
           </div>
