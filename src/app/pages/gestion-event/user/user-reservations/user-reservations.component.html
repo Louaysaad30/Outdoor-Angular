@@ -45,7 +45,7 @@
                 <div class="card-body m-2 p-4">
                   <div class="d-flex align-items-center mb-3">
                     <div class="ms-auto">
-                      <h2 class="mb-0">${{ reservation.ticket.price }} <small class="fs-sm text-muted">per ticket</small></h2>
+                      <h2 class="mb-0">${{ reservation.finalPrice }} <small class="fs-sm text-muted">per ticket</small></h2>
                     </div>
                   </div>
 
@@ -62,7 +62,23 @@
                         </div>
                       </div>
                     </li>
+                    <!-- When discount is applied -->
+                    <ng-container *ngIf="reservation.appliedDiscountCode; else noDiscount">
+                      <div class="d-flex align-items-center">
+                        <i class="ri-coupon-3-fill text-success me-1"></i>
+                        Discount Applied: <b>{{ reservation.appliedDiscountCode }}</b>
+                      </div>
+                    </ng-container>
+
+                    <!-- When no discount is applied -->
+                    <ng-template #noDiscount>
+                      <div class="d-flex align-items-center">
+                        <i class="ri-close-circle-line text-muted me-1"></i>
+                        <span class="text-muted">NO Discount Applied</span>
+                      </div>
+                    </ng-template>
                   </ul>
+
 
                   <div class="mt-3 pt-2">
                     <button type="button" (click)="cancelReservation(reservation.id!)" class="btn btn-outline-danger w-100">

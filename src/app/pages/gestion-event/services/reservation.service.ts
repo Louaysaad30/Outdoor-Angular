@@ -64,7 +64,6 @@ import { Injectable } from '@angular/core';
         }
 
 
-        // reservation.service.ts - Add this method
         createReservationWithDiscount(reservation: TicketReservation, discountCode: string | null): Observable<TicketReservation> {
           return this.http.post<TicketReservation>(
             `${this.apiUrl}`,
@@ -75,4 +74,20 @@ import { Injectable } from '@angular/core';
             }
           );
         }
+
+
+        getEventParticipants(eventId: number): Observable<any[]> {
+          return this.http.get<any[]>(`${this.apiUrl}/event/${eventId}/participants`);
+        }
+
+        getAllEventParticipants(): Observable<Map<number, any[]>> {
+          return this.http.get<Map<number, any[]>>(`${this.apiUrl}/events/participants`);
+        }
+
+
+        getTicketReservations(ticketId: number): Observable<any[]> {
+          return this.http.get<any[]>(`${this.apiUrl}/ticket/${ticketId}`)
+            .pipe(catchError(this.handleError));
+        }
+
       }

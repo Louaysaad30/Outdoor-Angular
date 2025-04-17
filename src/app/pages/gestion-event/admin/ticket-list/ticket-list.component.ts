@@ -10,7 +10,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
   import { TicketService } from '../../services/ticket.service';
   import { Ticket, TicketType } from '../../models/ticket.model';
   import { Event } from '../../models/event.model';
-
+import {ReservationService} from "../../services/reservation.service";
+import { TicketReservation } from '../../models/ticketReservation.model';
+import Swal from "sweetalert2";
   @Component({
     selector: 'app-ticket-list',
     standalone: true,
@@ -55,14 +57,20 @@ import { Component, OnInit, ViewChild } from '@angular/core';
     sortColumn: string = '';
     sortDirection: string = 'asc';
 
-    // Modal references
     @ViewChild('ticketModal', { static: false }) ticketModal?: ModalDirective;
     @ViewChild('deleteModal', { static: false }) deleteModal?: ModalDirective;
+    @ViewChild('reservationsModal', { static: false }) reservationsModal?: ModalDirective;
+    selectedTicket: any = null;
+    ticketReservations: TicketReservation[] = [];
+    loadingReservations: boolean = false;
+    reservationSearchTerm: string = '';
+    filteredReservations: TicketReservation[] = [];
 
     constructor(
       private formBuilder: UntypedFormBuilder,
       private ticketService: TicketService,
-      private eventService: EventService
+      private eventService: EventService,
+      private reservationService: ReservationService
     ) { }
 
     ngOnInit(): void {
@@ -388,4 +396,190 @@ pageChanged(event: PageChangedEvent): void {
         default: return 'secondary';
       }
     }
+
+
+showTicketReservations(ticket: any) {
+  this.selectedTicket = ticket;
+  this.loadingReservations = true;
+  this.ticketReservations = [];
+  this.filteredReservations = [];
+  this.reservationSearchTerm = '';
+
+  this.reservationsModal?.show();
+
+  this.reservationService.getTicketReservations(ticket.id).subscribe({
+    next: (data: any[]) => {
+      // Process the enhanced response structure
+      this.ticketReservations = data.map(item => {
+        // Combine reservation data with user data
+        return {
+          ...item.reservation,
+          user: item.user
+        };
+      });
+      this.filteredReservations = this.ticketReservations;
+      this.loadingReservations = false;
+    },
+    error: (error) => {
+      console.error('Error loading ticket reservations:', error);
+      this.loadingReservations = false;
+    }
+  });
+}
+
+
+filterReservations() {
+  if (!this.reservationSearchTerm.trim()) {
+    this.filteredReservations = this.ticketReservations;
+    return;
+  }
+
+  const term = this.reservationSearchTerm.toLowerCase().trim();
+
+  this.filteredReservations = this.ticketReservations.filter(r => {
+    // Get user fields, safely handling undefined values
+    const firstName = (r.user?.prenom || '').toLowerCase();
+    const lastName = (r.user?.nom || '').toLowerCase();
+    const email = (r.user?.email || '').toLowerCase();
+    const userId = r.userId?.toString() || '';
+    const reservationCode = (r.reservationCode || '').toLowerCase();
+
+    // Create full name combinations for better searching
+    const fullName = `${firstName} ${lastName}`.trim();
+    const reversedFullName = `${lastName} ${firstName}`.trim();
+
+    // Check if search term is in any of the fields
+    return userId.includes(term) ||
+           reservationCode.includes(term) ||
+           firstName.includes(term) ||
+           lastName.includes(term) ||
+           email.includes(term) ||
+           fullName.includes(term) ||
+           reversedFullName.includes(term);
+  });
+}
+exportReservationsList() {
+  if (!this.ticketReservations.length) return;
+
+  const csvContent = [
+    // Enhanced header row with user details
+    ['User ID', 'User Name', 'Email', 'Reservation Code', 'Final Price', 'Discount Applied'].join(','),
+    // Data rows with user details
+    ...this.ticketReservations.map(r => [
+      r.userId,
+      `${r.user?.prenom || ''} ${r.user?.nom || ''}`.trim() || 'Unknown',
+      r.user?.email || 'N/A',
+      r.reservationCode || 'N/A',
+      r.finalPrice || 'N/A',
+      r.appliedDiscountCode || 'None'
+    ].join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.setAttribute('download', `reservations-ticket-${this.selectedTicket?.id}-${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+confirmCancelReservation(reservation: TicketReservation) {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: 'You want to cancel this reservation?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, cancel it!',
+    cancelButtonText: 'No, keep it'
+  }).then((result: { isConfirmed: boolean }) => {
+    if (result.isConfirmed && reservation.id) {
+      // Call the service to cancel the reservation
+      this.reservationService.deleteReservation(reservation.id).subscribe({
+        next: () => {
+          // Remove the cancelled reservation from the list
+          this.ticketReservations = this.ticketReservations.filter(
+            r => r.id !== reservation.id
+          );
+          this.filterReservations(); // Refresh the filtered list
+          Swal.fire('Cancelled!', 'The reservation has been cancelled.', 'success');
+        },
+        error: (error) => {
+          console.error('Error cancelling reservation:', error);
+          Swal.fire('Error', 'Failed to cancel reservation.', 'error');
+        }
+      });
+    }
+  });
+}
+cancelReservation(reservationId: number) {
+  this.reservationService.deleteReservation(reservationId).subscribe({
+    next: () => {
+      // Update the ticket data (available tickets count)
+      this.selectedTicket.availableTickets++;
+
+      // Remove from displayed lists
+      this.ticketReservations = this.ticketReservations.filter(r => r.id !== reservationId);
+      this.filteredReservations = this.filteredReservations.filter(r => r.id !== reservationId);
+
+      Swal.fire('Cancelled!', 'The reservation has been cancelled.', 'success');
+    },
+    error: (error) => {
+      console.error('Error cancelling reservation:', error);
+      Swal.fire('Error', 'Failed to cancel reservation.', 'error');
+    }
+  });
+}
+
+sortReservations(column: string) {
+  // Toggle direction if same column is clicked
+  if (this.sortColumn === column) {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    this.sortColumn = column;
+    this.sortDirection = 'asc';
+  }
+
+  // Create a copy and sort it
+  this.filteredReservations = [...this.filteredReservations].sort((a, b) => {
+    let valA: any;
+    let valB: any;
+
+    // Handle different column types
+    switch(column) {
+      case 'userId':
+        valA = a.userId || 0;
+        valB = b.userId || 0;
+        break;
+      case 'email':
+        valA = a.user?.email?.toLowerCase() || '';
+        valB = b.user?.email?.toLowerCase() || '';
+        break;
+      case 'reservationCode':
+        valA = a.reservationCode?.toLowerCase() || '';
+        valB = b.reservationCode?.toLowerCase() || '';
+        break;
+      case 'finalPrice':
+        valA = a.finalPrice || 0;
+        valB = b.finalPrice || 0;
+        break;
+      case 'appliedDiscountCode':
+        valA = a.appliedDiscountCode?.toLowerCase() || '';
+        valB = b.appliedDiscountCode?.toLowerCase() || '';
+        break;
+      default:
+        valA = a[column as keyof TicketReservation] || '';
+        valB = b[column as keyof TicketReservation] || '';
+    }
+
+    // Compare and sort
+    const result = valA < valB ? -1 : valA > valB ? 1 : 0;
+    return this.sortDirection === 'asc' ? result : -result;
+  });
+}
+
+
   }

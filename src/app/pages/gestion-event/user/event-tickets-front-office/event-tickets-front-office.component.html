@@ -116,17 +116,17 @@
 
                         <div class="my-3">
                           <div class="d-flex align-items-center mb-2">
-                            <button class="btn btn-sm btn-outline-{{getColorClass(ticket.type)}}"
-                                    (click)="toggleDiscountForm(ticket)" type="button">
-                              <i class="bi bi-tag-fill me-1"></i> Have a discount code?
-                            </button>
+                           <button class="btn btn-sm btn-outline-{{getColorClass(ticket.type)}} w-100"
+                                   (click)="toggleDiscountForm(ticket)" type="button">
+                             <i class="bi bi-tag-fill me-1"></i> Have a discount code?
+                           </button>
                           </div>
 
                           <!-- Collapsible discount code form -->
                           <div *ngIf="showDiscountForm && selectedTicketId === ticket.id" class="mt-2">
                             <div class="input-group">
                               <input type="text" class="form-control"
-                                     placeholder="Enter discount code"
+                                     placeholder="Enter the code"
                                      [(ngModel)]="discountCode">
                               <button class="btn btn-{{getColorClass(ticket.type)}}"
                                       type="button"

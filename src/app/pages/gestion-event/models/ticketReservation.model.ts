@@ -6,6 +6,14 @@ export class TicketReservation {
   ticketId?: number; // Add this field
   ticket?: Ticket;
   reservationCode?: string;
+  appliedDiscountCode ?: string;
+  finalPrice ?: number
+  user?: {
+    id?: number;
+    nom?: string;
+    prenom?: string;
+    email?: string;
+  };
 
   constructor(reservation?: Partial<TicketReservation>) {
     if (reservation) {
@@ -13,6 +21,5 @@ export class TicketReservation {
     }
   }
 
-  appliedDiscountCode ?: string;
-  finalPrice ?: number;
+;
 }
