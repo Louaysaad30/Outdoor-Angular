@@ -1,0 +1,126 @@
+<!-- Breadcrumbs -->
+<app-breadcrumbs title="Category" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+
+<!-- Search and Add Button -->
+<div class="row align-items-center mb-4 g-2">
+  <div class="col-lg-3 col-md-4 me-auto">
+    <div class="search-box">
+      <input type="text" class="form-control search" placeholder="Search for category or something..."
+             [(ngModel)]="term" (keyup)="filterdata()">
+      <i class="ri-search-line search-icon"></i>
+    </div>
+  </div>
+  <div class="col-md-auto">
+    <a href="javascript:void(0);" class="btn btn-secondary" (click)="openAddModal()">
+      <i class="bi bi-plus-circle align-baseline me-1"></i> Add Category
+    </a>
+  </div>
+</div>
+
+<!-- Category Cards -->
+<div class="row row-cols-xl-5 row-cols-sm-2 row-cols-1">
+  <<div class="col" *ngFor="let cat of categories; let i = index; trackBy: trackById">
+    <div class="card card-animate text-center" [attr.id]="'category-card-' + i">
+      <div class="card-body p-4">
+        <div class="avatar-md mx-auto mb-4 d-flex align-items-center justify-content-center"
+             style="width:100px;height:100px;background:white;border-radius:8px;">
+          <img [src]="cat.imageUrl"
+               (load)="applyBackgroundFromImage(cat.imageUrl, i)"
+               alt="{{cat.nom}}"
+               style="max-width: 100%; max-height: 100%; object-fit: contain;">
+        </div>
+        <h5 class="text-truncate">{{ cat.nom }}</h5>
+        <p class="text-muted mb-0">{{ cat.formations.length || 0 }}+ Formations Available</p>
+      </div>
+    </div>
+  </div>
+  
+  </div>
+
+<!-- No Result -->
+<div class="noresult" *ngIf="categories.length === 0">
+  <div class="text-center py-4">
+    <i class="ph-magnifying-glass fs-1 text-primary"></i>
+    <h5 class="mt-2">Sorry! No Result Found</h5>
+    <p class="text-muted mb-0">We've searched more than 150+ Courses but did not find any Category for your search.</p>
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="row align-items-center mb-3" id="pagination-element">
+  <div class="col-sm">
+    <div class="text-muted text-center text-sm-start">
+      Showing <span class="fw-semibold">{{categories.length}}</span> of
+      <span class="fw-semibold">{{categorieslist.length}}</span> Results
+    </div>
+  </div>
+  <div class="col-sm-auto mt-3 mt-sm-0">
+    <pagination class="pagination-wrap hstack justify-content-center gap-2"
+                [totalItems]="categorieslist.length"
+                [(ngModel)]="currentPage"
+                [itemsPerPage]="itemsPerPage"
+                (pageChanged)="pageChanged($event)">
+    </pagination>
+  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div bsModal #addCategory="bs-modal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Add Category</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="addCategory.hide()" aria-label="Close"></button>
+      </div>
+
+      <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="tablelist-form" novalidate autocomplete="off">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Category Image <span class="text-danger">*</span></label>
+            <dropzone class="dropzone"
+                      [config]="dropzoneConfig"
+                      [message]="'Drop files here or click to upload.'"
+                      (addedFile)="onFileAdded($event)">
+            </dropzone>
+
+            <ul class="list-unstyled mt-2" *ngIf="uploadedFiles.length > 0">
+              <li *ngFor="let file of uploadedFiles">
+                <div class="d-flex align-items-center border rounded p-2">
+                  <img *ngIf="file.dataURL" [src]="file.dataURL" alt="preview"
+                       class="img-fluid rounded me-3" style="width: 60px; height: 60px; object-fit: contain;">
+                  <div class="flex-grow-1">
+                    <strong>{{ file.name }}</strong><br>
+                    <small>{{ file.size }} bytes</small>
+                  </div>
+                  <button class="btn btn-sm btn-danger ms-2" type="button" (click)="removeFile(file)">Delete</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="mb-3">
+            <label for="category-title-input" class="form-label">Category Title <span class="text-danger">*</span></label>
+            <input type="text" id="category-title-input" class="form-control" formControlName="name" placeholder="Enter category title">
+          </div>
+
+          <div class="mb-3">
+            <label for="category-description-input" class="form-label">Category Description <span class="text-danger">*</span></label>
+            <textarea id="category-description-input"
+                      class="form-control"
+                      formControlName="description"
+                      placeholder="Enter category description"
+                      rows="3"
+                      style="resize: none;"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-danger" (click)="addCategory.hide()">
+            <i class="bi bi-x-lg me-1"></i> Close
+          </button>
+          <button type="submit" class="btn btn-primary">Add Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

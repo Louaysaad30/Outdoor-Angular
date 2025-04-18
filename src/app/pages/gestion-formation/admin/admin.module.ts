@@ -6,6 +6,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module'; // Import shared module if app-breadcrumbs is part of it
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { HttpClientModule } from '@angular/common/http';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+
 
 @NgModule({
   declarations: [
@@ -14,6 +16,7 @@ import { HttpClientModule } from '@angular/common/http';
   imports: [
     CommonModule,
     AdminRoutingModule,
+    BsDropdownModule.forRoot(), // Initialize dropdown module
     ReactiveFormsModule,
     FormsModule,
     SharedModule,

@@ -24,13 +24,15 @@ export class FormationListService {
     return this.http.get<any[]>(this.sponsorUrl);
   }
 
-  // ✅ Pour ajouter une formation avec image
   createFormationWithImage(formData: FormData): Observable<any> {
     return this.http.post(this.baseUrl + '/upload', formData);
   }
 
- 
-   updateFormationWithImage(formData: FormData, id: number): Observable<any> {
-   return this.http.put(`${this.baseUrl}/upload/${id}`, formData);
+  updateFormationWithImage(formData: FormData, id: number): Observable<any> {
+    return this.http.put(`${this.baseUrl}/upload/${id}`, formData);
+  }
+
+  deleteFormation(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`);
   }
 }
