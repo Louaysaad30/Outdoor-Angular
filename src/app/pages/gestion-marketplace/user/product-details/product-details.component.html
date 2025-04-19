@@ -45,7 +45,7 @@
                 (mouseenter)="isHovered = true"
                 (mouseleave)="isHovered = false"
                 (error)="handleImageError($event)"
-               
+
               />
             </div>
           </div>
@@ -115,7 +115,7 @@
               <div class="text-muted">
                 Price:
                 <span class="text-primary fs-4 fw-bold"
-                  >${{ productdetail.prixProduit }}</span
+                  >{{ productdetail.prixProduit }} DT</span
                 >
               </div>
               <div class="vr"></div>
@@ -198,7 +198,7 @@
                   <tr>
                     <th scope="row">Price</th>
                     <td class="fw-medium text-primary">
-                      ${{ productdetail.prixProduit }}
+                      {{ productdetail.prixProduit }} DT
                     </td>
                   </tr>
                   <tr>

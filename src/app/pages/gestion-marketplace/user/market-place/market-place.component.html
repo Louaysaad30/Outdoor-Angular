@@ -60,7 +60,7 @@
             <div class="accordion-body">
               <div class="price-range">
                 <div class="mb-3">
-                  <label class="form-label">Min Price: ${{ minPrice }}</label>
+                  <label class="form-label">Min Price: {{ minPrice }} DT</label>
                   <input
                     type="range"
                     class="form-range"
@@ -71,7 +71,7 @@
                   />
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Max Price: ${{ maxPrice }}</label>
+                  <label class="form-label">Max Price: {{ maxPrice }} DT</label>
                   <input
                     type="range"
                     class="form-range"
@@ -121,7 +121,7 @@
                   </div>
                   <div class="flex-grow-1 ms-3">
                     <h6 class="mb-0 text-truncate">{{ product.nomProduit }}</h6>
-                    <p class="small text-muted mb-0">${{ product.prixProduit }}</p>
+                    <p class="small text-muted mb-0">{{ product.prixProduit }} DT</p>
                   </div>
                   <div class="flex-shrink-0">
                     <button
@@ -251,7 +251,7 @@
             <!-- Info produit -->
             <div class="flex-grow-1">
               <!-- flex-grow-1 pour l'espace restant -->
-              <h5 class="fs-5 mb-2">${{ product.prixProduit }}</h5>
+              <h5 class="fs-5 mb-2">{{ product.prixProduit }} DT</h5>
               <h6 class="text-truncate mb-1">{{ product.nomProduit }}</h6>
               <p class="text-muted small mb-2">
                 {{ product.categorie?.nomCategorie }}

@@ -161,7 +161,7 @@
                                                 <span class="text-muted fw-normal text-wrap d-block">Delivery within
                                                     24hrs.</span>
                                             </span>
-                                            <span class="fs-3xl float-end mt-2 text-wrap d-block fw-semibold">${{expressDeliveryFee}}</span>
+                                            <span class="fs-3xl float-end mt-2 text-wrap d-block fw-semibold">{{expressDeliveryFee}} DT</span>
                                         </label>
                                     </div>
                                 </div>
@@ -233,7 +233,7 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-2">
                                 <span class="text-muted">Total amount:</span>
-                                <span class="fw-bold fs-5">${{getDisplayTotal()}}</span>
+                                <span class="fw-bold fs-5">{{getDisplayTotal()}} DT</span>
                             </div>
                         </div>
                     </div>
@@ -266,35 +266,35 @@
                                 </td>
                                 <td>
                                     <h5 class="fs-md">{{item.produit.nomProduit}}</h5>
-                                    <p class="text-muted fw-medium mb-0">${{item.produit.prixProduit}} x {{item.quantite}}</p>
+                                    <p class="text-muted fw-medium mb-0">{{item.produit.prixProduit}} x {{item.quantite}} DT</p>
                                 </td>
-                                <td class="text-end fw-semibold">${{item.produit.prixProduit * item.quantite}}</td>
+                                <td class="text-end fw-semibold">{{item.produit.prixProduit * item.quantite}} DT</td>
                             </tr>
                             <!-- Summary rows -->
                             <tr>
                                 <td class="fw-semibold" colspan="2">Sub Total :</td>
-                                <td class="fw-semibold text-end">${{subtotal}}</td>
+                                <td class="fw-semibold text-end">{{subtotal}} DT</td>
                             </tr>
                             <tr>
                                 <td colspan="2">Service Fee :</td>
-                                <td class="text-end">${{flatFee}}</td>
+                                <td class="text-end">{{flatFee}} DT</td>
                             </tr>
                             <tr *ngIf="expressDelivery">
                                 <td colspan="2">Express Delivery :</td>
-                                <td class="text-end">${{expressDeliveryFee}}</td>
+                                <td class="text-end">{{expressDeliveryFee}} DT</td>
                             </tr>
                             <tr *ngIf="environmentFriendly">
                                 <td colspan="2">Environment Friendly Service :</td>
-                                <td class="text-end">${{environmentFriendlyFee}}</td>
+                                <td class="text-end">{{environmentFriendlyFee}} DT</td>
                             </tr>
                             <tr *ngIf="carePackage">
                                 <td colspan="2">Care Package Service :</td>
-                                <td class="text-end">${{carePackageFee}}</td>
+                                <td class="text-end">{{carePackageFee}} DT</td>
                             </tr>
                             <tr class="border-top border-dashed">
-                                <th colspan="2">Total (USD) :</th>
+                                <th colspan="2">Total (DT) :</th>
                                 <td class="text-end">
-                                    <span class="fw-semibold">${{getDisplayTotal()}}</span>
+                                    <span class="fw-semibold">{{getDisplayTotal()}} DT</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -316,7 +316,7 @@
                                 future generations.</p>
                         </div>
                         <div class="flex-shrink-0 fw-medium">
-                            ${{environmentFriendlyFee}}
+                            {{environmentFriendlyFee}} DT
                         </div>
                         <div class="flex-shrink-0">
                             <div class="form-check form-switch">
@@ -334,7 +334,7 @@
                                 joyous occasions, such as engagements.</p>
                         </div>
                         <div class="flex-shrink-0 fw-medium">
-                            ${{carePackageFee}}
+                            {{carePackageFee}} DT
                         </div>
                         <div class="flex-shrink-0">
                             <div class="form-check form-switch">

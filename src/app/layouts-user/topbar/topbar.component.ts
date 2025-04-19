@@ -63,7 +63,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   currentUser: any;
 
   cartItems: LigneCommande[] = [];
-  serviceFee: number = 1.99; // Fixed service fee
+  serviceFee: number = 1; // Fixed service fee
   totalPrice: number = 0;
 
   private cartUpdateSubscription: Subscription = new Subscription();

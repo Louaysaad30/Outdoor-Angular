@@ -61,7 +61,7 @@
                     </a>
                   </h6>
                   <p class="mb-2 text-muted small">{{item.produit?.categorie?.nomCategorie || 'Product'}}</p>
-                  <p class="mb-0 fw-semibold">${{item.prix || (item.produit?.prixProduit || 0)}}</p>
+                  <p class="mb-0 fw-semibold">{{item.prix || (item.produit?.prixProduit || 0)}} DT</p>
                 </div>
 
                 <!-- Quantity Controls -->
@@ -81,7 +81,7 @@
 
                 <!-- Price and Delete -->
                 <div class="col-md-2 col-6 text-end">
-                  <p class="mb-2 fw-bold">${{((item.prix || (item.produit?.prixProduit || 0)) * item.quantite) | number:'1.2-2'}}</p>
+                  <p class="mb-2 fw-bold">{{((item.prix || (item.produit?.prixProduit || 0)) * item.quantite) | number:'1.2-2'}} DT</p>
                   <button type="button" class="btn btn-sm p-0" (click)="deleteLigneCommande(item.idLigneCommande)"
                           style="color: #dc3545; background: transparent; transition: all 0.2s;">
                     <i class="bi bi-trash me-1"></i> Remove
@@ -104,16 +104,16 @@
           <div class="mb-4">
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Subtotal</span>
-              <span>${{subtotal | number:'1.2-2'}}</span>
+              <span>{{subtotal | number:'1.2-2'}} DT</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Service Fee</span>
-              <span>${{flatFee | number:'1.2-2'}}</span>
+              <span>{{flatFee | number:'1.2-2'}} DT</span>
             </div>
             <hr>
             <div class="d-flex justify-content-between fw-bold">
               <span>Total</span>
-              <span class="text-primary">${{getDisplayTotal() | number:'1.2-2'}}</span>
+              <span class="text-primary">{{getDisplayTotal() | number:'1.2-2'}} DT</span>
             </div>
           </div>
 
