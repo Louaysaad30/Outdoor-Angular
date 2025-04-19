@@ -153,6 +153,17 @@ import {FormsModule} from "@angular/forms";
 
 
     reserveTicket(ticket: Ticket): void {
+
+      if (!this.canReserveTickets()) {
+        this.showToastNotification(
+          this.isEventCanceled()
+            ? 'Cannot reserve tickets for canceled events'
+            : 'Cannot reserve tickets for finished events',
+          'warning'
+        );
+        return;
+      }
+
       if (!this.userId) {
         this.router.navigate(['/auth/login']);
         return;
@@ -269,4 +280,30 @@ import {FormsModule} from "@angular/forms";
         this.discountValidated = false;
       }
     }
+
+    // Add these methods to your EventTicketsFrontOfficeComponent class
+    isEventCanceled(): boolean {
+      return this.event?.status === 'CANCELED';
+    }
+
+    isEventFinished(): boolean {
+      if (!this.event) return false;
+
+      // Check status is FINISHED
+      if (this.event.status === 'FINISHED') return true;
+
+      // Check if current date is after end date
+      if (this.event.endDate) {
+        const now = new Date();
+        const endDate = new Date(this.event.endDate);
+        return now > endDate;
+      }
+
+      return false;
+    }
+
+    canReserveTickets(): boolean {
+      return !this.isEventCanceled() && !this.isEventFinished();
+    }
+
   }
