@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Store } from '@ngrx/store';
@@ -16,6 +16,8 @@ import { ChatService } from '../../services/chat.service';
 import { UserListComponent } from "../user-list/user-list.component";
 import { ConversationComponent } from "../conversation/conversation.component";
 import { ChatMessage } from '../../models/chat-message';
+import { Subscription } from 'rxjs';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
   selector: 'app-chat-conv',
@@ -39,7 +41,9 @@ import { ChatMessage } from '../../models/chat-message';
   templateUrl: './chat-conv.component.html',
   styleUrl: './chat-conv.component.scss'
 })
-export class ChatConvComponent {channeldata: any
+export class ChatConvComponent implements OnDestroy  {
+    private subscriptions = new Subscription();
+    channeldata: any
     contactData: any
     chatData: any
     searchText: any;
@@ -71,22 +75,40 @@ export class ChatConvComponent {channeldata: any
     selectedUser:any;
     currentUser: any;
     messages: ChatMessage[] | undefined;
-    constructor(private userService: UserServiceService, private chatService: ChatService,public formBuilder: UntypedFormBuilder, private datePipe: DatePipe, public store: Store) { }
+    constructor(    private websocketService: WebsocketService
+,        private userService: UserServiceService, private chatService: ChatService,public formBuilder: UntypedFormBuilder, private datePipe: DatePipe, public store: Store) { }
 
     ngOnInit(): void {
       this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       console.log("Utilisateur connecté :", this.currentUser.id);
         // Chat Data Get Function
-        this.loadUsers();
         // Validation
         this.formData = this.formBuilder.group({
             message: ['', [Validators.required]],
         });
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          this.websocketService.connect(token, this.currentUser.id);
+        }
+        this.subscriptions.add(
+            this.websocketService.connectedUsers$.subscribe(connectedUsers => {
+              console.log('Received connected users:', connectedUsers);
+              this.updateUserStatuses(connectedUsers);
+            })
+          );
+          this.loadUsers();
+
     }
+  
     loadUsers() {
         this.userService.getUsersWithConversations(this.currentUser.id).subscribe((res) => {
-          this.users = res; // This is the array of users you showed from Swagger
-          console.log('Utilisateurs:', this.users.map(user => user.nom + ' ' + user.prenom));
+          this.users = res;
+          console.log('Initial users loaded:', this.users);
+          
+          // After loading users, check if we have any connected users data
+          if (this.websocketService.connectedUsersSubject.value.length > 0) {
+            this.updateUserStatuses(this.websocketService.connectedUsersSubject.value);
+          }
         });
       }
       
@@ -99,7 +121,28 @@ export class ChatConvComponent {channeldata: any
         console.log('Utilisateur sélectionné:', user);
         this.loadChatForUser(user);
     }
-  
+    
+    updateUserStatuses(connectedUsers: any[]) {
+        console.log('Updating user statuses with:', connectedUsers);
+        
+        // Create a map of connected user IDs for quick lookup
+        const connectedUserIds = new Set(connectedUsers.map(u => u.id));
+        
+        // Update the status for each user
+        this.users = this.users.map(user => {
+          return {
+            ...user,
+            etat: connectedUserIds.has(user.id) ? 'ONLINE' : 'OFFLINE'
+          };
+        });
+        
+        console.log('Updated users list:', this.users);
+      }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+    this.websocketService.disconnect(this.currentUser.id);
+  }
     loadChatForUser(user: any): void {
         // Fetch and load messages for the selected user
         const senderId = this.currentUser.id;

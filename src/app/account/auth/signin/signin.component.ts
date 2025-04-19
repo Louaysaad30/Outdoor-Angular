@@ -53,7 +53,7 @@ export class SigninComponent {
             (user: User) => {
               this.currentUser = user;
               const authority = this.currentUser.authorities[0]?.authority;
-              this.websocketService.connect(localStorage.getItem('authToken')); // pass userId too
+              this.websocketService.connect(localStorage.getItem('authToken'),this.currentUser.id); // pass userId too
               Swal.fire({
                 icon: 'success',
                 title: 'Login Successful',

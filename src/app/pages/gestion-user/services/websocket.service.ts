@@ -3,86 +3,108 @@ import { Client, IMessage, Stomp } from '@stomp/stompjs';
 import * as SockJS from 'sockjs-client';
 import { Subject, Observable, BehaviorSubject } from 'rxjs';
 import { ChatMessage } from '../models/chat-message';
+import { User } from 'src/app/store/Authentication/auth.models';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebsocketService {
-  stompClient: Client | null = null;  // STOMP client instance to handle WebSocket connection
+  constructor(private route: Router) { }
+  stompClient: Client | null = null;
 
-  // Subject to manage the stream of incoming messages
   private messageSubject = new BehaviorSubject<any>(null);
-  public messages$ = this.messageSubject.asObservable();  // Observable for components to subscribe to messages
-
-  // Subject to track the connection status (connected/disconnected)
+  public messages$ = this.messageSubject.asObservable();
   private connectionSubject = new BehaviorSubject<boolean>(false);
   public connectionStatus$ = this.connectionSubject.asObservable();
+  public connectedUsersSubject = new BehaviorSubject<any[]>([]);
+  public connectedUsers$ = this.connectedUsersSubject.asObservable();
 
-  
-  connect (token:any){
+  connect(token: any, userId: any) {
+    const socket = new SockJS('http://localhost:9096/ws');
 
-    const socket = new SockJS('http://localhost:9096/ws');  // Initialize the SockJS WebSocket connection to the server
-
-        this.stompClient = new Client({
-          webSocketFactory: () => socket,
-          reconnectDelay: 5000,
-          debug: (str) => console.log(str),
-          connectHeaders: {  // MUST include these
-              Authorization: `Bearer ${token}`,
-              'X-Client-Type': 'angular'  // Optional but helpful for debugging
-          }
-      });
-
-      this.stompClient.onConnect = (frame) => {
-          console.log('Connected to:', frame.headers['server']);  // Should show server info
-          this.connectionSubject.next(true);
-      };
-      
-      this.stompClient.onStompError = (frame) => {
-          console.error('Connection error:', frame.headers['message']);
-      };
+    this.stompClient = new Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000,
+      debug: (str) => console.log(str),
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+        'userId': userId.toString(),
+        'X-Client-Type': 'angular'
+      }
+    });
 
     this.stompClient.onConnect = (frame) => {
-        console.log('Connected to WebSocket server');
-        this.connectionSubject.next(true);
+      console.log('Connected to WebSocket server');
+      this.connectionSubject.next(true);
+      this.sendOnlineStatus(userId);
 
-          // Fix subscription path
-        this.stompClient?.subscribe('/queue/messages', (message) => {
-          console.log('Received message:', message.body);  // Log the received message
-              this.messageSubject.next(JSON.parse(message.body)); 
-          });
-        };
+      this.stompClient?.subscribe('/queue/messages', (message) => {
+        console.log('Received message:', message.body);
+        this.messageSubject.next(JSON.parse(message.body));
+      });
 
-    // Handle errors reported by the STOMP broker
-    this.stompClient.onStompError = (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);  // Log the error message
-      console.error('Additional details: ' + frame.body);  // Log additional error details
+      this.stompClient?.subscribe('/topic/connected-users', (message) => {
+        const users = JSON.parse(message.body);
+        this.connectedUsersSubject.next(users);
+      });
     };
-    
-    this.stompClient?.activate();
+
+    this.stompClient.onDisconnect = (frame) => {
+      this.connectionSubject.next(false);
+    };
+
+    this.stompClient.onStompError = (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+    };
+
+    this.stompClient.activate();
   }
 
   sendMessage(payload: any) {
     if (this.stompClient && this.stompClient.connected) {
-      // Log the message being sent and the sender
       console.log(`Message sent by ${payload.sender} to ${payload.recipient}: ${payload.content}`);
-
-      // Publish (send) the message to the '/app/chat.sendMessage' destination
       this.stompClient.publish({
         destination: '/app/chat',
-        body: JSON.stringify(payload)  // Convert the message to JSON and send
+        body: JSON.stringify(payload)
       });
     } else {
-      // Log an error if the WebSocket connection is not active
       console.error('WebSocket is not connected. Unable to send message.');
     }
-
   }
 
-  disconnect(){
-    if (this.stompClient) {
-      this.stompClient.deactivate();  // Deactivate the WebSocket connection
+  sendOnlineStatus(userId: number) {
+    if (this.stompClient && this.stompClient.connected) {
+      this.stompClient.publish({
+        destination: '/app/user.online',
+        body: JSON.stringify({ userId })
+      });
     }
   }
-  
+
+  sendOfflineStatus(userId: any) {
+    if (this.stompClient && this.stompClient.connected) {
+      this.stompClient.publish({
+        destination: '/app/user.offline',
+        body: JSON.stringify({ userId })
+      });
+    } else {
+      console.warn('Cannot send offline status: STOMP client not connected');
+    }
+  }
+
+  disconnect(user: any) {
+    // ✅ First send the offline status if connected
+    this.sendOfflineStatus(user);
+    console.log('User is offline:', user);
+
+    setTimeout(() => {
+      this.stompClient?.deactivate(); // Then deactivate
+      this.connectionSubject.next(false);
+      console.log('WebSocket disconnected');
+      this.route.navigate(['/auth/logout']);
+    }, 1000); // Give it some time to send the message
+
+  }
 }

@@ -52,6 +52,7 @@ export class ConversationComponent implements OnInit , OnChanges {
         this.loadMessages();  // Reload messages to ensure the view is updated
       }
     });
+    
   }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['user'] && !changes['user'].firstChange) {
@@ -77,7 +78,7 @@ export class ConversationComponent implements OnInit , OnChanges {
     }
     
     console.log('Connecting to WebSocket with token');
-    this.websocket.connect(this.token);
+    this.websocket.connect(this.token,this.currentUser.id);
   }
   
   sendMessage(): void {
