@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { ModalDirective } from 'ngx-bootstrap/modal';
 import { CheckoutService } from '../../services/checkout.service';
 import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { Commande } from '../../models/Commande';
@@ -10,6 +11,7 @@ import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product';
 import { Status } from '../../models/Status';
 import { ToastrService } from 'ngx-toastr'; // Add this import
+import { UpdateStateCommand } from '../../models/DTO/UpdateStateCommand';
 
 interface OrderWithItems extends Commande {
   orderItems?: LigneCommande[];
@@ -22,10 +24,22 @@ interface OrderWithItems extends Commande {
   templateUrl: './order-overview.component.html'
 })
 export class OrderOverviewComponent implements OnInit {
+  // Reference to the modal component
+  @ViewChild('cancelOrderModal', { static: false }) cancelOrderModal?: ModalDirective;
+  // Add this ViewChild reference
+  @ViewChild('cannotCancelModal', { static: false }) cannotCancelModal?: ModalDirective;
+
   userId: number = 1; // Static user ID for now
   orders: OrderWithItems[] = [];
+  cancelledOrders: OrderWithItems[] = [];
   isLoading: boolean = false;
   errorMessage: string | null = null;
+  isCancellingOrder = false;
+  selectedOrderId?: number;
+  selectedOrderNumber?: string;
+  selectedOrderDate?: Date;
+  // Add a property to track if the order has a delivery person assigned
+  selectedOrderHasDelivery = false;
 
   constructor(
     private checkoutService: CheckoutService,
@@ -42,22 +56,42 @@ export class OrderOverviewComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = null;
 
-    // Use the specific method to get orders for this user with 'exist' status
-    this.checkoutService.getCommandesByUserIdAndStatus(this.userId, 'exist')
+    // Use the specific method to get all orders for this user
+    this.checkoutService.getCommandesByUserId(this.userId)
       .subscribe({
         next: (orders: Commande[]) => {
-          this.orders = orders.map(order => ({
+          // Separate active and cancelled orders
+          const activeOrders = orders.filter(order => order.etat !== 'CANCELED');
+          const cancelledOrders = orders.filter(order => order.etat === 'CANCELED');
+
+          // Process active orders
+          this.orders = activeOrders.map(order => ({
             ...order,
             orderItems: [],
             isLoadingItems: true,
-            showItems: true // Always show items
+            showItems: true
           }));
 
+          // Process cancelled orders with minimal data
+          this.cancelledOrders = cancelledOrders.map(order => ({
+            ...order,
+            orderItems: [],
+            isLoadingItems: false,
+            showItems: false
+          }));
+
+          // Load items for active orders only
           if (this.orders.length > 0) {
             this.loadAllOrderItems();
           }
 
+          // Optionally load minimal data for cancelled orders if needed
+          if (this.cancelledOrders.length > 0) {
+            this.loadCancelledOrdersBasicInfo();
+          }
+
           console.log('User orders loaded:', this.orders);
+          console.log('Cancelled orders:', this.cancelledOrders);
           this.isLoading = false;
         },
         error: (error) => {
@@ -294,5 +328,213 @@ export class OrderOverviewComponent implements OnInit {
 
     // Join the lines with newline characters for better readability when scanned
     return lines.join('\n');
+  }
+
+  // Add this method to your component class
+  cancelOrder(orderId: number): void {
+    if (!orderId) {
+      this.errorMessage = "Cannot cancel order: Invalid order ID";
+      return;
+    }
+
+    if (confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+      this.isCancellingOrder = true;
+
+      const updateCommand: UpdateStateCommand = {
+        idCommande: orderId,
+        etat: Status.CANCELED // Using the enum value from Status.ts
+      };
+
+      this.checkoutService.updateOrderStatus(updateCommand).subscribe({
+        next: (updatedOrder) => {
+          // Find and update the order in the local array
+          const index = this.orders.findIndex(o => o.idCommande === orderId);
+          if (index !== -1) {
+            this.orders[index].etat = Status.CANCELED; // Update the status locally
+          }
+
+          // Show success message
+          alert('Your order has been successfully cancelled.');
+          this.isCancellingOrder = false;
+        },
+        error: (error) => {
+          console.error('Error cancelling order:', error);
+          this.errorMessage = 'Failed to cancel the order. Please try again later.';
+          this.isCancellingOrder = false;
+        }
+      });
+    }
+  }
+
+  // Modify the openCancelModal method to check if the order has a delivery person
+  openCancelModal(order: Commande): void {
+    if (!order.idCommande) return;
+
+    this.selectedOrderId = order.idCommande;
+    this.selectedOrderNumber = order.OrderNumber;
+    this.selectedOrderDate = order.dateCommande;
+
+    // Check if the order has a delivery person assigned
+    // You'll need to modify this based on your actual data structure
+    if (order.livraison !== null && order.livraison !== undefined) {
+      this.selectedOrderHasDelivery = true;
+
+      // Show the "cannot cancel" modal instead
+      if (this.cannotCancelModal) {
+        this.cannotCancelModal.show();
+      } else {
+        console.error('Cannot cancel modal directive not available');
+        this.toastr.error('Cannot display modal. The order cannot be cancelled as it has been assigned to delivery.');
+      }
+    } else {
+      this.selectedOrderHasDelivery = false;
+
+      // Show the normal cancel modal
+      if (this.cancelOrderModal) {
+        this.cancelOrderModal.show();
+      } else {
+        console.error('Modal directive not available');
+        this.toastr.error('Cannot open cancel dialog. Please try again.');
+      }
+    }
+  }
+
+  confirmCancel() {
+    if (!this.selectedOrderId) return;
+
+    // Safety check: Verify again that the order can be cancelled
+    // This prevents cancellation if selectedOrderHasDelivery was somehow bypassed
+    if (this.selectedOrderHasDelivery) {
+      console.error('Attempted to cancel an order with delivery assigned');
+      this.toastr.error('This order cannot be cancelled as it has already been assigned for delivery');
+
+      // Hide cancel modal and show the cannot cancel modal
+      if (this.cancelOrderModal) {
+        this.cancelOrderModal.hide();
+      }
+
+      if (this.cannotCancelModal) {
+        this.cannotCancelModal.show();
+      }
+
+      // Reset cancellation state
+      this.isCancellingOrder = false;
+      return;
+    }
+
+    this.isCancellingOrder = true;
+
+    // Find the order to double check livraison status
+    const orderToCancel = this.orders.find(o => o.idCommande === this.selectedOrderId);
+
+    // Extra safety: Check one more time if the order has livraison
+    if (orderToCancel && orderToCancel.livraison) {
+      console.error('Cannot cancel order with active delivery');
+      this.toastr.error('Unable to cancel: This order is already in delivery process');
+
+      // Hide cancel modal and show the cannot cancel modal
+      if (this.cancelOrderModal) {
+        this.cancelOrderModal.hide();
+      }
+
+      if (this.cannotCancelModal) {
+        this.cannotCancelModal.show();
+      }
+
+      this.isCancellingOrder = false;
+      return;
+    }
+
+    const updateCommand: UpdateStateCommand = {
+      idCommande: this.selectedOrderId,
+      etat: Status.CANCELED
+    };
+
+    this.checkoutService.updateOrderStatus(updateCommand).subscribe({
+      next: (updatedOrder) => {
+        // Find the order in the active orders array
+        const index = this.orders.findIndex(o => o.idCommande === this.selectedOrderId);
+
+        if (index !== -1) {
+          // Get the cancelled order and remove it from active orders
+          const cancelledOrder = { ...this.orders[index], etat: Status.CANCELED };
+          this.orders.splice(index, 1);
+
+          // Add to cancelled orders list
+          this.cancelledOrders.push(cancelledOrder);
+
+          // Update UI to reflect changes
+          this.toastr.success('Your order has been successfully cancelled');
+        } else {
+          this.toastr.info('Order status updated but UI refresh required');
+          // Optionally reload all orders here if needed
+        }
+
+        // Hide the modal
+        if (this.cancelOrderModal) {
+          this.cancelOrderModal.hide();
+        }
+
+        // Reset state
+        this.isCancellingOrder = false;
+        this.selectedOrderId = undefined;
+        this.selectedOrderNumber = undefined;
+        this.selectedOrderDate = undefined;
+        this.selectedOrderHasDelivery = false;
+      },
+      error: (error) => {
+        console.error('Error cancelling order:', error);
+        this.errorMessage = 'Failed to cancel the order. Please try again later.';
+        this.toastr.error('Failed to cancel your order');
+        this.isCancellingOrder = false;
+      }
+    });
+  }
+
+  // Add this method to get the item count for cancelled orders
+  getOrderItemCount(order: OrderWithItems): number {
+    if (order.orderItems && order.orderItems.length > 0) {
+      return order.orderItems.length;
+    }
+
+    // If order items haven't been loaded, estimate from total amount
+    return Math.max(1, Math.floor(order.montantCommande / 50));
+  }
+
+  // Add this method to load basic info for cancelled orders
+  loadCancelledOrdersBasicInfo(): void {
+    // For each cancelled order, you might want to get just the count of items
+    // rather than all the details
+    this.cancelledOrders.forEach(order => {
+      if (order.idCommande) {
+        this.ligneCommandeService.getByCommandeId(order.idCommande)
+          .subscribe({
+            next: (lignes) => {
+              order.orderItems = lignes;
+            },
+            error: (error) => {
+              console.error(`Error loading basic info for cancelled order ${order.idCommande}:`, error);
+            }
+          });
+      }
+    });
+  }
+
+  // Add this method to handle reordering
+  reorderItems(order: OrderWithItems): void {
+    // Implement reordering logic - create a new cart with the same items
+    this.toastr.info('Creating new order with the same items...', 'Reordering');
+
+    // You'll need to implement this based on your cart service
+    // For example:
+    // this.cartService.clearCart();
+    // order.orderItems?.forEach(item => {
+    //   this.cartService.addToCart({
+    //     productId: item.produit?.idProduit,
+    //     quantity: item.quantite,
+    //     price: item.prix
+    //   });
+    // });
+    // this.router.navigate(['/marketplacefront/checkout']);
   }
 }

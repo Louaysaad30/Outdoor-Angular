@@ -13,6 +13,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { Router } from '@angular/router';
 import { Status } from '../../models/Status';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
     selector: 'app-checkout',
@@ -24,10 +25,9 @@ export class CheckoutComponent implements OnInit {
     cartData: LigneCommande[] = [];
     subtotal: number = 0;
     flatFee: number = 1;
-    userId: number = 1; // Replace with actual user ID from your auth service
+    CurrentUser:any;// Replace with actual user ID from your auth service
     expressDelivery: boolean = false;
     expressDeliveryFee: number = 10; // $10 for express delivery
-
 
     // Add new properties for additional services
     environmentFriendly: boolean = false;
@@ -38,18 +38,24 @@ export class CheckoutComponent implements OnInit {
     checkoutForm!: FormGroup;
     submitted = false;
 
+    // Add these properties
+    selectedPaymentMethod = 'cod'; // Default to cash on delivery
+    processingPayment = false;
+
     constructor(
         private formBuilder: FormBuilder,
         private ligneCommandeService: LignedecommandeService,
         private productService: ProductService,
         private panierService: PanierService,
         private checkoutService: CheckoutService,
-        private router: Router
+        private router: Router,
+        private toastr: ToastrService
     ) {
         this.initForm(); // Initialize form in constructor
     }
 
     ngOnInit(): void {
+      this.CurrentUser = JSON.parse(localStorage.getItem('user')!);
         this.loadCartData();
     }
 
@@ -136,87 +142,239 @@ export class CheckoutComponent implements OnInit {
         this.confirmOrderModal?.show();
     }
 
-    submitOrder(): void {
-        const formValues = this.checkoutForm.value;
-        const newOrder = new Commande();
+    redirectToOverviewOrProcessOrder() {
+        if (this.selectedPaymentMethod === 'stripe') {
+            // For Stripe payment, first save the order with pending status
+            const order = this.createOrderObject();
+            order.etat = Status.IN_PROGRESS; // Set status to pending for Stripe
 
-        // Personal Information with direct form values
-        newOrder.nom = formValues.name;
-        newOrder.phone = Number(formValues.phoneNumber);
-        newOrder.email = formValues.email;
-        newOrder.city = formValues.city;
-        newOrder.gouvernement = formValues.gouvernorate;
-        newOrder.adresse = formValues.address;
-        newOrder.userId = this.userId; // Static user ID for testing
-        newOrder.etat = Status.IN_PROGRESS; // Set initial status to IN_PROGRESS
-        newOrder.OrderNumber = this.generateComplexOrderNumber(this.userId); // Complex order number to avoid duplication
+            this.processingPayment = true;
 
-        // Shipping Method
-        newOrder.shippingMethod = this.expressDelivery ? 'ExpressDelivery' : 'FreeDelivery';
-
-        // Additional Services
-        if (this.environmentFriendly && this.carePackage) {
-            newOrder.AdditionalService = 3;
-        } else if (this.carePackage) {
-            newOrder.AdditionalService = 2;
-        } else if (this.environmentFriendly) {
-            newOrder.AdditionalService = 1;
-        } else {
-            newOrder.AdditionalService = 0;
-        }
-
-        // Order total and date
-        newOrder.montantCommande = Number(this.getDisplayTotal().toFixed(2));
-        newOrder.dateCommande = new Date();
-
-        // Set ligne commande
-        newOrder.ligneCommande = this.cartData;
-
-        this.checkoutService.addCommande(newOrder).subscribe({
-            next: (response) => {
-                console.log('Order created successfully:', response);
-
-                // After order creation, affect each ligne commande to the order
-                const affectationPromises = this.cartData.map(ligne =>
-                    this.ligneCommandeService.affecterCommandeToLigneCommande(
-                        ligne.idLigneCommande!,
-                        response.idCommande!
-                    ).toPromise()
-                );
-
-                // Find the panier ID from the cart data
-                if (this.cartData.length > 0 && this.cartData[0].panier && this.cartData[0].panier.idPanier) {
-                    const panierId = this.cartData[0].panier.idPanier;
-                    console.log('Panier ID:', panierId);
-                    // Mark the panier as validated using the existping validatePanier method
-                    this.panierService.validatePanier(panierId).subscribe({
-                        next: (validatedPanier) => {
-                            console.log('Panier marked as validated:', validatedPanier);
-                        },
-                        error: (error) => {
-                            console.error('Error validating panier:', error);
+            this.checkoutService.addCommande(order).subscribe({
+                next: (savedOrder) => {
+                    // Associate each ligne commande with the new order
+                    const orderAssociationPromises = this.cartData.map(item => {
+                        if (!item.idLigneCommande) {
+                            console.error('Missing idLigneCommande for item:', item);
+                            return Promise.reject('Missing required ligne commande ID');
                         }
+                        if (!savedOrder.idCommande) {
+                          console.error('Missing idCommande in savedOrder:', savedOrder);
+                          return Promise.reject('Missing required order ID');
+                      }
+                        return this.ligneCommandeService.affecterCommandeToLigneCommande(
+                            item.idLigneCommande,
+                            savedOrder.idCommande
+                        ).toPromise();
                     });
-                }
 
-                // Wait for all affectations to complete
-                Promise.all(affectationPromises)
-                    .then(() => {
-                        console.log('All ligne commandes affected successfully');
-                        this.confirmOrderModal?.hide();
-                        // Redirect after successful order and affectations
-                        this.router.navigate(['/marketplacefront/user/overview']);
-                    })
-                    .catch(error => {
-                        console.error('Error affecting ligne commandes:', error);
-                        alert('Error finalizing order. Please try again.');
+                    Promise.all(orderAssociationPromises)
+                        .then(() => {
+                            this.processingPayment = false;
+                            this.confirmOrderModal?.hide();
+
+                            // Store the order ID in session storage for later use
+                            sessionStorage.setItem('pendingOrderId', savedOrder.idCommande?.toString() || '0');
+
+                            // Redirect to overview page
+                            this.router.navigate(['/marketplacefront/user/overview'], {
+                                queryParams: {
+                                    pendingPayment: true,
+                                    orderId: savedOrder.idCommande,
+                                    amount: this.getDisplayTotal()
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            this.processingPayment = false;
+                            console.error('Error associating line items with order:', error);
+                            this.toastr.error('There was an error finalizing your order. Please try again.', 'Order Error');
+                        });
+                },
+                error: (error) => {
+                    this.processingPayment = false;
+                    console.error('Error saving order:', error);
+                    this.toastr.error('There was an error processing your order. Please try again.', 'Order Failed');
+                }
+            });
+        } else {
+            // For COD, process normally
+            this.submitOrder();
+        }
+    }
+
+    // Update your existing submitOrder method to handle only COD
+    submitOrder() {
+        this.processingPayment = true;
+
+        // Create order object from form and cart data
+        const order = this.createOrderObject();
+
+        if (this.selectedPaymentMethod === 'cod') {
+            // Process normal COD order
+            this.checkoutService.addCommande(order).subscribe({
+                next: (response) => {
+                    // After order is created, associate each ligne commande with the order
+                    const orderAssociationPromises = this.cartData.map(item => {
+                      if (!item.idLigneCommande) {
+                        console.error('Missing idLigneCommande for item:', item);
+                        return Promise.reject('Missing required ligne commande ID');
+                    }
+                    if (!response.idCommande) {
+                      console.error('Missing idCommande in savedOrder:', response);
+                      return Promise.reject('Missing required order ID');
+                  }
+                        return this.ligneCommandeService.affecterCommandeToLigneCommande(
+
+                            item.idLigneCommande,
+                            response.idCommande
+                        ).toPromise();
                     });
-            },
-            error: (error) => {
-                console.error('Error creating order:', error);
-                alert('Error creating order. Please try again.');
-            }
-        });
+
+                    // Wait for all ligne commande associations to complete
+                    Promise.all(orderAssociationPromises)
+                        .then(() => {
+                            this.processingPayment = false;
+                            this.confirmOrderModal?.hide();
+                            // Show success message
+                            this.toastr.success('Your order has been placed successfully!', 'Order Confirmed');
+
+                            // Redirect to overview page instead of order success page for COD orders
+                            this.router.navigate(['/marketplacefront/user/overview'], {
+                                queryParams: {
+                                    orderComplete: true,
+                                    orderId: response.idCommande,
+                                    paymentMethod: 'cod'
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            this.processingPayment = false;
+                            console.error('Error associating line items with order:', error);
+                            this.toastr.error('There was an error finalizing your order. Please try again.', 'Order Error');
+                        });
+                },
+                error: (error) => {
+                    this.processingPayment = false;
+                    console.error('Error placing order:', error);
+                    this.toastr.error('There was an error processing your order. Please try again.', 'Order Failed');
+                }
+            });
+        } else if (this.selectedPaymentMethod === 'stripe') {
+            // Create a Stripe checkout session with order details
+            order.etat = Status.IN_PROGRESS;
+
+            this.checkoutService.addCommande(order).subscribe({
+                next: (savedOrder) => {
+                    // Associate each ligne commande with the new order
+                    const orderAssociationPromises = this.cartData.map(item => {
+                      if (!item.idLigneCommande) {
+                        console.error('Missing idLigneCommande for item:', item);
+                        return Promise.reject('Missing required ligne commande ID');
+                    }
+                    if (!savedOrder.idCommande) {
+                      console.error('Missing idCommande in savedOrder:', savedOrder);
+                      return Promise.reject('Missing required order ID');
+                  }
+                        return this.ligneCommandeService.affecterCommandeToLigneCommande(
+                            item.idLigneCommande,
+                            savedOrder.idCommande
+                        ).toPromise();
+                    });
+
+                    Promise.all(orderAssociationPromises)
+                        .then(() => {
+                            // Now create the Stripe session with the order ID
+                            const stripeData = {
+                                orderId: savedOrder.idCommande,
+                                orderAmount: this.getDisplayTotal(),
+                                orderItems: this.cartData.map(item => ({
+                                    productId: item.produit.idProduit,
+                                    productName: item.produit.nomProduit,
+                                    quantity: item.quantite,
+                                    price: item.produit.prixProduit
+                                })),
+                                customerEmail: this.checkoutForm.value.email,
+                                customerName: this.checkoutForm.value.name,
+                                successUrl: `${window.location.origin}/marketplacefront/payment-success?orderId=${savedOrder.idCommande}`,
+                                cancelUrl: `${window.location.origin}/marketplacefront/user/overview?orderId=${savedOrder.idCommande}`
+                            };
+
+                            this.checkoutService.createStripeCheckoutSession(stripeData).subscribe({
+                                next: (checkoutUrl) => {
+                                    // Redirect to Stripe checkout
+                                    window.location.href = checkoutUrl;
+                                },
+                                error: (error) => {
+                                    this.processingPayment = false;
+                                    console.error('Error creating Stripe session:', error);
+                                    this.toastr.error('There was an error setting up the payment. Please try again.', 'Payment Setup Failed');
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            this.processingPayment = false;
+                            console.error('Error associating line items with order:', error);
+                            this.toastr.error('There was an error finalizing your order. Please try again.', 'Order Error');
+                        });
+                },
+                error: (error) => {
+                    this.processingPayment = false;
+                    console.error('Error saving order before payment:', error);
+                    this.toastr.error('There was an error saving your order details. Please try again.', 'Order Failed');
+                }
+            });
+        }
+    }
+
+    // Helper method to create the order object
+    private createOrderObject(): Commande {
+        // Create a new order object with form data
+        const order: Commande = {
+            idCommande: 0, // New order, ID will be assigned by server
+            nom: this.checkoutForm.value.name,
+            phone: this.checkoutForm.value.phoneNumber,
+            email: this.checkoutForm.value.email,
+            city: this.checkoutForm.value.city,
+            gouvernement: this.checkoutForm.value.gouvernorate,
+            adresse: this.checkoutForm.value.address,
+            shippingMethod: this.expressDelivery ? 'EXPRESS' : 'STANDARD',
+            AdditionalService: this.getAdditionalServices(),
+            montantCommande: this.getDisplayTotal(),
+            dateCommande: new Date(),
+            ligneCommande: this.cartData.map(item => {
+                const ligneCmd = new LigneCommande();
+                ligneCmd.quantite = item.quantite;
+                ligneCmd.prix = item.produit.prixProduit;
+                ligneCmd.produit = item.produit; // Use the full Product object
+                ligneCmd.idProduit = item.produit.idProduit;
+                return ligneCmd;
+            }),
+            userId: this.CurrentUser.id, // Use the actual user ID from your auth service
+            etat: Status.IN_PROGRESS, // Default status
+            OrderNumber: this.generateOrderNumber(),
+            paymentMethod: this.selectedPaymentMethod // Add the selected payment method
+
+        };
+
+        return order;
+    }
+
+    // Helper method to generate a unique order number
+    private generateOrderNumber(): string {
+        const timestamp = new Date().getTime();
+        const randomPart = Math.floor(Math.random() * 1000);
+        return `ORD-${timestamp}-${randomPart}`;
+    }
+
+    // Helper method to get additional services as a number
+    private getAdditionalServices(): number {
+        // Convert service selections to a numeric code
+        // 0: No services, 1: Environment friendly only, 2: Care package only, 3: Both services
+        let serviceCode = 0;
+        if (this.environmentFriendly) serviceCode += 1;
+        if (this.carePackage) serviceCode += 2;
+        return serviceCode;
     }
 
     private generateComplexOrderNumber(userId: number): string {
@@ -237,7 +395,7 @@ export class CheckoutComponent implements OnInit {
     }
 
     loadCartData(): void {
-        this.panierService.getAllPaniersByUserId(this.userId).pipe(
+        this.panierService.getAllPaniersByUserId(this.CurrentUser.id).pipe(
             tap(paniers => console.log('All paniers received:', paniers)),
             switchMap(paniers => {
                 // Filter for non-validated paniers

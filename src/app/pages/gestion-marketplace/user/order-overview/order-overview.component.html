@@ -21,7 +21,7 @@
                         <div class="card-body">
                             <h5>You don't have any orders yet.</h5>
                             <p class="text-muted">Start exploring our products and add items to your cart!</p>
-                            <a routerLink="/marketplacefront/products" class="btn btn-primary">Shop Now</a>
+                            <a routerLink="/marketplacefront/user/market-place" class="btn btn-primary">Shop Now</a>
                         </div>
                     </div>
                 </div>
@@ -226,9 +226,24 @@
                                             <div class="col-sm-6 col-lg-6 col-xl-3">
                                                 <div class="text-center border border-dashed p-3 rounded">
                                                     <p class="text-muted mb-2">Order Status</p>
-                                                    <span class="badge" >
+                                                    <span class="badge" [ngClass]="{
+                                                        'bg-success': order.etat === 'DELIVERED',
+                                                        'bg-info': order.etat === 'IN_PROGRESS' || order.etat === 'SHIPPED',
+
+                                                        'bg-danger': order.etat === 'CANCELED'
+                                                    }">
                                                         {{ order.etat }}
                                                     </span>
+
+                                                    <!-- Cancel Order Button - Only displayed if order can be cancelled -->
+                                                    <div class="mt-2" *ngIf="order.etat === 'IN_PROGRESS'">
+                                                        <button class="btn btn-sm btn-danger"
+                                                                (click)="order.idCommande !== undefined && openCancelModal(order)"
+                                                                [disabled]="order.idCommande === undefined">
+                                                            <i class="bi bi-x-circle me-1"></i>
+                                                            Cancel Order
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -364,11 +379,7 @@
                                 <div class="card">
                                     <div class="card-header d-flex align-items-center flex-wrap gap-2">
                                         <h6 class="card-title flex-grow-1 mb-0">Order Status</h6>
-                                        <div class="flex-shrink-0">
-                                            <button type="button" class="btn btn-soft-primary btn-sm rounded-pill" (click)="order.idCommande ? downloadInvoice(order.idCommande, $event) : null">
-                                                <i class="ph-download-simple align-middle me-1"></i> Download Invoice
-                                            </button>
-                                        </div>
+
                                     </div>
                                     <div class="card-body">
                                         <div class="progress progress-step-arrow progress-info mb-4">
@@ -423,5 +434,174 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Cancelled Orders Section -->
+<div class="card mt-5" *ngIf="cancelledOrders && cancelledOrders.length > 0">
+  <div class="card-header">
+    <h5 class="card-title mb-0">
+      <i class="bi bi-x-circle me-2 text-danger"></i>Cancelled Orders
+    </h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Order #</th>
+            <th scope="col">Date</th>
+            <th scope="col">Total</th>
+            <th scope="col">Items</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of cancelledOrders">
+            <td>
+              <span class="badge bg-light text-dark">{{ order.OrderNumber }}</span>
+            </td>
+            <td>{{ order.dateCommande | date:'MMM d, yyyy' }}</td>
+            <td>{{ order.montantCommande | currency }}</td>
+            <td>
+              <span class="badge bg-light text-secondary">
+                {{ getOrderItemCount(order) }} item(s)
+              </span>
+            </td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary me-1"
+                      *ngIf="order.idCommande"
+                      (click)="downloadInvoice(order.idCommande)">
+                <i class="ph-download-simple"></i>
+              </button>
+            <!--   <button class="btn btn-sm btn-outline-success"
+                      (click)="reorderItems(order)">
+                <i class="ph-arrows-clockwise me-1"></i>Reorder
+              </button> -->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Order Confirmation Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center pb-4">
+        <div class="mb-4">
+          <i class="ph-warning-circle text-danger display-4"></i>
+        </div>
+        <h4 class="mb-3">Are you sure you want to cancel this order?</h4>
+        <p class="text-muted mb-4">
+          This action cannot be undone. The order will be marked as cancelled and you'll need to place a new order if you change your mind.
+        </p>
+        <div *ngIf="selectedOrderNumber" class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <i class="ph-info-circle me-2 fs-4"></i>
+            <div>
+              <strong>Order #{{ selectedOrderNumber }}</strong>
+              <div class="small text-muted">Placed on {{ selectedOrderDate | date:'MMM d, yyyy' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-top-0 pt-0 pb-3 px-4">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
+          No, Keep My Order
+        </button>
+        <button type="button" class="btn btn-danger rounded-pill px-4" [disabled]="isCancellingOrder" (click)="confirmCancel()">
+          <span *ngIf="!isCancellingOrder">Yes, Cancel Order</span>
+          <span *ngIf="isCancellingOrder">
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Cancelling...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Order Confirmation Modal -->
+<div bsModal #cancelOrderModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cancelOrderModal.hide()"></button>
+      </div>
+      <div class="modal-body text-center pb-4">
+        <div class="mb-4">
+          <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+        </div>
+        <h4 class="mb-3">Are you sure you want to cancel this order?</h4>
+        <p class="text-muted mb-4">
+          This action cannot be undone. The order will be marked as cancelled and you'll need to place a new order if you change your mind.
+        </p>
+        <div *ngIf="selectedOrderNumber" class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <div>
+              <strong>Order #{{ selectedOrderNumber }}</strong>
+              <div class="small text-muted">Placed on {{ selectedOrderDate | date:'MMM d, yyyy' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-top-0 pt-0 pb-3 px-4">
+        <button type="button" class="btn btn-light rounded-pill px-4" (click)="cancelOrderModal.hide()">
+          No, Keep My Order
+        </button>
+        <button type="button" class="btn btn-danger rounded-pill px-4" [disabled]="isCancellingOrder" (click)="confirmCancel()">
+          <span *ngIf="!isCancellingOrder">Yes, Cancel Order</span>
+          <span *ngIf="isCancellingOrder">
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Cancelling...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cannot Cancel Order Modal -->
+<div bsModal #cannotCancelModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="cannotCancelModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title" id="cannotCancelModalLabel">Cannot Cancel Order</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cannotCancelModal.hide()"></button>
+      </div>
+      <div class="modal-body text-center pb-4">
+        <div class="mb-4">
+          <i class="bi bi-truck text-info" style="font-size: 3rem;"></i>
+        </div>
+        <h4 class="mb-3">Sorry, this order cannot be cancelled</h4>
+        <p class="text-muted mb-4">
+          Your order has already been assigned to a delivery person and is in transit.
+          Once an order has been dispatched for delivery, it cannot be cancelled through the system.
+        </p>
+        <div *ngIf="selectedOrderNumber" class="alert alert-info">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <div>
+              <strong>Order #{{ selectedOrderNumber }}</strong>
+              <div class="small text-muted">Placed on {{ selectedOrderDate | date:'MMM d, yyyy' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-top-0 pt-0 pb-3 px-4">
+        <button type="button" class="btn btn-primary rounded-pill px-4" (click)="cannotCancelModal.hide()">
+          I Understand
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 

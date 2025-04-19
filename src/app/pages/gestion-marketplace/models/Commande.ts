@@ -18,7 +18,8 @@ export class Commande {
     userId!: number;
     etat!: Status;
     OrderNumber!: string;
-
+    livraison?: Livraison;
+    paymentMethod?: string;
 
     constructor() {
         this.dateCommande = new Date();

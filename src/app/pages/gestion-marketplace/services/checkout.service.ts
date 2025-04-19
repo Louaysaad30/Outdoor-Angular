@@ -5,6 +5,13 @@ import { Commande } from '../models/Commande';
 import { environment } from 'src/environments/environment';
 import { tap, catchError, map } from 'rxjs/operators';
 import { LigneCommande } from '../models/LigneCommande';
+import { Status } from '../models/Status';
+import { UpdateStateCommand } from '../models/DTO/UpdateStateCommand';
+import { method } from 'lodash';
+
+interface StripeCheckoutResponse {
+  checkoutUrl: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +19,38 @@ import { LigneCommande } from '../models/LigneCommande';
 export class CheckoutService {
 
   private baseUrl = 'http://localhost:9093/Commande';
+  private paymentUrl = 'http://localhost:9093/api/payment'; // Adjust if your payment endpoint is on a different URL
 
   constructor(private http: HttpClient) { }
+
+  // Create a Stripe checkout session and return the redirect URL
+  createStripeCheckoutSession(customData?: any): Observable<string> {
+    return this.http.post<StripeCheckoutResponse>(
+      `${this.paymentUrl}/create-checkout-session`,
+      customData || {}
+    ).pipe(
+      tap(response => console.log('Stripe checkout session created:', response)),
+      map(response => response.checkoutUrl), // Extract just the URL
+      catchError(error => {
+        console.error('Error creating Stripe checkout session:', error);
+        throw error;
+      })
+    );
+  }
+
+  // Method to redirect to Stripe checkout
+  redirectToStripeCheckout(): Observable<never> {
+    return this.createStripeCheckoutSession().pipe(
+      tap(checkoutUrl => {
+        // Redirect the browser to the Stripe checkout page
+        window.location.href = checkoutUrl;
+      }),
+      // This observable will never complete normally since we're redirecting
+      map(() => {
+        throw new Error('Redirect to payment gateway in progress');
+      })
+    );
+  }
 
   // Get all orders
   getAllCommandes(): Observable<Commande[]> {
@@ -39,7 +76,8 @@ export class CheckoutService {
         ligneCommande: commande.ligneCommande,
         userId: commande.userId,
         etat: commande.etat,
-        OrderNumber: commande.OrderNumber
+        OrderNumber: commande.OrderNumber,
+        paymentMethod: commande.paymentMethod,
     };
 
     return this.http.post<Commande>(
@@ -128,5 +166,30 @@ export class CheckoutService {
       // Extract just the blob body from the response and handle null case
       map(response => response.body || new Blob())
     );
+  }
+
+  updateOrderStatus(dto: UpdateStateCommand): Observable<Commande> {
+    return this.http.put<Commande>(
+      `${this.baseUrl}/updateStatus/${dto.idCommande}`,
+      dto
+    ).pipe(
+      tap(updatedOrder => console.log(`Order ${dto.idCommande} status updated`)),
+      catchError(error => {
+        console.error(`Error updating status for order ${dto.idCommande}:`, error);
+        throw error;
+      })
+    );
+  }
+
+  // Add this method to get all orders for a user
+  getCommandesByUserId(userId: number): Observable<Commande[]> {
+    return this.http.get<Commande[]>(`${this.baseUrl}/getByUserId/${userId}`)
+      .pipe(
+        tap(orders => console.log(`Found ${orders.length} orders for user ${userId}`)),
+        catchError(error => {
+          console.error('Error fetching orders by user:', error);
+          throw error;
+        })
+      );
   }
 }
