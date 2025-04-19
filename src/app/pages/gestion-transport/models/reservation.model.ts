@@ -1,7 +1,7 @@
 import { Vehicule } from "./vehicule.model";
 
 export interface Reservation {
-    id?: number;
+    id: number;
     fullName: string;
     phone: string;
     //vehicule: { id: number }; 

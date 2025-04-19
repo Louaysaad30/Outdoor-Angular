@@ -1,0 +1,233 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Admin Dashboard" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+    <!-- Total Vehicles -->
+    <div class="col-xxl-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-column h-100">
+                            <p class="fs-md text-muted mb-4">Total Vehicles</p>
+                            <h3 class="mb-0 mt-auto">
+                                <span class="counter-value" [countUp]="stats.totalVehicles"></span>
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-primary-subtle rounded fs-3">
+                                <i class="bi bi-truck text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!--end col-->
+    
+    <!-- Total Agencies -->
+    <div class="col-xxl-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-column h-100">
+                            <p class="fs-md text-muted mb-4">Total Agencies</p>
+                            <h3 class="mb-0 mt-auto">
+                                <span class="counter-value" [countUp]="stats.totalAgence"></span>
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-success-subtle rounded fs-3">
+                                <i class="bi bi-building text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!--end col-->
+    
+    <!-- Total Reservations -->
+    <div class="col-xxl-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-column h-100">
+                            <p class="fs-md text-muted mb-4">Total Reservations</p>
+                            <h3 class="mb-0 mt-auto">
+                                <span class="counter-value" [countUp]="stats.totalReservations"></span>
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-warning-subtle rounded fs-3">
+                                <i class="bi bi-calendar-check text-warning"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!--end col-->
+    
+    <!-- Total Reviews -->
+    <div class="col-xxl-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex">
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-column h-100">
+                            <p class="fs-md text-muted mb-4">Total Reviews</p>
+                            <h3 class="mb-0 mt-auto">
+                                <span class="counter-value" [countUp]="stats.totalReviews"></span>
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <span class="avatar-title bg-info-subtle rounded fs-3">
+                                <i class="bi bi-star-fill text-info"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!--end col-->
+</div><!--end row-->
+
+<!-- Agencies Table -->
+<div class="row">
+    <div class="col-xxl-12">
+      <div class="card">
+        <div class="card-header align-items-center d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Agencies</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+              <thead class="text-muted table-light">
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Phone</th>
+                  <th scope="col">Address</th>
+                  <th scope="col">Vehicles Count</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let agency of agence">
+                  <td>{{agency.id}}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="flex-shrink-0">
+                        <img src="assets/images/company/img-1.png" alt="" class="avatar-xs rounded-circle">
+                      </div>
+                      <div class="flex-grow-1">
+                        <a href="javascript:void(0);" class="fw-medium">{{agency.nom}}</a>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{agency.email}}</td>
+                  <td>{{agency.numero}}</td>
+                  <td>{{agency.adresse}}</td>
+                  <td>{{agency.vehicules?.length || 0}}</td>
+                  <td>
+                    <ul class="d-flex gap-2 list-unstyled mb-0">
+                      <li>
+                        <button class="btn btn-subtle-danger btn-icon btn-sm" 
+                                (click)="blockAgence(agency.id)">
+                          <i class="bi bi-ban"></i>
+                        </button>
+                      </li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr *ngIf="agence.length === 0">
+                  <td colspan="7" class="text-center py-4">No agencies found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Vehicles Table -->
+  <div class="row">
+    <div class="col-xxl-12">
+      <div class="card">
+        <div class="card-header align-items-center d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Vehicles</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+              <thead class="text-muted table-light">
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Vehicle</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Agency</th>
+                  <th scope="col">Seats</th>
+                  <th scope="col">Daily Rate</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let vehicle of vehicles">
+                  <td>{{vehicle.id}}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="flex-shrink-0">
+                        <img [src]="vehicle.image || 'assets/images/vehicle-placeholder.png'" 
+                             alt="" height="40" class="rounded">
+                      </div>
+                      <div class="flex-grow-1">
+                        <a href="javascript:void(0);" class="fw-medium">{{vehicle.modele}}</a>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{vehicle.type}}</td>
+                  <td>{{vehicle.agence.nom}}</td>
+                  <td>{{vehicle.nbPlace}}</td>
+                  <td>{{vehicle.prixParJour | currency:'TND':'symbol':'1.2-2'}}</td>
+                  <td>
+                    <span class="badge" [ngClass]="getVehicleStatusClass(vehicle)">
+                      {{getVehicleStatusText(vehicle)}}
+                    </span>
+                  </td>
+                  <td>
+                    <ul class="d-flex gap-2 list-unstyled mb-0">
+                      <li>
+                        <button class="btn btn-subtle-danger btn-icon btn-sm" 
+                        (click)="deleteVehicle(vehicle.id)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr *ngIf="vehicles.length === 0">
+                  <td colspan="8" class="text-center py-4">No vehicles found</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

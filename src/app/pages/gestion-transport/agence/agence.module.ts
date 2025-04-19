@@ -4,18 +4,27 @@ import { AgenceRoutingModule } from './agence-routing.module';
 import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AddVehiculeComponent } from './add-vehicule/add-vehicule.component';
-import { ListVehiculeAgenceComponent } from './list-vehicule-agence/list-vehicule-agence.component';
 import { UpdateVehiculeComponent } from './update-vehicule/update-vehicule.component';
-import { AgenceReservationsComponent } from './agence-reservations/agence-reservations.component';
+import { DashboardAgenceComponent } from './dashboard-agence/dashboard-agence.component';
 import { HttpClientModule } from '@angular/common/http';
+import { CountUpModule } from 'ngx-countup';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { PaginationModule } from 'ngx-bootstrap/pagination';
+import { ProgressbarModule } from 'ngx-bootstrap/progressbar';
+import { ModalModule } from 'ngx-bootstrap/modal';
+import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
+import { SharedModule } from 'src/app/shared/shared.module';
+import { NgxEchartsModule } from 'ngx-echarts';
+import { FlatpickrModule } from 'angularx-flatpickr';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 @NgModule({
   declarations: [
     AddVehiculeComponent,
-    ListVehiculeAgenceComponent,
     UpdateVehiculeComponent,
-    AgenceReservationsComponent
+    DashboardAgenceComponent,
   ],
   imports: [
     CommonModule,
@@ -23,6 +32,17 @@ import { HttpClientModule } from '@angular/common/http';
     FormsModule,
     ReactiveFormsModule, 
     HttpClientModule,
+    SharedModule,
+    BsDropdownModule,
+    CountUpModule,
+    PaginationModule.forRoot(),
+    ProgressbarModule.forRoot(),
+    ModalModule.forRoot(),
+    BsDatepickerModule.forRoot(),
+    NgxEchartsModule.forRoot({ echarts: () => import('echarts') }),
+    NgApexchartsModule,
+    FlatpickrModule.forRoot(),
+    NgbPaginationModule    
   ]
 })
 export class AgenceModule {

@@ -16,6 +16,12 @@ export class ReviewService {
     return this.http.get<Vehicule>(`${this.baseUrl}/vehicules/${id}`);
   }
 
+
+  
+  getAllReviews(): Observable<Review[]> {
+  return this.http.get<Review[]>(`${this.baseUrl}/all`);
+}
+
   getReviewsByVehicule(vehiculeId: number): Observable<Review[]> {
     return this.http.get<Review[]>(`${this.baseUrl}/${vehiculeId}`);  // Updated URL
   }

@@ -91,7 +91,7 @@ export class UpdateVehiculeComponent implements OnInit {
         setTimeout(() => {
           this.showToast = false;
           const agenceId = this.vehiculeForm.value.agenceId; // ID de l'agence
-          this.router.navigate([`/transportfront/agence/vehicules/list/agences/${agenceId}`]);
+          this.router.navigate([`/transportback/agence`]);
         }, 2000); // Laisse un peu de temps pour afficher le toast
       },
       error: err => console.error('Erreur mise à jour véhicule', err)
@@ -100,6 +100,6 @@ export class UpdateVehiculeComponent implements OnInit {
 
   onCancel(): void {
     const agenceId = this.vehiculeForm.value.agenceId; // Récupérer l'ID de l'agence
-    this.router.navigate([`/transportfront/agence/vehicules/list/agences/${agenceId}`]);
+    this.router.navigate([`/transportback/agence`]);
   }
 }

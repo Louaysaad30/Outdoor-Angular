@@ -8,17 +8,19 @@ import { ReservationService } from '../../services/reservation.service';
 })
 export class ReservationsComponent implements OnInit {
   reservations: any[] = [];
-  userId: number = 1;  
+  
+  currentUser: any ;  
   errorMessage: string = '';
 
   constructor(private reservationService: ReservationService) {}
 
   ngOnInit(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user')!);
     this.getReservations();
   }
 
   getReservations() {
-    this.reservationService.getReservationsByUserId(this.userId).subscribe(
+    this.reservationService.getReservationsByUserId(this.currentUser.id).subscribe(
       (data) => {
         this.reservations = data;
       },
