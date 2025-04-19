@@ -20,23 +20,19 @@
                     <div class="flex-grow-1">
                       <h5 class="mb-4">Chats</h5>
                     </div>
-                    
                   </div>
                   <div class="search-box">
                     <input type="text" class="form-control bg-light border-light" placeholder="Search here...">
                     <i class="ri-search-2-line search-icon"></i>
                   </div>
-                </div> <!-- .p-4 -->
-              
-                <ngx-simplebar class="chat-room-list ">
-                    <div class="chat-message-list">
-
-                  <!-- Pass the users array and listen to the user selection event -->
-                  <app-user-list [users]="users" (userSelected)="selectUser($event)"></app-user-list>
-                  </div>
-                </ngx-simplebar>
+                </div>
+                    <ngx-simplebar class="chat-room-list h-100">
+                        <div class="chat-message-list">
+                            <!-- Pass the users array and listen to the user selection event -->
+                            <app-user-list [users]="users" (userSelected)="selectUser($event)"></app-user-list>
+                        </div>
+                    </ngx-simplebar>
               </div>
-              
             <!-- end tab-pane -->
         </div>
         <!-- end tab content -->
@@ -46,16 +42,27 @@
     <!-- Start User chat -->
     <div class="user-chat w-100 overflow-hidden">
 
-        <div class="chat-content" >
-            <!-- start chat conversation section -->
-            <div class="w-100 overflow-hidden position-relative">
-                <!-- conversation user -->
-                <div class="">
-                    <div *ngIf="selectedUser">
-                        <app-conversation [user]="selectedUser"></app-conversation>
-                      </div>
-                    <!-- end chat-conversation -->
+        <div class="user-chat w-100 overflow-hidden d-flex flex-column" style="height: calc(100vh - 120px);">
+            <div class="chat-content flex-grow-1">
+                <!-- ... rest of your chat content ... -->
+                <div *ngIf="selectedUser; else selectUserPrompt">
+                    <app-conversation [user]="selectedUser"></app-conversation>
                 </div>
+                    <ng-template #selectUserPrompt>
+                        <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                            <div class="text-center p-4">
+                                <br><br><br><br>
+                                <div class="avatar-xl mx-auto mb-3">
+                                    <div class="avatar-title bg-soft-primary rounded-circle">
+                                        <i class="bi bi-person-plus fs-1 text-primary"></i>
+                                    </div>
+                                </div>
+                                <h5 class="mb-2">Select a chat</h5>
+                                <p class="text-muted mb-0">Choose a contact to start chatting</p>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <!-- end chat-conversation -->
             </div>
         </div>
     </div>

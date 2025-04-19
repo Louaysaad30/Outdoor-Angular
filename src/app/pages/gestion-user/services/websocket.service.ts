@@ -47,7 +47,8 @@ export class WebsocketService {
         this.connectionSubject.next(true);
 
           // Fix subscription path
-        this.stompClient?.subscribe('/queue/messages', (message: IMessage) => {
+        this.stompClient?.subscribe('/queue/messages', (message) => {
+          console.log('Received message:', message.body);  // Log the received message
               this.messageSubject.next(JSON.parse(message.body)); 
           });
         };
@@ -64,7 +65,7 @@ export class WebsocketService {
   sendMessage(payload: any) {
     if (this.stompClient && this.stompClient.connected) {
       // Log the message being sent and the sender
-      console.log(`Message sent by ${payload.sender}: ${payload.content}`);
+      console.log(`Message sent by ${payload.sender} to ${payload.recipient}: ${payload.content}`);
 
       // Publish (send) the message to the '/app/chat.sendMessage' destination
       this.stompClient.publish({

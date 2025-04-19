@@ -69,7 +69,7 @@ export class ChatConvComponent {channeldata: any
     bookmarkData: any;
     users: any[] = [];
     selectedUser:any;
-  currentUser: any;
+    currentUser: any;
     messages: ChatMessage[] | undefined;
     constructor(private userService: UserServiceService, private chatService: ChatService,public formBuilder: UntypedFormBuilder, private datePipe: DatePipe, public store: Store) { }
 
@@ -77,65 +77,60 @@ export class ChatConvComponent {channeldata: any
       this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       console.log("Utilisateur connecté :", this.currentUser.id);
         // Chat Data Get Function
-        this._fetchData();
         this.loadUsers();
         // Validation
         this.formData = this.formBuilder.group({
             message: ['', [Validators.required]],
         });
-
-        this.onListScroll();
     }
-  
-loadUsers() {
-  this.userService.getUsersWithConversations(this.currentUser.id).subscribe((res) => {
-    this.users = res; // Vérifie bien que res contient un tableau d'utilisateurs
-  });
-}
-    
-selectUser(user: any): void {
-    if (this.selectedUser === user) {
-      return;  // Do nothing if the same user is clicked again
-    }
-    this.selectedUser = user;
-    this.loadChatForUser(user);
-  }
-  
-  loadChatForUser(user: any): void {
-    // Fetch and load messages for the selected user
-    const senderId = this.currentUser.id;
-    const recipientId = user.id;
-  
-    this.chatService.checkChatRoom(senderId, recipientId).subscribe(room => {
-      if (room) {
-        this.loadMessages(senderId, recipientId, room.id);
-      } else {
-        // Create a new chat room if none exists
-        this.chatService.createChatRoom(senderId, recipientId).subscribe(newRoom => {
-          this.loadMessages(senderId, recipientId, newRoom.id);
+    loadUsers() {
+        this.userService.getUsersWithConversations(this.currentUser.id).subscribe((res) => {
+          this.users = res; // This is the array of users you showed from Swagger
+          console.log('Utilisateurs:', this.users.map(user => user.nom + ' ' + user.prenom));
         });
       }
-    });
-  }
-  
-  loadMessages(senderId: number, recipientId: number, chatRoomId: number) {
-    this.chatService.getChatMessages(senderId, recipientId).subscribe((msgs: ChatMessage[]) => {
-      this.messages = msgs;
-    });
-  }
-  
-
       
+    
+    selectUser(user: any): void {
+        if (this.selectedUser === user) {
+        return;  // Do nothing if the same user is clicked again
+        }
+        this.selectedUser = user;
+        console.log('Utilisateur sélectionné:', user);
+        this.loadChatForUser(user);
+    }
+  
+    loadChatForUser(user: any): void {
+        // Fetch and load messages for the selected user
+        const senderId = this.currentUser.id;
+        const recipientId = user.id;
+    
+        this.chatService.checkChatRoom(senderId, recipientId).subscribe({
+            next: (room) => {
+            this.loadMessages(senderId, recipientId, room);
+            console.log('Room:', room, 'Sender:', senderId, 'Recipient:', recipientId);
+            },
+            error: (err) => {
+            console.error('Error checking chat room:', err);
+            }
+        });
+        
+    }
+  
+    loadMessages(senderId: any, recipientId: any, chatRoomId: number) {
+
+        this.chatService.getChatMessages(senderId, recipientId).subscribe((msgs: ChatMessage[]) => {
+        this.messages = msgs;
+        });
+    }
+  
     openConversation(user: any): void {
       this.chatService.getChatRoomsForUser(user.id).subscribe(conversation => {
         console.log('Conversation ouverte :', conversation);
         // ici tu peux passer la conversation à une fenêtre de chat
       });
     }
-    // ngAfterViewInit() {
-    //     this.scrollRef.SimpleBar.getScrollElement().scrollTop = 300;
-    //     this.onListScroll();
-    // }
+
 
     closeoffcanvas() {
         document.querySelector('.chat-detail')?.classList.remove('show')
@@ -160,42 +155,7 @@ selectUser(user: any): void {
         return this.formData.controls;
     }
 
-    // Chat Data Fetch
-    private _fetchData() {
-
-        // Fetch Data
-        setTimeout(() => {
-            this.store.dispatch(fetchmessagesData());
-            this.store.select(selectData).subscribe((data: any) => {
-                this.messageData = cloneDeep(data);
-            })
-        }, 1200)
-        this.store.dispatch(fetchchatData());
-        this.store.select(selectcallslistData).subscribe((data: any) => {
-            this.chatData = data;
-        })
-        this.store.dispatch(fetchchannnelData());
-        this.store.select(selectchannelData).subscribe((data: any) => {
-            this.channeldata = data;
-        })
-        this.store.dispatch(fetchcontactData());
-        this.store.select(selectcontactData).subscribe((data: any) => {
-            this.contactData = data;
-        })
-        this.store.dispatch(fetchattachmentData());
-        this.store.select(selectattachmentData).subscribe((data: any) => {
-            this.attachementsData = data;
-        })
-        this.store.dispatch(fetchcallsData());
-        this.store.select(selectcallData).subscribe((data: any) => {
-            this.callsData = data;
-        })
-        this.store.dispatch(fetchbookmarkData());
-        this.store.select(selectbookmarkData).subscribe((data: any) => {
-            this.bookmarkData = data;
-        })
-
-    }
+  
 
     onListScroll() {
         if (this.scrollRef !== undefined) {

@@ -15,10 +15,11 @@
                   <img [src]="user.image || 'assets/images/default-avatar.jpg'" class="rounded-circle img-fluid userprofile" alt="" style="width: 40px; height: 40px;">
                 </ng-template>
                 <!-- Badge statut -->
+                <!-- In user-list.component.html -->
                 <span 
-                  class="position-absolute bottom-0 end-0 border border-white rounded-circle"
-                  [ngClass]="user.etat=='ONLINE' ? 'bg-success' : 'bg-danger'" 
-                  style="width: 10px; height: 10px;">
+                class="position-absolute bottom-0 end-0 border border-white rounded-circle"
+                [ngClass]="user.etat === 'ONLINE' ? 'bg-success' : 'bg-danger'" 
+                style="width: 10px; height: 10px;">
                 </span>
               </div>
             </div>

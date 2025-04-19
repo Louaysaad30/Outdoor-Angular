@@ -6,6 +6,9 @@ import { Router } from '@angular/router';
 
 import {AuthenticationRequest} from '../models/AuthenticationRequest';
 import { User } from '../models/User';
+import { JSONParser } from '@amcharts/amcharts5';
+import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
+import { UserServiceService } from '../services/user-service.service';
 
 @Component({
   selector: 'app-signin',
@@ -24,7 +27,9 @@ export class SigninComponent {
 
   currentUser: any | null = null;
 
-  constructor(private authService: AuthServiceService,private router:Router) {
+  constructor(private authService: AuthServiceService,private router:Router,
+    private websocketService: WebsocketService,
+    private userService:UserServiceService) {
     this.loginForm = new FormGroup({
       email: new FormControl('', [Validators.required, Validators.email]), // Added email validator
       motDePasse: new FormControl('', [Validators.required]), // Keep password required
@@ -48,7 +53,7 @@ export class SigninComponent {
             (user: User) => {
               this.currentUser = user;
               const authority = this.currentUser.authorities[0]?.authority;
-  
+              this.websocketService.connect(localStorage.getItem('authToken')); // pass userId too
               Swal.fire({
                 icon: 'success',
                 title: 'Login Successful',

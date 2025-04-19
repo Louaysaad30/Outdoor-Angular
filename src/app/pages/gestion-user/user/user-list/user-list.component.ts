@@ -21,6 +21,7 @@ export class UserListComponent {
   // Select user and emit event to parent component
   selectUser(user: any) {
     this.selectedUser = user;
+    console.log('Selected user:', user);  // Log selected user
     this.userSelected.emit(user);  // Emit selected user to parent component
   }
 }

@@ -1,10 +1,12 @@
-<div class="card-body p-0">
-  <div id="users-chat">
-    <ngx-simplebar class="chat-conversation p-3" id="chat-conversation" #chatContainer >
-      <ul class="list-unstyled chat-conversation-list chat-sm" id="users-conversation">
-        <li *ngFor="let msg of messages" [ngClass]="msg.sender.id === currentUser.id ? 'chat-list right' : 'chat-list left'">
+<div class="card-body p-0  d-flex flex-column">
+  <div id="users-chat" class="flex-grow-1 ">
+    <ngx-simplebar  style="max-height: 450px;"  class="chat-conversation p-3">
+      <!-- Show messages if they exist -->
+      <ul *ngIf="messages.length > 0; else noMessages" class="list-unstyled chat-conversation-list chat-sm" id="users-conversation">
+        <!-- Your existing message list -->
+        <li *ngFor="let msg of messages" [ngClass]="msg.sender === currentUser.id ? 'chat-list right' : 'chat-list left'">
           <div class="conversation-list">
-            <div *ngIf="msg.sender.id !== currentUser.id" class="chat-avatar">
+            <div *ngIf="msg.sender !== currentUser.id" class="chat-avatar">
               <img src="assets/images/users/48/avatar-2.jpg" alt="">
             </div>
             <div class="user-chat-content">
@@ -12,7 +14,7 @@
                 <div class="ctext-wrap-content">
                   <p class="mb-0 ctext-content">{{ msg.content }}</p>
                 </div>
-                <div dropdown [container]="'body'" class="dropdown align-self-start message-box-drop" [dropup]="msg.sender.id === currentUser.id">
+                <div dropdown [container]="'body'" class="dropdown align-self-start message-box-drop" [dropup]="msg.sender === currentUser.id">
                   <a dropdownToggle class="dropdown-toggle" href="javascript:void(0);">
                     <i class="ri-more-2-fill"></i>
                   </a>
@@ -32,20 +34,32 @@
             </div>
           </div>
         </li>
-        
       </ul>
+      
+      <!-- No messages placeholder -->
+      <ng-template #noMessages>
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+          <div class="avatar-lg mb-3">
+            <div class="avatar-title bg-soft-primary rounded-circle">
+              <i class="bi bi-chat-square-text fs-2 text-primary"></i>
+            </div>
+          </div>
+          <h5 class="text-muted">No messages yet</h5>
+          <p class="text-muted mb-0">Send a message to start the conversation</p>
+        </div>
+      </ng-template>
     </ngx-simplebar>
   </div>
-
-  <div class="border-top border-top-dashed">
+  <!-- Message input area (unchanged) -->
+  <div >
     <div class="row g-2 mx-3 mt-2 mb-3">
       <div class="col">
-        <div class="position-relative">
-          <input type="text" class="form-control border-light bg-light" placeholder="Enter Message..." [(ngModel)]="messageText">
-        </div>
+        <input type="text" class="form-control border-light bg-light" placeholder="Enter Message..." [(ngModel)]="messageText">
       </div>
       <div class="col-auto">
-        <button type="button" class="btn btn-secondary" (click)="sendMessage()"><i class="mdi mdi-send"></i></button>
+        <button type="button" class="btn btn-secondary" (click)="sendMessage()">
+          <i class="mdi mdi-send"></i>
+        </button>
       </div>
     </div>
   </div>

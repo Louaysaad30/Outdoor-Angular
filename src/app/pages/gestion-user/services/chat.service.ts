@@ -25,8 +25,8 @@ export class ChatService {
   // 2. Check if chat room exists
   checkChatRoom(senderId: number, recipientId: number): Observable<any> {
     const params = new HttpParams()
-      .set('senderId', senderId.toString())
-      .set('recipientId', recipientId.toString());
+      .set('senderId', senderId)
+      .set('recipientId', recipientId);
     return this.http.get(`${this.baseUrl}/exists`, { params });
   }
 
