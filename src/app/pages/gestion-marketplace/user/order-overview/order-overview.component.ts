@@ -9,6 +9,7 @@ import { tap, switchMap, map } from 'rxjs/operators';
 import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product';
 import { Status } from '../../models/Status';
+import { ToastrService } from 'ngx-toastr'; // Add this import
 
 interface OrderWithItems extends Commande {
   orderItems?: LigneCommande[];
@@ -29,7 +30,8 @@ export class OrderOverviewComponent implements OnInit {
   constructor(
     private checkoutService: CheckoutService,
     private ligneCommandeService: LignedecommandeService,
-    private productService: ProductService
+    private productService: ProductService,
+    private toastr: ToastrService // Add this injection
   ) {}
 
   ngOnInit(): void {
@@ -184,14 +186,44 @@ export class OrderOverviewComponent implements OnInit {
     return price * quantity;
   }
 
-  downloadInvoice(orderId: number): void {
+  // Keep only this method and remove downloadOrderInvoice method
+  downloadInvoice(orderId: number | undefined, event?: Event): void {
+    // Prevent default action only if event is provided
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    if (!orderId) {
+      this.toastr.error('Order ID is missing. Cannot download invoice.');
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = null;
+
     this.checkoutService.downloadInvoice(orderId).subscribe({
-      next: (response: Blob) => {
-        saveAs(response, `invoice-${orderId}.pdf`);
+      next: (blob: Blob) => {
+        this.isLoading = false;
+
+        // Check if the blob is of PDF type
+        if (blob.type === 'application/pdf' || blob.size > 100) {
+          // Save the file using FileSaver.js
+          saveAs(blob, `facture_${orderId}.pdf`);
+
+          this.toastr.success('Invoice downloaded successfully');
+        } else {
+          // Handle case where response isn't a valid PDF
+          console.error('Invalid PDF response:', blob);
+          this.errorMessage = 'The downloaded file is not a valid PDF. Please contact support.';
+          this.toastr.error('Downloaded file is not a valid PDF');
+        }
       },
       error: (error) => {
+        this.isLoading = false;
         console.error('Error downloading invoice:', error);
         this.errorMessage = 'Failed to download invoice. Please try again later.';
+        this.toastr.error('Failed to download invoice');
       }
     });
   }
@@ -205,5 +237,62 @@ export class OrderOverviewComponent implements OnInit {
   calculateTotalWithExtras(order: Commande): number {
     // The montantCommande already includes all costs (shipping, service fee, etc.)
     return order.montantCommande || 0;
+  }
+
+  generateQRCodeUrl(order: any): string {
+    if (!order || !order.idCommande) {
+      return 'assets/images/placeholder-qr.png'; // Provide a fallback image
+    }
+
+    // Create content string with order details
+    const qrContent = this.generateQrContent(order);
+
+    // Encode the content for URL
+    const encodedContent = encodeURIComponent(qrContent);
+
+    // Use Google Charts API to generate QR code
+    return `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodedContent}&choe=UTF-8&chld=H|1`;
+  }
+
+  generateQrContent(order: any): string {
+    // Create a well-structured object with clear labels and formatting
+    const qrData = {
+      "Invoice ID": order.idCommande,
+      "Order #": order.OrderNumber,
+      "Date": new Date(order.dateCommande).toLocaleDateString(),
+      "Total": `${order.montantCommande} TND`,
+      "Status": order.etat,
+      "Customer": order.nom,
+      "Address": `${order.adresse}, ${order.city}, ${order.gouvernement}`,
+      "Shipping": order.shippingMethod === "ExpressDelivery" ? "Express" : "Standard",
+    };
+
+    // Format with line breaks for better readability when scanned
+    let formattedContent = "";
+    for (const [key, value] of Object.entries(qrData)) {
+      formattedContent += `${key}: ${value}\n`;
+    }
+
+    return formattedContent.trim();
+  }
+
+  generateScannable(order: any): string {
+    if (!order) {
+      return 'No order data available';
+    }
+
+    // Create a simple text format with line breaks for better readability when scanned
+    const lines = [
+      `Order ID: ${order.idCommande || 'N/A'}`,
+      `Order #: ${order.OrderNumber || 'N/A'}`,
+      `Date: ${order.dateCommande ? new Date(order.dateCommande).toLocaleDateString() : 'N/A'}`,
+      `Customer: ${order.nom || 'N/A'}`,
+      `Address: ${order.adresse || ''}, ${order.city || ''}, ${order.gouvernement || ''}`,
+      `Amount: ${order.montantCommande ? order.montantCommande + ' TND' : 'N/A'}`,
+      `Status: ${order.etat || 'Pending'}`
+    ];
+
+    // Join the lines with newline characters for better readability when scanned
+    return lines.join('\n');
   }
 }

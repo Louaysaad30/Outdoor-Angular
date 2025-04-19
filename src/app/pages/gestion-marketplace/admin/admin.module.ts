@@ -19,6 +19,9 @@ import { CountUpModule } from 'ngx-countup';
 import { OrdersComponent } from './orders/orders.component';
 import { FlatpickrModule } from 'angularx-flatpickr';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
+
 
 
 @NgModule({
@@ -39,6 +42,9 @@ import { TooltipModule } from 'ngx-bootstrap/tooltip';
     NgApexchartsModule,
     FlatpickrModule.forRoot(),
     TooltipModule.forRoot(),
+    BsDropdownModule.forRoot(),
+    BsDatepickerModule.forRoot(),
+
 
 
   ]

@@ -99,13 +99,11 @@ export class OrdersComponent implements OnInit {
     ).subscribe(orders => {
       this.Orderlist = orders;
       console.log('Orders:', this.Orderlist);
-      this.Order = orders.slice(0, 8); // Display first 8 orders by default
+      this.Order = orders.slice(0, 8);
 
-      // Calculate statistics
       console.log('Calculating order statistics...',orders);
       this.calculateOrderStatistics(orders);
 
-      // Prepare chart data
       this._linebasicChart('["--tb-primary", "--tb-secondary"]');
       this.prepareChartData(orders);
 

@@ -211,10 +211,10 @@ export class MarketPlaceComponent implements OnInit {
       return;
     }
 
-    this.favorisService.retrieveAllFavoris().subscribe({
-      next: (favoris) => {
-        // Filter favorites for current user
-        const userFavorites = favoris.filter(f => f.idUser === this.currentUser.id);
+    this.favorisService.retrieveFavorisByUserId(this.currentUser.id).subscribe({
+      next: (userFavorites) => {
+        // Clear existing favorites
+        this.favoritedProducts.clear();
 
         // Add to tracked set
         userFavorites.forEach(fav => {
@@ -222,9 +222,11 @@ export class MarketPlaceComponent implements OnInit {
             this.favoritedProducts.add(fav.idProduit);
           }
         });
+
+        console.log('User favorites loaded:', userFavorites.length);
       },
       error: (error) => {
-        console.error('Error loading favorites:', error);
+        console.error('Error loading user favorites:', error);
       }
     });
   }
@@ -492,41 +494,6 @@ export class MarketPlaceComponent implements OnInit {
     });
   }
 
-  // New method to remove from favorites
-  removeFavorite(product: any): void {
-    if (!this.currentUser || !this.currentUser.id) {
-      return;
-    }
-
-    // First, find the favorite ID by querying all favorites
-    this.favorisService.retrieveAllFavoris().subscribe({
-      next: (favoris) => {
-        // Find the favorite entry for this product and user
-        const favorite = favoris.find(f =>
-          f.idUser === this.currentUser.id &&
-          f.idProduit === product.idProduit
-        );
-
-        if (favorite && favorite.idFavoris) {
-          // Remove the favorite
-          this.favorisService.removeFavoris(favorite.idFavoris).subscribe({
-            next: () => {
-              console.log('Removed from favorites successfully');
-              // Remove from tracked favorites
-              this.favoritedProducts.delete(product.idProduit);
-            },
-            error: (err) => {
-              console.error('Error removing from favorites:', err);
-            }
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Error finding favorite to remove:', err);
-      }
-    });
-  }
-
   // Check if a product is in favorites
   isProductFavorited(productId: number): boolean {
     return this.favoritedProducts.has(productId);
@@ -544,7 +511,7 @@ export class MarketPlaceComponent implements OnInit {
     // Check if user is logged in
     if (!this.currentUser || !this.currentUser.id) {
       console.error('User ID is not set. Cannot manage favorites.');
-
+      this.toastr.warning('Please log in to manage favorites');
       return;
     }
 
@@ -552,10 +519,58 @@ export class MarketPlaceComponent implements OnInit {
 
     if (this.isProductFavorited(productId)) {
       // Product is already favorited, so remove it
-      this.removeFavorite(product);
+      this.removeFavorite(product, event);
     } else {
       // Product is not favorited, so add it
       this.addToFavorites(product, event);
     }
+  }
+
+  removeFavorite(product: any, event: Event): void {
+    event.stopPropagation(); // Prevent event bubbling
+
+    if (!this.currentUser || !this.currentUser.id) {
+      return;
+    }
+
+    // Find the favorite ID by querying favorites for this specific user
+    this.favorisService.retrieveFavorisByUserId(this.currentUser.id).subscribe({
+      next: (favoris) => {
+        // Find the favorite entry for this product
+        const favorite = favoris.find(f => f.idProduit === product.idProduit);
+
+        if (favorite && favorite.idFavoris) {
+          // Remove the favorite
+          this.favorisService.removeFavoris(favorite.idFavoris).subscribe({
+            next: () => {
+              console.log('Removed from favorites successfully');
+              this.toastr.success(`Removed ${product.nomProduit} from favorites`);
+              // Remove from tracked favorites
+              this.favoritedProducts.delete(product.idProduit);
+            },
+            error: (err) => {
+              console.error('Error removing from favorites:', err);
+              this.toastr.error('Error removing from favorites');
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error finding favorite to remove:', err);
+      }
+    });
+  }
+
+  // Get the number of favorited products
+  getNumberOfFavorites(): number {
+    return this.favoritedProducts.size;
+  }
+
+  // Get the actual favorited product objects
+  getFavoritedProducts(): any[] {
+    // Filter products that are in the favoritedProducts set
+    return this.products.filter(product =>
+      this.favoritedProducts.has(product.idProduit)
+    );
   }
 }

@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Commande } from '../models/Commande';
 import { environment } from 'src/environments/environment';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { LigneCommande } from '../models/LigneCommande';
 
 @Injectable({
@@ -82,29 +82,51 @@ export class CheckoutService {
       );
   }
 
-  // Add this method to your service
-  downloadInvoice(orderId: number): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/invoice/${orderId}`, {
-      responseType: 'blob',
-      headers: new HttpHeaders().append('Accept', 'application/pdf')
-    }).pipe(
-      tap(() => console.log(`Invoice for order ${orderId} downloaded successfully`)),
-      catchError(error => {
-        console.error('Error downloading invoice:', error);
-        throw error;
-      })
-    );
+  // Ajouter cette méthode à votre CheckoutService
+  getProductNamesByCommandeId(commandeId: number): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/getProductNamesByCommandeId/${commandeId}`)
+      .pipe(
+        tap(productNames => console.log(`Found ${productNames.length} products for order ${commandeId}`)),
+        catchError(error => {
+          console.error(`Error fetching product names for order ${commandeId}:`, error);
+          throw error;
+        })
+      );
   }
 
-  // Ajouter cette méthode à votre CheckoutService
-getProductNamesByCommandeId(commandeId: number): Observable<string[]> {
-  return this.http.get<string[]>(`${this.baseUrl}/getProductNamesByCommandeId/${commandeId}`)
-    .pipe(
-      tap(productNames => console.log(`Found ${productNames.length} products for order ${commandeId}`)),
+  downloadInvoice(commandeId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/downloadInvoice/${commandeId}`, {
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      tap(response => {
+        console.log('Invoice downloaded successfully for order', commandeId);
+
+        // Extract filename from Content-Disposition header if available
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filename = contentDisposition
+          ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+          : `facture_${commandeId}.pdf`;
+
+        // Create a download link and trigger the download
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+
+          // Clean up
+          window.URL.revokeObjectURL(url);
+        }
+      }),
       catchError(error => {
-        console.error(`Error fetching product names for order ${commandeId}:`, error);
+        console.error(`Error downloading invoice for order ${commandeId}:`, error);
         throw error;
-      })
+      }),
+      // Extract just the blob body from the response and handle null case
+      map(response => response.body || new Blob())
     );
-}
+  }
 }

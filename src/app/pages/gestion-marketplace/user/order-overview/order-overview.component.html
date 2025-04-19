@@ -99,7 +99,7 @@
                                     <div class="card-body d-flex gap-3">
                                         <div class="flex-grow-1">
                                             <h6 class="card-title mb-3">Order Details</h6>
-                                            <p class="fw-medium fs-md mb-1">ID: {{ order.idCommande }}</p>
+                                            <p class="fw-medium fs-md mb-1">Date:<b>{{ order.dateCommande | date:'MMM d, yyyy' }}</b></p>
                                             <p class="text-muted mb-1">Status: <b>{{ order.etat }}</b></p>
                                             <p class="text-muted mb-0">Shipping: <b>{{ order.shippingMethod }}</b></p>
                                         </div>
@@ -300,11 +300,55 @@
                                             </div>
                                             <div class="card-body border-top border-dashed">
                                                 <div>
-                                                    <h6 class="text-muted float-end mb-0">ID: {{ order.OrderNumber }}</h6>
-                                                    <h5 class="fs-lg clearfix"><a href="javascript:void(0);" class="text-reset">Outdoor Delivery</a></h5>
-                                                    <p class="text-muted mb-2 mb-md-0">Scan barcode to track </p>
-                                                    <div class="text-center p-3 pb-0">
-                                                        <img alt="Scan Me!" src="assets/images/barcode.svg" class="img-fluid">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <h6 class="mb-0 text-muted">Order Tracking</h6>
+                                                        <span class="badge bg-light text-dark p-2">
+                                                            ID: {{ order.OrderNumber }}
+                                                        </span>
+                                                    </div>
+
+                                                    <h5 class="fs-lg mb-2"><a href="javascript:void(0);" class="text-reset">Outdoor Delivery</a></h5>
+
+                                                    <div class="text-center modern-qr-container">
+                                                        <div class="qr-header">
+                                                            <span class="qr-title">SCAN TO TRACK</span>
+                                                        </div>
+
+                                                        <div class="qr-inner">
+                                                            <qrcode
+                                                              [qrdata]="generateScannable(order)"
+                                                              [width]="160"
+                                                              [errorCorrectionLevel]="'M'"
+                                                              [elementType]="'canvas'"
+                                                              [cssClass]="'img-fluid modern-qr-code'"
+                                                              [margin]="4"
+                                                              [colorDark]="'#000000'"
+                                                              [colorLight]="'#ffffff'">
+                                                            </qrcode>
+                                                        </div>
+
+                                                        <!-- Modern order information badges -->
+                                                        <div class="modern-qr-info">
+                                                            <span class="modern-badge primary">
+                                                                <i class="ph-tag me-1"></i> {{ order.OrderNumber || 'N/A' }}
+                                                            </span>
+                                                            <span class="modern-badge success">
+                                                                <i class="ph-currency-circle-dollar me-1"></i> {{ order.montantCommande | currency }}
+                                                            </span>
+                                                            <span class="modern-badge info">
+                                                                <i class="ph-check-circle me-1"></i> {{ order.etat || 'Pending' }}
+                                                            </span>
+                                                        </div>
+
+                                                        <p class="qr-footer">
+                                                            <i class="ph-qr-code me-1"></i> Track your order status or download invoice
+                                                        </p>
+                                                        <p class="qr-content-hint mt-2">
+                                                          <small data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                                                 title="Contains order ID, customer info, delivery address, and order date">
+                                                            <i class="ph-info-circle me-1"></i> Scan for complete order details
+                                                          </small>
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -321,8 +365,8 @@
                                     <div class="card-header d-flex align-items-center flex-wrap gap-2">
                                         <h6 class="card-title flex-grow-1 mb-0">Order Status</h6>
                                         <div class="flex-shrink-0">
-                                            <button class="btn btn-primary btn-sm" (click)="order.idCommande ? downloadInvoice(order.idCommande) : null">
-                                                <i class="ph-download-simple align-middle"></i> Download Facture
+                                            <button type="button" class="btn btn-soft-primary btn-sm rounded-pill" (click)="order.idCommande ? downloadInvoice(order.idCommande, $event) : null">
+                                                <i class="ph-download-simple align-middle me-1"></i> Download Invoice
                                             </button>
                                         </div>
                                     </div>

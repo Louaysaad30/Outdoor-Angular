@@ -32,4 +32,8 @@ export class FavorisService {
   removeFavoris(idFavoris: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/delete/${idFavoris}`);
   }
+
+  retrieveFavorisByUserId(userId: number): Observable<Favoris[]> {
+    return this.http.get<Favoris[]>(`${this.apiUrl}/getByUserId/${userId}`);
+  }
 }
