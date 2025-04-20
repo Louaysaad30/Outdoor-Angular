@@ -1,8 +1,9 @@
 export interface ChatMessage {  
-    id?: number;
+    id: number;
     sender: any;
     recipient: any;
     content: string;
     timestamp?: Date;
+    isRead?: boolean;
   }
  

@@ -38,6 +38,13 @@ export class WebsocketService {
       console.log('Connected to WebSocket server');
       this.connectionSubject.next(true);
       this.sendOnlineStatus(userId);
+      // WebSocketService: Add a subscription to the notifications channel
+      this.stompClient?.subscribe('/user/queue/notifications', (message) => {
+        console.log('Received notification:', message.body);
+        this.messageSubject.next(JSON.parse(message.body)); // Handle the notification
+      });
+      
+      
 
       this.stompClient?.subscribe('/queue/messages', (message) => {
         console.log('Received message:', message.body);
@@ -69,6 +76,7 @@ export class WebsocketService {
         destination: '/app/chat',
         body: JSON.stringify(payload)
       });
+      console.log('Message sent:', payload);
     } else {
       console.error('WebSocket is not connected. Unable to send message.');
     }

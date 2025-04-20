@@ -150,7 +150,7 @@ export class ChatConvComponent implements OnDestroy  {
     
         this.chatService.checkChatRoom(senderId, recipientId).subscribe({
             next: (room) => {
-            this.loadMessages(senderId, recipientId, room);
+            this.loadMessages(room);
             console.log('Room:', room, 'Sender:', senderId, 'Recipient:', recipientId);
             },
             error: (err) => {
@@ -160,9 +160,9 @@ export class ChatConvComponent implements OnDestroy  {
         
     }
   
-    loadMessages(senderId: any, recipientId: any, chatRoomId: number) {
+    loadMessages( chatRoomId: number) {
 
-        this.chatService.getChatMessages(senderId, recipientId).subscribe((msgs: ChatMessage[]) => {
+        this.chatService.getMessagesByChatRoomId(chatRoomId).subscribe((msgs: ChatMessage[]) => {
         this.messages = msgs;
         });
     }

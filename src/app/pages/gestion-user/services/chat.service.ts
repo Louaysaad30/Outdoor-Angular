@@ -29,7 +29,9 @@ export class ChatService {
       .set('recipientId', recipientId);
     return this.http.get(`${this.baseUrl}/exists`, { params });
   }
-
+  getMessagesByChatRoomId(chatRoomId: number): Observable<ChatMessage[]> {
+    return this.http.get<ChatMessage[]>(`${this.baseUrl}/messages/room/${chatRoomId}`);
+  }
   // 3. Get all chat rooms for a user
   getChatRoomsForUser(userId: number): Observable<ChatRoom[]> {
     return this.http.get<ChatRoom[]>(`${this.baseUrl}/user/${userId}`);
@@ -39,6 +41,8 @@ export class ChatService {
   getChatMessages(senderId: number, recipientId: number): Observable<ChatMessage[]> {
     return this.http.get<ChatMessage[]>(`${this.baseUrl}/messages/${senderId}/${recipientId}`);
   }
-
+  markMessageAsRead(messageId: number) {
+    return this.http.put(`${this.baseUrl}/mark-as-read/${messageId}`, null);
+  }
 
 }

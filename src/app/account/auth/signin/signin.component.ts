@@ -3,10 +3,9 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AuthServiceService } from '../services/auth-service.service';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
-
+import { NgxCaptchaModule } from 'ngx-captcha';
 import {AuthenticationRequest} from '../models/AuthenticationRequest';
 import { User } from '../models/User';
-import { JSONParser } from '@amcharts/amcharts5';
 import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
 import { UserServiceService } from '../services/user-service.service';
 
@@ -24,7 +23,7 @@ export class SigninComponent {
   loginuser!:AuthenticationRequest;
   loginForm: FormGroup;
   errorLoginMessage = '';
-
+  siteKey: string = '6LewnB4rAAAAAFWY26OgfY1IAx8-v9f5Z_zSVG31';
   currentUser: any | null = null;
 
   constructor(private authService: AuthServiceService,private router:Router,
@@ -34,16 +33,21 @@ export class SigninComponent {
       email: new FormControl('', [Validators.required, Validators.email]), // Added email validator
       motDePasse: new FormControl('', [Validators.required]), // Keep password required
       rememberMe: new FormControl(false),
+      recaptcha: new FormControl('', Validators.required)
     });
   }
 
+  
   onSubmit() {
     this.errorLoginMessage = '';
   
     if (this.loginForm.valid) {
       const loginUser = {
         email: this.loginForm.get('email')?.value,
-        motDePasse: this.loginForm.get('motDePasse')?.value
+        motDePasse: this.loginForm.get('motDePasse')?.value,
+        recaptchaToken:
+         this.loginForm.get('recaptcha')?.value
+
       };
   
       this.authService.authenticate(loginUser).subscribe(
@@ -107,6 +111,7 @@ export class SigninComponent {
     }
   }
   
+
   
   // Toggle the visibility of the password
   toggleFieldTextType(): void {
