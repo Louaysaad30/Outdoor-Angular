@@ -17,6 +17,9 @@ import { UserServiceService } from '../services/user-service.service';
 
 // Signin Component
 export class SigninComponent {
+  failedAttempts = 0;
+maxAttempts = 3;
+
   // set the currenr year
   year: number = new Date().getFullYear();
   fieldTextType!: boolean;
@@ -36,7 +39,6 @@ export class SigninComponent {
       recaptcha: new FormControl('', Validators.required)
     });
   }
-
   
   onSubmit() {
     this.errorLoginMessage = '';
@@ -45,19 +47,22 @@ export class SigninComponent {
       const loginUser = {
         email: this.loginForm.get('email')?.value,
         motDePasse: this.loginForm.get('motDePasse')?.value,
-        recaptchaToken:
-         this.loginForm.get('recaptcha')?.value
-
+        recaptchaToken: this.loginForm.get('recaptcha')?.value
       };
   
       this.authService.authenticate(loginUser).subscribe(
         (response: any) => {
+          // Reset failed attempts on success
+          this.failedAttempts = 0;
+  
           // Wait for user data before continuing
           this.authService.handleLoginSuccess(response).subscribe(
             (user: User) => {
               this.currentUser = user;
               const authority = this.currentUser.authorities[0]?.authority;
-              this.websocketService.connect(localStorage.getItem('authToken'),this.currentUser.id); // pass userId too
+  
+              this.websocketService.connect(localStorage.getItem('authToken'), this.currentUser.id); // pass userId too
+  
               Swal.fire({
                 icon: 'success',
                 title: 'Login Successful',
@@ -96,20 +101,37 @@ export class SigninComponent {
           if (error.status === 0) {
             errorMessage = 'Unable to connect to server. Please check your backend.';
           } else {
-            errorMessage = error || 'Login failed. Please check your credentials.';
+            errorMessage = error?.error?.message || 'Login failed. Please check your credentials.';
+          }
+  
+          this.failedAttempts++;
+  
+          if (this.failedAttempts >= this.maxAttempts) {
+            // Block user after 3 failed attempts
+            this.userService.blockUserFailByEmail(this.loginForm.get('email')?.value).subscribe(() => {
+              Swal.fire({
+                icon: 'error',
+                title: 'Account Blocked',
+                text: 'Your account has been blocked due to 3 failed login attempts.',
+              });
+  
+              // Disable form after blocking
+              this.loginForm.disable();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Login Failed',
+              text: errorMessage + ` (${this.maxAttempts - this.failedAttempts} attempts left)`,
+            });
           }
   
           this.errorLoginMessage = errorMessage;
-  
-          Swal.fire({
-            icon: 'error',
-            title: 'Login Failed',
-            text: errorMessage
-          });
         }
       );
     }
   }
+  
   
 
   

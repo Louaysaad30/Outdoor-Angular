@@ -38,6 +38,10 @@ export class UserServiceService {
     return this.http.put<User>(`${this.apiUrl}/block/${id}`, {});
   }
 
+  blockUserFailByEmail(email: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/block-fail-by-email`, { email });
+  }
+  
   // Unblock user
   unblockUser(id: number): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/unblock/${id}`, {});
