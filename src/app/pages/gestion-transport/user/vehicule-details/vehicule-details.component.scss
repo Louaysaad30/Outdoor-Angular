@@ -8,4 +8,36 @@
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    
+    &.rounded-circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      i {
+        font-size: 1.2rem;
+      }
+    }
+  }
+  
+  .object-fit-cover {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+
+  .vehicle-image-container {
+    .vehicle-image {
+      object-fit: contain; /* Different from avatar's cover */
+      width: 100%;
+      height: 100%;
+      border-radius: 8px; /* Different from avatar's 50% */
+    }
+  }
   

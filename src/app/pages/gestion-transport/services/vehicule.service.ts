@@ -40,4 +40,8 @@ export class VehiculeService {
   generateVehiculeFromGroq(attributes: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/generate`, attributes);
   }
+
+  updateVehiculeRating(vehiculeId: number, rating: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${vehiculeId}/rating`, { rating });
+  }
 }
