@@ -81,8 +81,8 @@ export class ChatConvComponent implements OnDestroy  {
     ngOnInit(): void {
       this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       console.log("Utilisateur connecté :", this.currentUser.id);
-        // Chat Data Get Function
-        // Validation
+      this.userService.incrementNavigation(this.currentUser.id).subscribe();
+      // Validation
         this.formData = this.formBuilder.group({
             message: ['', [Validators.required]],
         });

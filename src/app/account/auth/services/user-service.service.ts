@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { User } from '../models/User';
@@ -22,7 +22,12 @@ export class UserServiceService {
     return this.http.get<any[]>(`${this.apiUrl1}/all/${userId}`);
   }
   
-
+  predictChurn(userId: number): Observable<any> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.post<string>(`${this.apiUrl}/predict-churn`, params);
+  }
+  
+  
   // Get user by ID
   getUserById(id: number): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/${id}`);
@@ -46,6 +51,12 @@ export class UserServiceService {
   unblockUser(id: number): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/unblock/${id}`, {});
   }
+
+  // user.service.ts
+  incrementNavigation(userId: number) {
+    return this.http.post(`${this.apiUrl}/increment-navigation?userId=${userId}`, {});
+  }
+
 
 
   updateUser(id: number, formData: FormData): Observable<User> {

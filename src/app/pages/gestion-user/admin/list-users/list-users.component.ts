@@ -24,7 +24,8 @@ export class ListUsersComponent {
   constructor(private userService: UserServiceService) {}
 
   breadCrumbItems!: Array<{}>;
-
+  predictionMessage: string = '';
+  userPrediction: number = 0;
   users: any[] = [];
   filteredUsers: any[] = [];
   searchTerm: string = '';
@@ -120,6 +121,26 @@ export class ListUsersComponent {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+ // Méthode pour obtenir la prédiction pour un utilisateur spécifique
+getChurnPrediction(userId: number) {
+  this.userService.predictChurn(userId).subscribe(
+    (response) => {
+      const user = this.paginatedUsers.find(u => u.id === userId); // Trouver l'utilisateur
+      if (user) {
+        user.churnResult = response.message; // Ajouter le résultat de la prédiction à l'utilisateur
+      }
+    },
+    (error) => {
+      console.error('Error fetching churn prediction:', error);
+    }
+  );
+}
+
+
+  // Call this method when a user card or relevant UI is clicked to get the prediction
+  onUserCardClick(userId: number) {
+    this.getChurnPrediction(userId);
   }
   
 

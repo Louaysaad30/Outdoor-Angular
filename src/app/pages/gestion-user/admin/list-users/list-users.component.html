@@ -102,6 +102,25 @@
               <i class="bi bi-patch-check-fill fs-6"></i> Verified
             </span>
           </ng-template>
+
+          <!-- Predict Churn -->
+          <button *ngIf="!user.churnResult"
+            class="btn btn-sm btn-warning"
+            (click)="getChurnPrediction(user.id)">
+            Prédire Churn
+          </button>
+          
+          <!-- Churn Prediction Result -->
+          <div *ngIf="user.churnResult" class="mt-2 text-center">
+            <span class="badge rounded-pill"
+                  [ngClass]="{
+                    'bg-success': user.churnResult.includes('fidele'),
+                    'bg-danger': user.churnResult.includes('churner')
+                  }">
+              {{ user.churnResult }}
+            </span>
+          </div>
+
         </div>
       </div>
     </div>
