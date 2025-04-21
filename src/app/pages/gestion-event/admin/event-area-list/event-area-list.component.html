@@ -16,8 +16,9 @@
           <div class="col-xl-2 col-sm-6">
             <select class="form-control" id="idType" (change)="selectstatus()">
               <option value="all">Select All Type</option>
-              <option value="Villa">IN DOOR</option>
-              <option value="Apartment">OUTDOOR</option>
+              <option value="Villa">PENDING</option>
+              <option value="Apartment">REJECTED</option>
+              <option value="Apartment">ACCEPTED</option>
 
             </select>
           </div>
@@ -59,7 +60,20 @@
                 <div class="position-relative">
                   <img src="{{data.areaImg}}" alt="" class="img-fluid rounded d-block mx-auto">
                   <div class="position-absolute bottom-0 start-0 m-2">
-                    <span class="badge bg-white text- fs-xxs"><i class="bi bi-house-door align-baseline me-1"></i> {{data.name}}</span>
+                    <span class="badge rounded-pill fs-xs"
+                          [ngClass]="{
+                            'bg-warning-subtle text-warning': data.status === 'PENDING',
+                            'bg-success-subtle text-success': data.status === 'APPROVED',
+                            'bg-danger-subtle text-danger': data.status === 'REJECTED'
+                          }">
+                      <i class="bi me-1"
+                         [ngClass]="{
+                           'bi-hourglass-split': data.status === 'PENDING',
+                           'bi-check-circle-fill': data.status === 'APPROVED',
+                           'bi-x-circle-fill': data.status === 'REJECTED'
+                         }"></i>
+                      {{ data.status }}
+                    </span>
                   </div>
                 </div>
               </div><!--end col-->

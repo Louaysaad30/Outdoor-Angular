@@ -1,6 +1,11 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs title="Event Area Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
-<!-- End Breadcrumbs -->
+<!-- Next to breadcrumbs -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <app-breadcrumbs title="Event Area Details" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+  <button class="btn btn-outline-primary" [routerLink]="['/eventback/admin/event-area-list']">
+    <i class="bi bi-arrow-left me-1"></i> Back to List
+  </button>
+</div><!-- End Breadcrumbs -->
 
 <div class="row">
   <div class="col-xl-9 col-lg-8">
@@ -10,7 +15,16 @@
         <ngx-slick-carousel class="carousel" [config]="slidesConfig" #slickModal class="swiper property-slider mb-3">
           <div ngxSlickItem class="swiper-slide">
             <div class="position-relative ribbon-box">
-              <div class="ribbon ribbon-danger fw-medium rounded-end mt-2"> For Sale</div>
+              <div class="ribbon position-absolute top-0 start-0"
+                   [ngClass]="{
+                                 'bg-warning': eventArea?.status === 'PENDING',
+                                 'bg-success': eventArea?.status === 'APPROVED',
+                                 'bg-danger': eventArea?.status === 'REJECTED'
+                               }"
+                   [ngStyle]="{'cursor': eventArea?.status === 'REJECTED' ? 'pointer' : 'default'}"
+                   (click)="eventArea?.status === 'REJECTED' && showRejectionMessage()">
+                <span class="ribbon-text">{{ eventArea?.status || 'UNKNOWN' }}</span>
+              </div>
               <div dropdown class="dropdown position-absolute top-0 end-0 m-3">
                 <button dropdownToggle class="btn bg-white avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                   <i class="bi bi-three-dots-vertical"></i>
@@ -90,64 +104,58 @@
         <h6 class="card-title mb-0">Even Area Location</h6>
       </div>
       <div class="card-body">
-        <div id="leaflet-map-group-control" leaflet [leafletOptions]="options" [leafletLayers]="[marker]" class="leaflet-map leaflet-gray" style="min-height: 100%;"></div>
+        <div
+          id="map"
+          leaflet
+          [leafletOptions]="options"
+          [leafletLayers]="mapMarkers"
+          (leafletMapReady)="onMapReady($event)"
+          class="leaflet-map leaflet-gray rounded"
+          style="height: 400px; width: 100%;">
+        </div>
       </div>
     </div>
 
   </div><!--end col-->
   <div class="col-xl-3 col-lg-4">
     <div class="row">
-      <div class="col-lg-12">
-        <div class="card card-primary text-center">
-          <div class="card-body">
-            <h4 class="text-reset fw-normal">$7000 - $8000</h4>
-            <p class="text-white-75 fs-md mb-0">Sale Price</p>
-          </div>
+<!--end col-->
+
+<!-- User Details Card -->
+<div class="card border-0 rounded-4 shadow-lg mb-4 creator-card">
+  <div class="card-header bg-gradient-primary text-white p-4 rounded-top-4">
+    <h5 class="card-title mb-0 d-flex align-items-center justify-content-center">
+      <i class="bi bi-person-badge me-2"></i>
+      <span class="fw-bold">Event Area Creator</span>
+    </h5>
+  </div>
+  <div class="card-body p-4">
+    <div class="d-flex flex-column align-items-center text-center">
+      <div class="position-relative mb-3">
+        <div class="avatar-profile bg-primary-subtle rounded-circle pulse-animation d-flex align-items-center justify-content-center">
+          <i class="bi bi-person-fill text-primary fs-1"></i>
         </div>
-      </div><!--end col-->
-      <div class="col-lg-12">
-        <div class="card">
-          <div class="card-body">
-            <div class="text-center">
-              <img src="assets/images/users/avatar-1.jpg" alt="" class="avatar-md rounded mx-auto d-block">
-              <h5 class="mt-3">Jerry Emard</h5>
-              <p class="text-muted">OWNER</p>
-              <p class="text-muted mb-4">73 Alum Rock Rd, Birmingham, West Midland, United Kingdom - s B8
-                1LY</p>
-            </div>
-            <ul class="list-unstyled hstack justify-content-center gap-2 mb-0">
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title rounded bg-primary-subtle text-primary">
-                    <i class="bi bi-facebook"></i>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title bg-success-subtle text-success rounded">
-                    <i class="bi bi-whatsapp"></i>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title bg-info-subtle text-info rounded">
-                    <i class="bi bi-twitter"></i>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title bg-danger-subtle text-danger rounded">
-                    <i class="bi bi-instagram"></i>
-                  </div>
-                </a>
-              </li>
-            </ul>
-          </div>
+        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success p-2 border border-white">
+          <i class="bi bi-check-circle-fill"></i>
+        </span>
+      </div>
+
+      <div class="text-center">
+        <h4 class="mb-2 fw-bold creator-name">{{userDetails?.prenom}} {{userDetails?.nom}}</h4>
+        <div class="contact-info-container d-flex flex-column align-items-center">
+          <a href="mailto:{{userDetails?.email}}" class="contact-info text-decoration-none mb-2">
+            <i class="bi bi-envelope-fill me-2 contact-icon"></i>
+            <span>{{userDetails?.email}}</span>
+          </a>
+          <a *ngIf="userDetails?.tel" href="tel:{{userDetails?.tel}}" class="contact-info text-decoration-none">
+            <i class="bi bi-telephone-fill me-2 contact-icon"></i>
+            <span>{{userDetails?.tel}}</span>
+          </a>
         </div>
-      </div><!--end col-->
+      </div>
+    </div>
+  </div>
+</div>
       <div class="col-lg-12">
         <div class="card">
           <div class="card-header">
@@ -513,6 +521,39 @@
           <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Cancel</button>
           <button type="button" class="btn w-sm btn-danger btn-hover" (click)="confirmDelete()">Yes, Delete It!</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- modal to show rejection message -->
+<div bsModal #rejectionModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger-subtle">
+        <h5 class="modal-title text-danger">
+          <i class="bi bi-exclamation-circle me-1"></i>Rejection Reason
+        </h5>
+        <button type="button" class="btn-close" (click)="rejectionModal.hide()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="text-center mb-4">
+          <div class="avatar-lg mx-auto">
+            <div class="avatar-title bg-danger-subtle text-danger rounded-circle">
+              <i class="bi bi-x-circle fs-1"></i>
+            </div>
+          </div>
+          <h5 class="mt-3">Area Rejected</h5>
+        </div>
+        <div class="alert alert-danger">
+          {{ eventArea?.rejectionMessage || 'No rejection reason provided.' }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="rejectionModal.hide()">Close</button>
       </div>
     </div>
   </div>
