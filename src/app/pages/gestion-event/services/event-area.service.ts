@@ -117,4 +117,8 @@ private getUserId(): number {
   getEventsByEventArea(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${id}/events`);
   }
+
+  getEventAreasByUserId(userId: number): Observable<EventArea[]> {
+    return this.http.get<EventArea[]>(`${this.apiUrl}/user/${userId}`);
+  }
 }

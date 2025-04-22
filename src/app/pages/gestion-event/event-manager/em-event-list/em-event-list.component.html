@@ -1,0 +1,331 @@
+<div class="calendar-wrapper d-lg-flex gap-4">
+
+  <div class="w-100">
+    <div class="card card-h-100">
+      <div class="">
+        <div id="calendar">
+          <full-calendar #calendar [options]="calendarOptions"></full-calendar>
+        </div>
+      </div>
+    </div>
+  </div><!-- end col -->
+</div>
+<!--end row-->
+
+<div style='clear:both'></div>
+
+<!-- Add New Event MODAL -->
+<div bsModal #eventModal="bs-modal" class="modal fade" id="event-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0">
+      <div class="modal-header p-3 bg-info-subtle">
+        <h5 class="modal-title" id="modal-title">Event</h5>
+        <button type="button" class="btn-close" (click)="eventModal.hide()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form [formGroup]="formData"  (ngSubmit)="isEditMode ? editEventSave() : saveEvent()" class="needs-validation" name="event-form" id="form-event" novalidate>
+          @if(isEditMode){
+            <div class="text-end">
+              <a href="javascript:void(0);" class="btn btn-sm btn-subtle-primary" id="edit-event-btn" (click)="showeditEvent()" role="button">Edit</a>
+            </div>
+          }
+
+          @if(editEvent){
+
+
+            <div class="event-details">
+
+              <div class="flex-grow-1 text-center">
+                @if(editEvent.extendedProps){
+                  <h6 class="d-block fw-semibold mb-0"></h6>
+                  <img *ngIf="editEvent.extendedProps['imageUrl']"
+                       [src]="editEvent.extendedProps['imageUrl']"
+                       alt="Event Image"
+                       class="img-fluid rounded mt-2 shadow-sm"
+                       style="max-height: 300px; width: 100%; border: 1px solid #ddd; padding: 5px;">
+                }
+              </div>
+
+              <div class="d-flex mb-2">
+                <div class="flex-grow-1 d-flex align-items-center">
+                  <div class="flex-shrink-0 me-3">
+                    <i class="ri-calendar-event-line text-muted fs-lg"></i>
+                  </div>
+                  @if(editEvent.start){
+                    <div class="flex-grow-1">
+                      <h6 class="d-block fw-semibold mb-0" id="event-start-date-tag">FROM : {{editEvent.start | date: 'dd MMMM yyyy'}}  TO  :  {{editEvent.end | date: 'dd MMMM yyyy'}}</h6>
+                    </div>
+                  }
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <div class="flex-shrink-0 me-3">
+                  <i class="ri-time-line text-muted fs-lg"></i>
+                </div>
+<!-- Change lines around 67-71 -->
+<div class="flex-grow-1">
+  @if(editEvent.start){
+    <h6 class="d-block fw-semibold mb-0">
+      <span id="event-start-time-tag"></span> {{editEvent.start | date: 'h:mm a'}} - {{editEvent.end | date:'h:mm a'}} <span id="event-end-time-tag"></span>
+    </h6>
+  }@else {
+    <h6 class="d-block fw-semibold mb-0">
+      <span id="event-start-time-placeholder"></span> - <span id="event-end-time-placeholder"></span>
+    </h6>
+  }
+</div>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <div class="flex-shrink-0 me-3">
+                  <i class="ri-map-pin-line text-muted fs-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                  @if(editEvent.extendedProps){
+                    <h6 class="d-block fw-semibold mb-0"> <span id="event-location-tag">{{editEvent.extendedProps['address']}}</span></h6>
+                  }
+                </div>
+              </div>
+              <div class="d-flex mb-3">
+                <div class="flex-shrink-0 me-3">
+                  <i class="ri-discuss-line text-muted fs-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <p class="d-block text-muted mb-0" id="event-description-tag">{{editEvent.extendedProps['description']}}</p>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <button type="button" class="btn btn-info w-100" (click)="showParticipants()">
+                  <i class="ri-team-line me-1"></i> Show Participants
+                </button>
+              </div>
+            </div>
+          }
+          <div class="row event-form">
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Event Image</label>
+
+                <!-- Image source selection -->
+                <div class="btn-group mb-3 w-100" role="group">
+                  <input type="radio" class="btn-check" name="imageSource" id="upload-option"
+                         [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
+                  <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
+
+                  <input type="radio" class="btn-check" name="imageSource" id="generate-option"
+                         [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
+                  <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
+                </div>
+
+                <!-- Upload image option -->
+                <div *ngIf="imageSource === 'upload'">
+                  <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+                </div>
+
+                <!-- Generate image option -->
+                <div *ngIf="imageSource === 'generate'" class="mb-3">
+                  <button type="button" [disabled]="!formData.get('description')?.value || isGeneratingImage"
+                          class="btn btn-primary w-100" (click)="generateImageFromDescription()">
+                    <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
+                    {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
+                  </button>
+                  <small class="form-text text-muted">
+                    Image will be generated based on your description text.
+                  </small>
+                </div>
+
+                <!-- Image preview -->
+                <div *ngIf="formData.get('imageUrl')?.value" class="mt-2">
+                  <img [src]="formData.get('imageUrl')?.value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Event Name</label>
+                <input class="form-control" placeholder="Enter event name" type="text" name="title" id="event-title" formControlName="title" required value="">
+                <div class="invalid-feedback">Please provide a valid event name</div>
+              </div>
+            </div>
+
+            <div class="col-12" id="event-time">
+              <div class="row">
+                <div class="col-6">
+                  <div class="mb-3">
+                    <label class="form-label">Start Date and Time</label>
+                    <div class="input-group">
+                      <input id="timepicker1" type="text" mwlFlatpickr
+                             [noCalendar]="false"
+                             [enableTime]="true"
+                             [dateFormat]="'Y-m-d H:i'"
+                             formControlName="startDate"
+                             class="form-control flatpickr flatpickr-input"
+                             placeholder="Select start date and time"
+                             readonly>
+                      <span class="input-group-text"><i class="ri-time-line"></i></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="mb-3">
+                    <label class="form-label">End Date and Time</label>
+                    <div class="input-group">
+                      <input id="timepicker2" type="text" mwlFlatpickr
+                             [noCalendar]="false"
+                             [enableTime]="true"
+                             [dateFormat]="'Y-m-d H:i'"
+                             formControlName="endDate"
+                             class="form-control flatpickr flatpickr-input"
+                             placeholder="Select end date and time"
+                             readonly>
+                      <span class="input-group-text"><i class="ri-time-line"></i></span>
+                    </div>
+                  </div>
+                </div>
+              </div><!--end row-->
+            </div>
+            <!--end col-->
+
+            <input type="hidden" id="eventid" name="eventid" value="">
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+
+                <div class="d-flex align-items-center mb-2">
+                  <button type="button" class="btn btn-sm btn-outline-primary"
+                          (click)="previewImprovedText()" [disabled]="isProcessingText || !formData.get('description')?.value">
+                    <i class="ri-magic-line me-1"></i>Improve Text
+                  </button>
+                  <div *ngIf="isProcessingText" class="ms-2">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-1">Processing...</span>
+                  </div>
+                </div>
+
+                <textarea class="form-control" id="event-description" placeholder="Enter a description"
+                          rows="3" formControlName="description" spellcheck="false"></textarea>
+
+                <div *ngIf="improvedText" class="mt-3">
+                  <div class="card bg-light border">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Improved Version</h6>
+                      <button type="button" class="btn btn-sm btn-success" (click)="applyImprovedText()">
+                        Apply
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <p class="mb-0">{{improvedText}}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--end col-->
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" formControlName="status" required>
+                  <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Event Area</label>
+                <select class="form-select" formControlName="eventArea" required>
+                  <option value="">Select an area</option>
+                  <option *ngFor="let area of eventAreas" [value]="area.id">{{ area.name }}</option>
+                </select>
+              </div>
+            </div>
+            <!--end col-->
+          </div>
+          <!--end row-->
+          <div class="hstack gap-2 justify-content-end">
+            <button type="button" class="btn btn-subtle-danger" id="btn-delete-event" (click)="deleteEventData()"><i class="ri-close-line align-bottom"></i> Delete</button>
+            <button type="submit" class="btn btn-success" id="btn-save-event">Add Event</button>
+          </div>
+
+        </form>
+      </div>
+    </div> <!-- end modal-content-->
+  </div> <!-- end modal dialog-->
+</div> <!-- end modal-->
+<!-- end modal-->
+
+<!-- Participants Modal -->
+<div bsModal #participantsModal="bs-modal" class="modal fade participants-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header p-3 bg-info-subtle">
+        <h5 class="modal-title">Participants for "{{selectedEventTitle}}"</h5>
+        <button type="button" class="btn-close" (click)="participantsModal.hide()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Loading spinner -->
+        <div *ngIf="loadingParticipants" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Loading participants...</p>
+        </div>
+
+        <!-- Participants list -->
+        <div *ngIf="!loadingParticipants">
+          <!-- Search filter -->
+          <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Search participants..."
+                   [(ngModel)]="participantSearchTerm" (input)="filterParticipants()">
+          </div>
+
+          <!-- Empty state -->
+          <div *ngIf="!filteredParticipants.length" class="text-center py-4">
+            <div class="avatar-md mx-auto">
+              <div class="avatar-title rounded-circle bg-light text-primary">
+                <i class="ri-user-search-line fs-24"></i>
+              </div>
+            </div>
+            <h5 class="mt-4">No participants found</h5>
+            <p class="text-muted">This event doesn't have any participants yet.</p>
+          </div>
+
+          <!-- Participants table -->
+          <div *ngIf="filteredParticipants.length" class="table-responsive">
+            <table class="table table-centered table-hover">
+              <thead class="table-light">
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Tickets</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let participant of filteredParticipants; let i = index">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-xs me-2">
+                      <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                        {{participant.user.prenom?.charAt(0) || 'U'}}
+                      </div>
+                    </div>
+                    <div>{{participant.user.prenom}} {{participant.user.nom}}</div>
+                  </div>
+                </td>
+                <td>{{participant.user.email}}</td>
+                <td>
+                  <span class="badge bg-success">{{participant.ticketCount}}</span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="participantsModal.hide()">Close</button>
+        <button type="button" class="btn btn-primary" (click)="exportParticipantsList()">
+          <i class="ri-file-download-line me-1"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

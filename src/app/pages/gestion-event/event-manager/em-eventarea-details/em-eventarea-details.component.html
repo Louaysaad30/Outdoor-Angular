@@ -7,7 +7,7 @@
   <!-- Breadcrumb navigation on the right -->
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb mb-0">
-      <li class="breadcrumb-item"><a class="breadcrumb-link" [routerLink]="['/eventback/admin/event-area-list']">Event Areas</a></li>
+      <li class="breadcrumb-item"><a class="breadcrumb-link" [routerLink]="['/eventback/event-manager/event-area-list']">Event Areas</a></li>
       <li class="breadcrumb-item active">{{ eventArea?.name }} Details</li>
     </ol>
   </nav>
@@ -41,21 +41,21 @@
                 </p>
               </div>
 
-     <span class="badge rounded-pill fs-6 px-3 py-2"
-           [ngClass]="{
+              <span class="badge rounded-pill fs-6 px-3 py-2"
+                    [ngClass]="{
                'bg-warning-subtle text-warning': eventArea?.status === 'PENDING',
                'bg-success-subtle text-success': eventArea?.status === 'APPROVED',
                'bg-danger-subtle text-danger cursor-pointer': eventArea?.status === 'REJECTED'
            }"
-           (click)="eventArea?.status === 'REJECTED' && showRejectionMessage()">
+                    (click)="eventArea?.status === 'REJECTED' && showRejectionMessage()">
          <i class="bi me-1"
             [ngClass]="{
                 'bi-hourglass-split': eventArea?.status === 'PENDING',
                 'bi-check-circle-fill': eventArea?.status === 'APPROVED',
                 'bi-x-circle-fill': eventArea?.status === 'REJECTED'
             }"></i>
-         {{eventArea?.status}}
-         <i *ngIf="eventArea?.status === 'REJECTED'" class="bi bi-info-circle ms-1" title="Click to view rejection message"></i>
+                {{eventArea?.status}}
+                <i *ngIf="eventArea?.status === 'REJECTED'" class="bi bi-info-circle ms-1" title="Click to view rejection message"></i>
      </span>
             </div>
           </div>
@@ -77,41 +77,41 @@
           <p class="text-muted">{{ eventArea?.description }}</p>
         </div>
 
-      <!-- Keywords Section -->
-          <div class="mb-3 mt-4">
-        <h6 class="card-title mb-3">Event Area Keywords</h6>
-        <div class="row g-3">
-          <!-- Loading indicator -->
-          <div *ngIf="isExtractingKeywords" class="col-12 text-center">
-            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-            <span class="ms-2">Extracting keywords...</span>
-          </div>
+        <!-- Keywords Section -->
+        <div class="mb-3 mt-4">
+          <h6 class="card-title mb-3">Event Area Keywords</h6>
+          <div class="row g-3">
+            <!-- Loading indicator -->
+            <div *ngIf="isExtractingKeywords" class="col-12 text-center">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+              <span class="ms-2">Extracting keywords...</span>
+            </div>
 
-          <!-- Display keywords -->
-          <ng-container *ngIf="!isExtractingKeywords && extractedKeywords.length > 0">
-            <div *ngFor="let keyword of extractedKeywords" class="col-xl-3 col-sm-6">
-              <div class="p-3 border border-dashed rounded">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-xs flex-shrink-0">
-                    <div class="avatar-title bg-primary-subtle text-primary fs-lg rounded">
-                      <i class="bi bi-hash"></i>
+            <!-- Display keywords -->
+            <ng-container *ngIf="!isExtractingKeywords && extractedKeywords.length > 0">
+              <div *ngFor="let keyword of extractedKeywords" class="col-xl-3 col-sm-6">
+                <div class="p-3 border border-dashed rounded">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="avatar-xs flex-shrink-0">
+                      <div class="avatar-title bg-primary-subtle text-primary fs-lg rounded">
+                        <i class="bi bi-hash"></i>
+                      </div>
                     </div>
+                    <p class="fs-md mb-0">{{ keyword }}</p>
                   </div>
-                  <p class="fs-md mb-0">{{ keyword }}</p>
                 </div>
               </div>
-            </div>
-          </ng-container>
+            </ng-container>
 
-          <!-- No keywords message -->
-          <div *ngIf="!isExtractingKeywords && extractedKeywords.length === 0" class="col-12">
-            <div class="alert alert-info mb-0">
-              <i class="bi bi-info-circle me-2"></i>
-              No keywords available for this event area.
+            <!-- No keywords message -->
+            <div *ngIf="!isExtractingKeywords && extractedKeywords.length === 0" class="col-12">
+              <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                No keywords available for this event area.
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       </div>
     </div>
@@ -137,47 +137,47 @@
   <div class="col-xl-3 col-lg-4">
     <div class="row">
 
-<!-- User Details Card -->
+      <!-- User Details Card -->
 
-<div class="col-lg-12">
-  <div class="card shadow-sm mb-4">
-  <div class="card-header">
-    <h6 class="card-title mb-0">
-      <i class="bi bi-person-badge me-2"></i>
-      Event Area Creator
-    </h6>
-  </div>
-  <div class="card-body">
-    <div class="d-flex gap-3 align-items-center mb-3">
-      <div class="flex-shrink-0">
-        <div class="avatar-sm bg-primary-subtle text-primary rounded d-flex align-items-center justify-content-center">
-          <i class="bi bi-person-fill fs-5"></i>
+      <div class="col-lg-12">
+        <div class="card shadow-sm mb-4">
+          <div class="card-header">
+            <h6 class="card-title mb-0">
+              <i class="bi bi-person-badge me-2"></i>
+              Event Area Creator
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="d-flex gap-3 align-items-center mb-3">
+              <div class="flex-shrink-0">
+                <div class="avatar-sm bg-primary-subtle text-primary rounded d-flex align-items-center justify-content-center">
+                  <i class="bi bi-person-fill fs-5"></i>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="fs-md">{{userDetails?.prenom}} {{userDetails?.nom}}</h6>
+                <p class="text-muted mb-0">Area Creator</p>
+              </div>
+            </div>
+            <div class="creator-details">
+              <div class="mb-2">
+                <a href="mailto:{{userDetails?.email}}" class="text-decoration-none text-muted d-flex align-items-center">
+                  <i class="bi bi-envelope me-2"></i>
+                  <span>{{userDetails?.email}}</span>
+                </a>
+              </div>
+              <div *ngIf="userDetails?.tel">
+                <a href="tel:{{userDetails?.tel}}" class="text-decoration-none text-muted d-flex align-items-center">
+                  <i class="bi bi-telephone me-2"></i>
+                  <span>{{userDetails?.tel}}</span>
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="flex-grow-1">
-        <h6 class="fs-md">{{userDetails?.prenom}} {{userDetails?.nom}}</h6>
-        <p class="text-muted mb-0">Area Creator</p>
-      </div>
-    </div>
-    <div class="creator-details">
-      <div class="mb-2">
-        <a href="mailto:{{userDetails?.email}}" class="text-decoration-none text-muted d-flex align-items-center">
-          <i class="bi bi-envelope me-2"></i>
-          <span>{{userDetails?.email}}</span>
-        </a>
-      </div>
-      <div *ngIf="userDetails?.tel">
-        <a href="tel:{{userDetails?.tel}}" class="text-decoration-none text-muted d-flex align-items-center">
-          <i class="bi bi-telephone me-2"></i>
-          <span>{{userDetails?.tel}}</span>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
 
-<div class="col-lg-12">
+      <div class="col-lg-12">
         <div class="card">
           <div class="card-header">
             <a href="javascript:void(0);" class="float-end link-effect">View More <i class="bi bi-arrow-right align-baseline ms-1"></i></a>
@@ -198,7 +198,7 @@
         </div>
       </div>
 
-<div class="col-lg-12">
+      <div class="col-lg-12">
         <div class="card">
           <div class="card-header">
             <h4 class="card-title mb-0">
@@ -229,28 +229,28 @@
             <div *ngIf="!isLoadingEvents && events.length > 0" class="table-responsive table-card">
               <table class="table align-middle mb-0">
                 <thead>
-                  <tr>
-                    <th>Event Details</th>
-                    <th class="text-end">Status</th>
-                  </tr>
+                <tr>
+                  <th>Event Details</th>
+                  <th class="text-end">Status</th>
+                </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let event of events">
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="flex-shrink-0">
-                          <img [src]="event.imageUrl || 'assets/images/small/img-3.jpg'" alt="" class="avatar-sm rounded">
-                        </div>
-                        <div class="flex-grow-1">
-                          <h6 class="fs-md mb-1">{{ event.title }}</h6>
-                          <p class="text-muted mb-0">
-                            <i class="bi bi-calendar-check me-1"></i>{{ event.startDate | date:'mediumDate' }}
-                            <i class="bi bi-clock ms-2 me-1"></i>{{ event.startDate | date:'shortTime' }}
-                          </p>
-                        </div>
+                <tr *ngFor="let event of events">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="flex-shrink-0">
+                        <img [src]="event.imageUrl || 'assets/images/small/img-3.jpg'" alt="" class="avatar-sm rounded">
                       </div>
-                    </td>
-                    <td class="text-end">
+                      <div class="flex-grow-1">
+                        <h6 class="fs-md mb-1">{{ event.title }}</h6>
+                        <p class="text-muted mb-0">
+                          <i class="bi bi-calendar-check me-1"></i>{{ event.startDate | date:'mediumDate' }}
+                          <i class="bi bi-clock ms-2 me-1"></i>{{ event.startDate | date:'shortTime' }}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-end">
                       <span class="badge"
                             [ngClass]="{
                               'bg-success': event.status === 'UPCOMING',
@@ -260,8 +260,8 @@
                             }">
                         {{ event.status }}
                       </span>
-                    </td>
-                  </tr>
+                  </td>
+                </tr>
                 </tbody>
               </table>
             </div>
@@ -426,42 +426,42 @@
 
       <form (ngSubmit)="saveProperty()" [formGroup]="propertyForm" class="tablelist-form" novalidate autocomplete="off">
         <div class="modal-body">
-<div class="mb-3">
-  <label class="form-label">Event Area Image</label>
+          <div class="mb-3">
+            <label class="form-label">Event Area Image</label>
 
-  <!-- Image source selection -->
-  <div class="btn-group mb-3 w-100" role="group">
-    <input type="radio" class="btn-check" name="imageSource" id="upload-option"
-           [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
-    <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
+            <!-- Image source selection -->
+            <div class="btn-group mb-3 w-100" role="group">
+              <input type="radio" class="btn-check" name="imageSource" id="upload-option"
+                     [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
+              <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
 
-    <input type="radio" class="btn-check" name="imageSource" id="generate-option"
-           [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
-    <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
-  </div>
+              <input type="radio" class="btn-check" name="imageSource" id="generate-option"
+                     [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
+              <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
+            </div>
 
-  <!-- Upload image option -->
-  <div *ngIf="imageSource === 'upload'">
-    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
-  </div>
+            <!-- Upload image option -->
+            <div *ngIf="imageSource === 'upload'">
+              <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+            </div>
 
-  <!-- Generate image option -->
-  <div *ngIf="imageSource === 'generate'" class="mb-3">
-    <button type="button" [disabled]="!propertyForm.controls['location'].value || isGeneratingImage"
-            class="btn btn-primary w-100" (click)="generateImageFromDescription()">
-      <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
-      {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
-    </button>
-    <small class="form-text text-muted">
-      Image will be generated based on your description text.
-    </small>
-  </div>
+            <!-- Generate image option -->
+            <div *ngIf="imageSource === 'generate'" class="mb-3">
+              <button type="button" [disabled]="!propertyForm.controls['location'].value || isGeneratingImage"
+                      class="btn btn-primary w-100" (click)="generateImageFromDescription()">
+                <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
+                {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
+              </button>
+              <small class="form-text text-muted">
+                Image will be generated based on your description text.
+              </small>
+            </div>
 
-  <!-- Image preview -->
-  <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
-    <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
-  </div>
-</div>
+            <!-- Image preview -->
+            <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
+              <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+            </div>
+          </div>
 
           <div class="mb-3">
             <label for="EVENT-AREA-title-input" class="form-label">EVENT AREA NAME<span class="text-danger">*</span></label>
@@ -587,112 +587,112 @@
 </div>
 
 <style>
-/* Modern styling for rejection modal */
-.rejection-modal {
-  border-radius: 16px;
-  overflow: hidden;
-  transform: scale(0.95);
-  animation: modal-pop 0.3s ease forwards;
-}
+  /* Modern styling for rejection modal */
+  .rejection-modal {
+    border-radius: 16px;
+    overflow: hidden;
+    transform: scale(0.95);
+    animation: modal-pop 0.3s ease forwards;
+  }
 
-.rejection-header {
-  background: linear-gradient(135deg, #ff4b4b 0%, #ff416c 100%);
-  padding: 1.25rem 1.5rem;
-}
+  .rejection-header {
+    background: linear-gradient(135deg, #ff4b4b 0%, #ff416c 100%);
+    padding: 1.25rem 1.5rem;
+  }
 
-.rejection-visual-container {
-  background-color: #fff;
-  padding: 2.5rem 1.5rem 1.5rem;
-  text-align: center;
-  position: relative;
-}
+  .rejection-visual-container {
+    background-color: #fff;
+    padding: 2.5rem 1.5rem 1.5rem;
+    text-align: center;
+    position: relative;
+  }
 
-.rejection-icon-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 1rem;
-}
+  .rejection-icon-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
 
-.rejection-icon {
-  font-size: 3.5rem;
-  color: #ff416c;
-  position: relative;
-  z-index: 2;
-}
+  .rejection-icon {
+    font-size: 3.5rem;
+    color: #ff416c;
+    position: relative;
+    z-index: 2;
+  }
 
-.rejection-icon-pulse {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  background-color: rgba(255, 65, 108, 0.1);
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: pulse 2s infinite;
-}
+  .rejection-icon-pulse {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background-color: rgba(255, 65, 108, 0.1);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 2s infinite;
+  }
 
-.rejection-message-container {
-  background-color: #f9f9f9;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-}
+  .rejection-message-container {
+    background-color: #f9f9f9;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
 
-.rejection-message-label {
-  color: #666;
-  display: flex;
-  align-items: center;
-}
+  .rejection-message-label {
+    color: #666;
+    display: flex;
+    align-items: center;
+  }
 
-.rejection-message {
-  background-color: white;
-  border-left: 4px solid #ff416c;
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-top: 0.5rem;
-  transition: all 0.3s ease;
-}
+  .rejection-message {
+    background-color: white;
+    border-left: 4px solid #ff416c;
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+  }
 
-.rejection-message:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
+  .rejection-message:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
 
-.hover-btn {
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-}
+  .hover-btn {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
 
-.hover-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
+  .hover-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
 
-.animated-icon {
-  animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
-  animation-delay: 0.5s;
-}
+  .animated-icon {
+    animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+    animation-delay: 0.5s;
+  }
 
-/* Animations */
-@keyframes modal-pop {
-  0% { transform: scale(0.95); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
+  /* Animations */
+  @keyframes modal-pop {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
 
-@keyframes pulse {
-  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
-  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
-  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
-}
+  @keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+    100% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+  }
 
-@keyframes shake {
-  10%, 90% { transform: translate(-1px, 0); }
-  20%, 80% { transform: translate(2px, 0); }
-  30%, 50%, 70% { transform: translate(-3px, 0); }
-  40%, 60% { transform: translate(3px, 0); }
-}
+  @keyframes shake {
+    10%, 90% { transform: translate(-1px, 0); }
+    20%, 80% { transform: translate(2px, 0); }
+    30%, 50%, 70% { transform: translate(-3px, 0); }
+    40%, 60% { transform: translate(3px, 0); }
+  }
 </style>
