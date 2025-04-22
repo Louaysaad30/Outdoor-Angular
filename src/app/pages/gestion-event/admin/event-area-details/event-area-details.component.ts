@@ -59,6 +59,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 
           userDetails: any = null;
 
+          events: any[] = [];
+          isLoadingEvents: boolean = false;
+
           options = {
             layers: [
               L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -74,6 +77,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 
           @ViewChild('addProperty', { static: false }) addProperty?: ModalDirective;
           @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
+          @ViewChild('rejectionModal', { static: false }) rejectionModal?: ModalDirective;
+
           propertyForm!: FormGroup;
           uploadedFile: File | null = null;
 
@@ -108,6 +113,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
                   });
 
                 this.extractKeywords();
+                this.loadEventsForEventArea();
               });
             }
           }
@@ -280,11 +286,27 @@ import { Component, OnInit, ViewChild } from '@angular/core';
             });
           }
 
-          @ViewChild('rejectionModal', { static: false }) rejectionModal?: ModalDirective;
-
           showRejectionMessage(): void {
             if (this.eventArea?.status === 'REJECTED' && this.rejectionModal) {
               this.rejectionModal.show();
             }
           }
+
+
+          loadEventsForEventArea(): void {
+            if (!this.eventArea?.id) return;
+
+            this.isLoadingEvents = true;
+            this.eventAreaService.getEventsByEventArea(this.eventArea.id).subscribe({
+              next: (events) => {
+                this.events = events;
+                this.isLoadingEvents = false;
+              },
+              error: (error) => {
+                console.error('Error loading events for this area:', error);
+                this.isLoadingEvents = false;
+              }
+            });
+          }
+
         }

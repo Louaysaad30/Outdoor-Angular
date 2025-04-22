@@ -53,3 +53,16 @@
   transform: scale(1.05);
   transition: transform 0.3s ease;
 }
+
+.breadcrumb-link-hover {
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #0d6efd !important; /* Bootstrap primary blue color */
+    text-decoration: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+  }
+}

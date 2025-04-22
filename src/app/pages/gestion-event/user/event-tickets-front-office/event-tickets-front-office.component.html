@@ -1,3 +1,17 @@
+<!-- Start Breadcrumbs -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Bold Event Tickets title on the left -->
+  <h5 class="fw-bold">{{ event?.title }} Tickets</h5>
+
+  <!-- Breadcrumb navigation on the right -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a [routerLink]="['/eventfront/user/events', event?.id]" class="breadcrumb-link-hover">{{ event?.title }} Details</a></li>
+      <li class="breadcrumb-item active">Tickets</li>
+    </ol>
+  </nav>
+</div>
+
 <!-- Toast Notifications Container -->
             <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
               <div *ngIf="showToast"

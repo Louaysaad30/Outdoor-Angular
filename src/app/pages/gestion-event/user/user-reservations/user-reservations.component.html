@@ -1,5 +1,16 @@
 <!-- Start Breadcrumbs -->
-          <app-breadcrumbs title="My Ticket Reservations" [breadcrumbItems]="[{label: 'My Reservations', active: true}]"></app-breadcrumbs>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Bold Reservation title on the left -->
+            <h5 class="fw-bold">Your Reservations</h5>
+
+            <!-- Breadcrumb navigation on the right -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a [routerLink]="['/eventfront/user/events']" class="breadcrumb-link-hover">Events</a></li>
+                <li class="breadcrumb-item active">MY Reservations</li>
+              </ol>
+            </nav>
+          </div>
           <!-- End Breadcrumbs -->
 
           <!-- Toast notification -->
