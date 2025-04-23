@@ -38,15 +38,10 @@ export class EditProfileComponent {
   changePasswordForm!: FormGroup;
   // bread crumb items
   breadCrumbItems!: Array<{}>;
- 
   fieldTextType!: boolean;
   fieldTextType1!: boolean;
   fieldTextType2!: boolean;
-
-
-
   bsConfig?: Partial<BsDatepickerConfig>;
-
   formGroups: FormGroup[] = [];
   educationForm!: FormGroup;
   currentTab = 'personalDetails';
@@ -105,6 +100,7 @@ export class EditProfileComponent {
     this.formGroups.push(this.educationForm);
 }
 onSubmit(): void {
+  
   if (this.userForm.valid) {
     const formData = new FormData();
 
@@ -115,13 +111,10 @@ onSubmit(): void {
     formData.append('dateNaissance', this.userForm.value.dateNaissance);
     formData.append('email', this.userForm.value.email);
     formData.append('location', this.userForm.value?.location);
-
-
     // Append image file if selected
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
     }
-
     this.userService.updateUser(this.currentUser.id, formData).subscribe({
       next: (res) => {
         alert('Profile updated successfully!');
@@ -131,7 +124,7 @@ onSubmit(): void {
         this.router.navigate(['/userfront/user/profile']);
       },
       error: (err) => {
-        const errorMessage = err?.error?.message || 'Profile update failed. Please try again.';
+        const errorMessage = err || 'Profile update failed. Please try again.';
         console.error('Update failed', err);
         alert(errorMessage);
       }

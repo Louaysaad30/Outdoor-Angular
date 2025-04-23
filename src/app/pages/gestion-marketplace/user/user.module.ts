@@ -20,6 +20,7 @@ import { OrderOverviewComponent } from './order-overview/order-overview.componen
 import { saveAs } from 'file-saver';
 import { ProductDetailsComponent } from './product-details/product-details.component';
 import { SlickCarouselModule } from 'ngx-slick-carousel';
+import { QRCodeComponent } from 'angularx-qrcode';
 
 @NgModule({
   declarations: [MarketPlaceComponent,CartComponent,CheckoutComponent,OrderOverviewComponent,ProductDetailsComponent],
@@ -38,7 +39,9 @@ import { SlickCarouselModule } from 'ngx-slick-carousel';
     AccordionModule.forRoot(),
     NgxSliderModule,
     AlertModule.forRoot(),
-    SlickCarouselModule
+    SlickCarouselModule,
+    QRCodeComponent,
+
 
 
   ]

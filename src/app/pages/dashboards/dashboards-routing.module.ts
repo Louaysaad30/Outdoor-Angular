@@ -7,12 +7,13 @@ import { CrmComponent } from './crm/crm.component';
 import { IndexComponent } from './index/index.component';
 import { LearningComponent } from './learning/learning.component';
 import { RealEstateComponent } from './real-estate/real-estate.component';
+import { SigninComponent } from '../../account/auth/signin/signin.component';
 
 
 const routes: Routes = [
   {
     path: "",
-    component: IndexComponent
+    component: IndexComponent,
   },
   {
     path: "analytics",

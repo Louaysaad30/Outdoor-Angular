@@ -161,7 +161,7 @@
                                                 <span class="text-muted fw-normal text-wrap d-block">Delivery within
                                                     24hrs.</span>
                                             </span>
-                                            <span class="fs-3xl float-end mt-2 text-wrap d-block fw-semibold">${{expressDeliveryFee}}</span>
+                                            <span class="fs-3xl float-end mt-2 text-wrap d-block fw-semibold">{{expressDeliveryFee}} DT</span>
                                         </label>
                                     </div>
                                 </div>
@@ -170,55 +170,70 @@
                     </div>
                 </div>
             </div><!--end col-->
-
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header d-flex align-items-center">
                         <h6 class="card-title flex-grow-1 mb-0">Payment Information</h6>
-                        <button class="btn btn-subtle-info flex-shrink-0" (click)="addCard.show()"><i
-                                class="bi bi-plus-circle align-baseline me-1"></i> Add
-                            Card</button>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="form-check card-radio">
-                                    <input id="debitCart01" name="debitCart" type="radio" class="form-check-input"
-                                        checked="">
-                                    <label class="form-check-label bg-primary p-4" for="debitCart01">
-                                        <i class="bi bi-cash-coin position-absolute top-0 end-0 display-1 text-white"
-                                            style="opacity: 0.06;"></i>
-                                        <span class="d-flex align-items-center mb-4 pb-4">
-                                            <img src="assets/images/mastercard.png" alt="" height="20">
-                                            <i class="ph-wifi-high ms-auto fs-4 text-white-75"></i>
-                                        </span>
-                                        <span class="fs-3xl text-white fw-medium mb-2 d-block">9873 6548 9871
-                                            0123</span>
-                                        <span class="d-flex align-items-center">
-                                            <span class="fs-xs text-white-75 d-block">Ophelia Steuber</span>
-                                            <span class="fs-xxs text-white-75 d-block ms-auto">Valid <b>32</b></span>
-                                        </span>
-                                    </label>
+                        <div class="mt-4">
+                            <h5 class="fs-md mb-3">Payment Method</h5>
+
+                            <div class="row g-4">
+                                <div class="col-lg-6">
+                                    <div class="form-check card-radio">
+                                        <input id="paymentMethod01" name="paymentMethod" type="radio"
+                                            class="form-check-input" checked
+                                            [(ngModel)]="selectedPaymentMethod"
+                                            [value]="'cod'">
+                                        <label class="form-check-label d-flex gap-2 align-items-center"
+                                            for="paymentMethod01">
+                                            <span class="avatar-sm">
+                                                <span class="avatar-title bg-light rounded text-body fs-4">
+                                                    <i class="bi bi-cash"></i>
+                                                </span>
+                                            </span>
+                                            <span class="flex-grow-1">
+                                                <span class="fs-md fw-medium mb-1 text-wrap d-block">Cash On Delivery</span>
+                                                <span class="text-muted fw-normal text-wrap d-block">Pay when you receive your order</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-check card-radio">
+                                        <input id="paymentMethod02" name="paymentMethod" type="radio"
+                                            class="form-check-input"
+                                            [(ngModel)]="selectedPaymentMethod"
+                                            [value]="'stripe'">
+                                        <label class="form-check-label d-flex gap-2 align-items-center"
+                                            for="paymentMethod02">
+                                            <span class="avatar-sm">
+                                                <span class="avatar-title bg-light rounded text-body fs-4">
+                                                    <i class="bi bi-credit-card"></i>
+                                                </span>
+                                            </span>
+                                            <span class="flex-grow-1">
+                                                <span class="fs-md fw-medium mb-1 text-wrap d-block">Card Payment</span>
+                                                <span class="text-muted fw-normal text-wrap d-block">Secure online payment with Stripe</span>
+                                            </span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-lg-4">
-                                <div class="form-check card-radio">
-                                    <input id="debitCart02" name="debitCart" type="radio" class="form-check-input">
-                                    <label class="form-check-label bg-secondary p-4" for="debitCart02">
-                                        <i class="bi bi-coin position-absolute top-0 end-0 display-1 text-white"
-                                            style="opacity: 0.06;"></i>
-                                        <span class="d-flex align-items-center mb-4 pb-4">
-                                            <img src="assets/images/visa.png" alt="" height="20">
-                                            <i class="ph-wifi-high ms-auto fs-4 text-white-75"></i>
-                                        </span>
-                                        <span class="fs-3xl text-white fw-medium mb-2 d-block">9873 6548 9871
-                                            0123</span>
-                                        <span class="d-flex align-items-center">
-                                            <span class="fs-xs text-white-75 d-block">Bethany Nienow</span>
-                                            <span class="fs-xxs text-white-75 d-block ms-auto">Valid <b>28</b></span>
-                                        </span>
-                                    </label>
+                        </div>
+                        <!-- Stripe Payment Preview (displays when stripe is selected) -->
+                        <div *ngIf="selectedPaymentMethod === 'stripe'" class="mt-4 p-3 border rounded">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://stripe.com/img/v3/home/social.png" alt="Stripe" style="height: 40px;" class="me-3">
+                                <div>
+                                    <h6 class="mb-1">Secure Payment via Stripe</h6>
+                                    <p class="text-muted mb-0 small">You'll be redirected to Stripe's secure checkout page to complete your payment.</p>
                                 </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-2">
+                                <span class="text-muted">Total amount:</span>
+                                <span class="fw-bold fs-5">{{getDisplayTotal()}} DT</span>
                             </div>
                         </div>
                     </div>
@@ -251,35 +266,35 @@
                                 </td>
                                 <td>
                                     <h5 class="fs-md">{{item.produit.nomProduit}}</h5>
-                                    <p class="text-muted fw-medium mb-0">${{item.produit.prixProduit}} x {{item.quantite}}</p>
+                                    <p class="text-muted fw-medium mb-0">{{item.produit.prixProduit}} x {{item.quantite}} DT</p>
                                 </td>
-                                <td class="text-end fw-semibold">${{item.produit.prixProduit * item.quantite}}</td>
+                                <td class="text-end fw-semibold">{{item.produit.prixProduit * item.quantite}} DT</td>
                             </tr>
                             <!-- Summary rows -->
                             <tr>
                                 <td class="fw-semibold" colspan="2">Sub Total :</td>
-                                <td class="fw-semibold text-end">${{subtotal}}</td>
+                                <td class="fw-semibold text-end">{{subtotal}} DT</td>
                             </tr>
                             <tr>
                                 <td colspan="2">Service Fee :</td>
-                                <td class="text-end">${{flatFee}}</td>
+                                <td class="text-end">{{flatFee}} DT</td>
                             </tr>
                             <tr *ngIf="expressDelivery">
                                 <td colspan="2">Express Delivery :</td>
-                                <td class="text-end">${{expressDeliveryFee}}</td>
+                                <td class="text-end">{{expressDeliveryFee}} DT</td>
                             </tr>
                             <tr *ngIf="environmentFriendly">
                                 <td colspan="2">Environment Friendly Service :</td>
-                                <td class="text-end">${{environmentFriendlyFee}}</td>
+                                <td class="text-end">{{environmentFriendlyFee}} DT</td>
                             </tr>
                             <tr *ngIf="carePackage">
                                 <td colspan="2">Care Package Service :</td>
-                                <td class="text-end">${{carePackageFee}}</td>
+                                <td class="text-end">{{carePackageFee}} DT</td>
                             </tr>
                             <tr class="border-top border-dashed">
-                                <th colspan="2">Total (USD) :</th>
+                                <th colspan="2">Total (DT) :</th>
                                 <td class="text-end">
-                                    <span class="fw-semibold">${{getDisplayTotal()}}</span>
+                                    <span class="fw-semibold">{{getDisplayTotal()}} DT</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -301,7 +316,7 @@
                                 future generations.</p>
                         </div>
                         <div class="flex-shrink-0 fw-medium">
-                            ${{environmentFriendlyFee}}
+                            {{environmentFriendlyFee}} DT
                         </div>
                         <div class="flex-shrink-0">
                             <div class="form-check form-switch">
@@ -319,7 +334,7 @@
                                 joyous occasions, such as engagements.</p>
                         </div>
                         <div class="flex-shrink-0 fw-medium">
-                            ${{carePackageFee}}
+                            {{carePackageFee}} DT
                         </div>
                         <div class="flex-shrink-0">
                             <div class="form-check form-switch">
@@ -414,21 +429,30 @@
                 <div class="mt-2 text-center">
                     <i class="bi bi-shop display-6"></i>
                     <div class="mt-4 pt-2 mx-4 mx-sm-5">
-                        <h4>Confirm your order ?</h4>
-                        <p class="text-muted mx-4 mb-0">Are you sure you want to confirm order ?</p>
+                        <h4>Confirm your order?</h4>
+                        <p class="text-muted mx-4 mb-0">
+                            <span *ngIf="selectedPaymentMethod === 'cod'">
+                                Your order will be processed for cash on delivery.
+                            </span>
+                            <span *ngIf="selectedPaymentMethod === 'stripe'">
+                                You'll be redirected to Stripe to complete your payment.
+                            </span>
+                        </p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-ghost-danger" (click)="confirmOrderModal.hide()"><i
-                            class="bi bi-x-lg align-baseline me-1"></i> Close</button>
+                    <button type="button" class="btn w-sm btn-ghost-danger" (click)="confirmOrderModal.hide()">
+                        <i class="bi bi-x-lg align-baseline me-1"></i> Close
+                    </button>
                     <button type="button"
                             class="btn w-sm btn-success"
+                            [disabled]="processingPayment"
                             (click)="submitOrder()">
+                        <span *ngIf="processingPayment" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                         Yes, Confirm Order
                     </button>
                 </div>
             </div>
-
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->

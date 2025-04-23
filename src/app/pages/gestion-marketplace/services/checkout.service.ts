@@ -3,8 +3,15 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Commande } from '../models/Commande';
 import { environment } from 'src/environments/environment';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { LigneCommande } from '../models/LigneCommande';
+import { Status } from '../models/Status';
+import { UpdateStateCommand } from '../models/DTO/UpdateStateCommand';
+import { method } from 'lodash';
+
+interface StripeCheckoutResponse {
+  checkoutUrl: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +19,38 @@ import { LigneCommande } from '../models/LigneCommande';
 export class CheckoutService {
 
   private baseUrl = 'http://localhost:9093/Commande';
+  private paymentUrl = 'http://localhost:9093/api/payment'; // Adjust if your payment endpoint is on a different URL
 
   constructor(private http: HttpClient) { }
+
+  // Create a Stripe checkout session and return the redirect URL
+  createStripeCheckoutSession(customData?: any): Observable<string> {
+    return this.http.post<StripeCheckoutResponse>(
+      `${this.paymentUrl}/create-checkout-session`,
+      customData || {}
+    ).pipe(
+      tap(response => console.log('Stripe checkout session created:', response)),
+      map(response => response.checkoutUrl), // Extract just the URL
+      catchError(error => {
+        console.error('Error creating Stripe checkout session:', error);
+        throw error;
+      })
+    );
+  }
+
+  // Method to redirect to Stripe checkout
+  redirectToStripeCheckout(): Observable<never> {
+    return this.createStripeCheckoutSession().pipe(
+      tap(checkoutUrl => {
+        // Redirect the browser to the Stripe checkout page
+        window.location.href = checkoutUrl;
+      }),
+      // This observable will never complete normally since we're redirecting
+      map(() => {
+        throw new Error('Redirect to payment gateway in progress');
+      })
+    );
+  }
 
   // Get all orders
   getAllCommandes(): Observable<Commande[]> {
@@ -39,7 +76,8 @@ export class CheckoutService {
         ligneCommande: commande.ligneCommande,
         userId: commande.userId,
         etat: commande.etat,
-        OrderNumber: commande.OrderNumber
+        OrderNumber: commande.OrderNumber,
+        paymentMethod: commande.paymentMethod,
     };
 
     return this.http.post<Commande>(
@@ -82,17 +120,102 @@ export class CheckoutService {
       );
   }
 
-  // Add this method to your service
-  downloadInvoice(orderId: number): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/invoice/${orderId}`, {
+  // Ajouter cette méthode à votre CheckoutService
+  getProductNamesByCommandeId(commandeId: number): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/getProductNamesByCommandeId/${commandeId}`)
+      .pipe(
+        tap(productNames => console.log(`Found ${productNames.length} products for order ${commandeId}`)),
+        catchError(error => {
+          console.error(`Error fetching product names for order ${commandeId}:`, error);
+          throw error;
+        })
+      );
+  }
+
+  downloadInvoice(commandeId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/downloadInvoice/${commandeId}`, {
       responseType: 'blob',
-      headers: new HttpHeaders().append('Accept', 'application/pdf')
+      observe: 'response'
     }).pipe(
-      tap(() => console.log(`Invoice for order ${orderId} downloaded successfully`)),
+      tap(response => {
+        console.log('Invoice downloaded successfully for order', commandeId);
+
+        // Extract filename from Content-Disposition header if available
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filename = contentDisposition
+          ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+          : `facture_${commandeId}.pdf`;
+
+        // Create a download link and trigger the download
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+
+          // Clean up
+          window.URL.revokeObjectURL(url);
+        }
+      }),
       catchError(error => {
-        console.error('Error downloading invoice:', error);
+        console.error(`Error downloading invoice for order ${commandeId}:`, error);
+        throw error;
+      }),
+      // Extract just the blob body from the response and handle null case
+      map(response => response.body || new Blob())
+    );
+  }
+
+  updateOrderStatus(dto: UpdateStateCommand): Observable<Commande> {
+    return this.http.put<Commande>(
+      `${this.baseUrl}/updateStatus/${dto.idCommande}`,
+      dto
+    ).pipe(
+      tap(updatedOrder => console.log(`Order ${dto.idCommande} status updated`)),
+      catchError(error => {
+        console.error(`Error updating status for order ${dto.idCommande}:`, error);
         throw error;
       })
     );
+  }
+
+  // Add this method to get all orders for a user
+  getCommandesByUserId(userId: number): Observable<Commande[]> {
+    return this.http.get<Commande[]>(`${this.baseUrl}/getByUserId/${userId}`)
+      .pipe(
+        tap(orders => console.log(`Found ${orders.length} orders for user ${userId}`)),
+        catchError(error => {
+          console.error('Error fetching orders by user:', error);
+          throw error;
+        })
+      );
+  }
+
+
+
+  affecterLivraisonACommande(commandeId: number, livraisonId: number): Observable<Commande> {
+    return this.http.put<Commande>(
+      `${this.baseUrl}/affecterLivreurACommande/${commandeId}/${livraisonId}`,
+      {}
+    ).pipe(
+      tap(order => console.log(`Delivery person ${livraisonId} assigned to order ${commandeId}`)),
+      catchError(error => {
+        console.error(`Error assigning delivery person ${livraisonId} to order ${commandeId}:`, error);
+        throw error;
+      })
+    );
+  }
+
+  getCommandeByLivraisonId(livraisonId: number): Observable<Commande[]> {
+    return this.http.get<Commande[]>(`${this.baseUrl}/getByLivraisonId/${livraisonId}`)
+      .pipe(
+        tap(orders => console.log(`Found ${orders.length} orders for delivery person ${livraisonId}`)),
+        catchError(error => {
+          console.error('Error fetching orders by delivery person:', error);
+          throw error;
+        })
+      );
   }
 }
