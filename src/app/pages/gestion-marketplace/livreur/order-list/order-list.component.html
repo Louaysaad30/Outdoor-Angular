@@ -1,0 +1,406 @@
+<div class="delivery-dashboard-container">
+  <!-- Page Header -->
+  <div class="dashboard-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="page-title mb-0">My Deliveries</h2>
+        <p class="text-muted">Manage and track your assigned delivery orders</p>
+      </div>
+      <button class="btn btn-primary refresh-btn" (click)="refreshDeliveries()">
+        <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-container mb-4">
+    <div class="card filter-card">
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- Search -->
+          <div class="col-md-4">
+            <div class="input-group">
+              <span class="input-group-text bg-transparent border-end-0">
+                <i class="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control border-start-0"
+                placeholder="Search by address, order #..."
+                [formControl]="searchTerm"
+              >
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-md-3">
+            <select class="form-select" [formControl]="statusFilter">
+              <option *ngFor="let option of statusOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Sort Options -->
+          <div class="col-md-5">
+            <div class="d-flex gap-2">
+              <select class="form-select" [formControl]="sortBy">
+                <option *ngFor="let option of sortOptions" [value]="option.value">
+                  Sort by {{ option.label }}
+                </option>
+              </select>
+              <button
+                class="btn sort-btn"
+                [ngClass]="sortOrder.value === 'desc' ? 'btn-outline-secondary' : 'btn-secondary'"
+                (click)="sortOrder.setValue(sortOrder.value === 'asc' ? 'desc' : 'asc')">
+                <i class="bi" [ngClass]="sortOrder.value === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3 text-muted">Loading deliveries...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !loading" class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && filteredDeliveries.length === 0" class="empty-state">
+    <div class="card empty-card">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-box-seam display-1 text-muted"></i>
+        <h4 class="mt-4">No deliveries found</h4>
+        <p class="text-muted">
+          {{ searchTerm.value || statusFilter.value !== 'all' ?
+            'Try adjusting your filters to see more results.' :
+            'You don\'t have any assigned deliveries yet.' }}
+        </p>
+        <button class="btn btn-outline-primary mt-3" (click)="refreshDeliveries()">
+          <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delivery Cards -->
+  <div *ngIf="!loading && filteredDeliveries.length > 0" class="delivery-cards-container">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+      <div class="col" *ngFor="let delivery of filteredDeliveries">
+        <div class="card delivery-card h-100">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <div class="delivery-icon me-2">
+                  <i class="bi bi-truck"></i>
+                </div>
+                <h6 class="mb-0">Order #{{ delivery.OrderNumber || 'N/A' }}</h6>
+              </div>
+              <div [class]="'status-badge ' + getStatusClass(delivery.etatLivraison)">
+                {{ getStatusLabel(delivery.etatLivraison) }}
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="delivery-details">
+              <!-- Delivery Date -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-calendar-date"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Delivery Date</div>
+                  <div class="detail-value">{{ delivery.dateLivraison | date:'mediumDate' }}</div>
+                </div>
+              </div>
+
+              <!-- Customer Information -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-person"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Customer</div>
+                  <div class="detail-value">{{ getClientOrder(delivery.idLivraison)?.nom || 'No name specified' }}</div>
+                </div>
+              </div>
+
+              <!-- Phone Number -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-telephone"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Phone Number</div>
+                  <div class="detail-value">
+                    <a *ngIf="getClientOrder(delivery.idLivraison)?.phone"
+                       href="tel:{{ getClientOrder(delivery.idLivraison)?.phone }}"
+                       class="text-decoration-none">
+                      {{ getClientOrder(delivery.idLivraison)?.phone }}
+                    </a>
+                    <span *ngIf="!getClientOrder(delivery.idLivraison)?.phone">No phone specified</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delivery Address -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-geo-alt"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Delivery Address</div>
+                  <div class="detail-value">{{ getClientOrder(delivery.idLivraison)?.adresse || 'No address specified' }}</div>
+                </div>
+              </div>
+
+              <!-- City and Governorate -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-pin-map"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Location</div>
+                  <div class="detail-value">
+                    {{ (getClientOrder(delivery.idLivraison)?.city ? getClientOrder(delivery.idLivraison)?.city + ', ' : '') +
+                       (getClientOrder(delivery.idLivraison)?.gouvernement || 'Not specified') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Amount -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-cash"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Amount</div>
+                  <div class="detail-value">
+                    {{ getClientOrder(delivery.idLivraison)?.montantCommande ?
+                       (getClientOrder(delivery.idLivraison)?.montantCommande | currency) : 'N/A' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Method -->
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="bi bi-credit-card"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Payment Method</div>
+                  <div class="detail-value">
+                    {{ getClientOrder(delivery.idLivraison)?.paymentMethod ||
+                       delivery.paymentMethod || 'Not specified' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+              <!-- Progress Indicator -->
+              <div class="delivery-progress">
+                <div class="progress" style="height: 6px;">
+                  <div class="progress-bar bg-success"
+                       [style.width]="delivery.etatLivraison === Status.DELIVERED ? '100%' :
+                                     delivery.etatLivraison === Status.SHIPPED ? '50%' :
+                                     delivery.etatLivraison === Status.IN_PROGRESS ? '25%' : '0%'">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="action-buttons d-flex gap-2">
+                <ng-container *ngIf="delivery.etatLivraison !== Status.DELIVERED && delivery.etatLivraison !== Status.CANCELED">
+                  <button *ngIf="delivery.etatLivraison === Status.IN_PROGRESS"
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="updateDeliveryStatus(delivery, Status.SHIPPED)">
+                    <i class="bi bi-truck me-1"></i> Start
+                  </button>
+
+                  <button *ngIf="delivery.etatLivraison === Status.SHIPPED"
+                          class="btn btn-sm btn-outline-success"
+                          (click)="updateDeliveryStatus(delivery, Status.DELIVERED)">
+                    <i class="bi bi-check-circle me-1"></i> Complete
+                  </button>
+
+                  <button class="btn btn-sm btn-outline-danger"
+                          (click)="updateDeliveryStatus(delivery, Status.CANCELED)">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                  </button>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+  /* Dashboard Container */
+  .delivery-dashboard-container {
+    padding: 1.5rem;
+  }
+
+  /* Page Header */
+  .page-title {
+    font-weight: 600;
+    color: #2c3e50;
+    position: relative;
+  }
+
+  .refresh-btn {
+    border-radius: 50px;
+    padding: 0.5rem 1.25rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Filter Card */
+  .filter-card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    background-color: #fff;
+  }
+
+  .sort-btn {
+    border-radius: 5px;
+    width: 40px;
+  }
+
+  /* Status Badges */
+  .status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-pending {
+    background-color: #fef9c3;
+    color: #854d0e;
+  }
+
+  .status-in-progress {
+    background-color: #e0f2fe;
+    color: #075985;
+  }
+
+  .status-completed {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
+  .status-cancelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  /* Delivery Cards */
+  .delivery-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+  }
+
+  .delivery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .delivery-card .card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+    padding: 1rem;
+  }
+
+  .delivery-icon {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  /* Detail Items */
+  .delivery-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .detail-icon {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+  }
+
+  .detail-value {
+    font-weight: 500;
+    color: #212529;
+  }
+
+  /* Card Footer */
+  .delivery-card .card-footer {
+    background-color: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+  }
+
+  /* Empty State */
+  .empty-card {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+  }
+
+  /* Dropdown Styling */
+  .dropdown-item {
+    cursor: pointer;
+  }
+
+  .dropdown-menu {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+</style>

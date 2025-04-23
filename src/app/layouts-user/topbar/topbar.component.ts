@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Inject, ViewChild } from '@angular/core';
+import { Component, Output, EventEmitter, Inject, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { EventService } from 'src/app/core/services/event.service';
 import { LanguageService } from 'src/app/core/services/language.service';
@@ -14,13 +14,20 @@ import { changeMode } from 'src/app/store/layouts/layout-action';
 import { getLayoutmode } from 'src/app/store/layouts/layout-selector';
 import { TokenStorageService } from 'src/app/core/services/token-storage.service';
 import { AuthServiceService } from 'src/app/account/auth/services/auth-service.service';
+import { LigneCommande } from 'src/app/pages/gestion-marketplace/models/LigneCommande';
+import { LignedecommandeService } from 'src/app/pages/gestion-marketplace/services/lignedecommande.service';
+import { PanierService } from 'src/app/pages/gestion-marketplace/services/panier/panier.service';
+import { map, switchMap, catchError } from 'rxjs/operators';
+import { of, Subscription } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
+import { CartUpdateService } from 'src/app/pages/gestion-marketplace/services/cart-update.service';
 
 @Component({
   selector: 'app-topbar',
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss']
 })
-export class TopbarComponent {
+export class TopbarComponent implements OnInit, OnDestroy {
 
   country: any;
   selectedItem!: any;
@@ -55,6 +62,12 @@ export class TopbarComponent {
   readNotify: number = 0;
   currentUser: any;
 
+  cartItems: LigneCommande[] = [];
+  serviceFee: number = 1; // Fixed service fee
+  totalPrice: number = 0;
+
+  private cartUpdateSubscription: Subscription = new Subscription();
+
   constructor(@Inject(DOCUMENT) private document: any,
     private eventService: EventService,
     public languageService: LanguageService,
@@ -63,7 +76,11 @@ export class TopbarComponent {
     private router: Router,
     public _cookiesService: CookieService,
     public store: Store<RootReducerState>,
-    private TokenStorageService: TokenStorageService) { }
+    private TokenStorageService: TokenStorageService,
+    private ligneCommandeService: LignedecommandeService,
+    private panierService: PanierService,
+    private toastr: ToastrService,
+    private cartUpdateService: CartUpdateService) { }
     image:any;
   ngOnInit(): void {
     this.element = document.documentElement;
@@ -103,6 +120,13 @@ export class TopbarComponent {
         this.readNotify = element.items.length
       }
     });
+
+    this.loadCartData();
+
+    this.cartUpdateSubscription = this.cartUpdateService.cartUpdate$.subscribe(() => {
+      console.log('Cart update detected in topbar component');
+      this.loadCartData(); // Recharger les données du panier
+    });
   }
   loadUser(): void {
     this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
@@ -113,7 +137,7 @@ export class TopbarComponent {
     this.authServicee.logout();
     this.router.navigate(['/auth/signin']);
   }
-  
+
   windowScroll() {
     if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
       (document.getElementById('back-to-top') as HTMLElement).style.display = "block";
@@ -355,4 +379,89 @@ export class TopbarComponent {
    * Logout the user
    */
 
+  /**
+   * Loads cart data for the current user
+   */
+  loadCartData(): void {
+    if (!this.currentUser || !this.currentUser.id) {
+      return;
+    }
+
+    // Get all paniers for the user
+    this.panierService.getAllPaniersByUserId(this.currentUser.id).pipe(
+      catchError(error => {
+        console.error('Error fetching user carts:', error);
+        return of([]);
+      }),
+      switchMap(paniers => {
+        // Filter for active (non-validated) paniers
+        const activePaniers = paniers.filter(p => p.validated !== true);
+
+        if (!activePaniers || activePaniers.length === 0) {
+          return of([]);
+        }
+
+        // Use the first active panier
+        const panier = activePaniers[0];
+
+        return this.ligneCommandeService.getLigneCommandesByPanierId(panier.idPanier!).pipe(
+          catchError(error => {
+            console.error('Error fetching cart items:', error);
+            return of([]);
+          }),
+          map(lignes => {
+            // Filter for items not in an order
+            return lignes.filter(ligne => !ligne.commande);
+          })
+        );
+      })
+    ).subscribe({
+      next: (items) => {
+        this.cartItems = items;
+        this.calculateTotals();
+      },
+      error: (error) => {
+        console.error('Failed to load cart data:', error);
+        this.cartItems = [];
+        this.calculateTotals();
+      }
+    });
+  }
+
+  /**
+   * Calculate cart totals
+   */
+  private calculateTotals(): void {
+    this.subtotal = this.cartItems.reduce((sum, item) =>
+      sum + ((item.prix || item.produit?.prixProduit || 0) * item.quantite), 0);
+    this.totalPrice = this.subtotal + this.serviceFee;
+  }
+
+  /**
+   * Remove item from cart
+   */
+  removeCartItem(id: number | undefined): void {
+    if (!id) {
+      console.error('Cannot delete item: ID is undefined');
+      return;
+    }
+
+    this.ligneCommandeService.deleteLigneCommande(id).subscribe({
+      next: () => {
+        this.cartItems = this.cartItems.filter(item => item.idLigneCommande !== id);
+        this.calculateTotals();
+        this.toastr.success('Item removed from cart', 'Success');
+      },
+      error: (error) => {
+        console.error('Error removing item from cart:', error);
+        this.toastr.error('Failed to remove item', 'Error');
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.cartUpdateSubscription) {
+      this.cartUpdateSubscription.unsubscribe();
+    }
+  }
 }

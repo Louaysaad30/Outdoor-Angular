@@ -6,8 +6,7 @@ import { PCategorie } from '../../models/PCategorie';
 
 @Component({
   selector: 'app-add-pcategory',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  standalone: false,
   templateUrl: './add-pcategory.component.html'
 })
 export class AddPCategoryComponent implements OnInit {

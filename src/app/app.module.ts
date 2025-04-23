@@ -62,7 +62,8 @@ if (environment.defaultauth === 'firebase') {
 @NgModule({
   declarations: [
     AppComponent,
-    AuthlayoutComponent
+    AuthlayoutComponent,
+    
   ],
   imports: [
     TranslateModule.forRoot({
