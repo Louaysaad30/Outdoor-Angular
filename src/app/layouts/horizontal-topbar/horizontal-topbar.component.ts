@@ -22,11 +22,37 @@ export class HorizontalTopbarComponent {
   constructor(private router: Router, public translate: TranslateService, private renderer: Renderer2, private elementRef: ElementRef) {
     translate.setDefaultLang('en');
   }
-
+currentUser: any;
   ngOnInit(): void {
-    // Menu Items
-    this.menuItems = MENU;
-    this.AllmenuItems = MENU;
+    
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const userRole = this.currentUser?.authorities[0]?.authority ;
+        // Menu Items
+        switch(userRole) {
+          case 'ADMIN':
+            this.menuItems = MENU.AdminMenu;
+            break;
+          case 'USER':
+            this.menuItems = MENU.UserMenu;
+            break;
+          case 'OWNER':
+            this.menuItems = MENU.OwnerMenu;
+            break;
+          case 'FORMATEUR':
+            this.menuItems = MENU.FormateurMenu;
+            break;
+          case 'EVENT_MANAGER':
+            this.menuItems = MENU.EventManagerMenu;
+            break;
+          case 'AGENCE':
+            this.menuItems = MENU.AgenceMenu;
+            break;
+          case 'LIVREUR':
+            this.menuItems = MENU.LivreurMenu;
+            break;
+          default:
+            this.menuItems = MENU.UserMenu;
+        }
     // Initialize the navData and menuItems
     this.navData = MENU;
     this.menuItems = this.navData;
@@ -52,7 +78,7 @@ export class HorizontalTopbarComponent {
         this.updateMenu();
       }, 1000);
     } else {
-      this.menuItems = MENU;
+   //   this.menuItems = MENU;
     }
     setTimeout(() => {
       this.menuPosSetOnClicknHover();

@@ -1,11 +1,14 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import {ForumDetailComponent} from "./forumDetail/forumDetail.component";
 import {ForumPostComponent} from "./forum-post/forum-post.component";
+import {AddPostComponent} from "./add-post/add-post.component";
+import {MesPostsComponent} from "./mes-posts/mes-posts.component";
 
 const routes: Routes = [
-  {path:"forumDetail",component:ForumDetailComponent},
-  {path:"forumPost",component:ForumPostComponent},
+  {path:"forumpost",component:ForumPostComponent},
+  {path:"addPost",component:AddPostComponent},
+  {path:"mesPost",component:MesPostsComponent},
+
 
 ];
 

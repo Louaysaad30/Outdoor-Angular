@@ -6,6 +6,7 @@ import { AuthenticationRequest } from '../models/AuthenticationRequest';
 import { User } from '../models/User';
 import { jwtDecode } from 'jwt-decode';
 import { UserServiceService } from './user-service.service';
+import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,8 +17,7 @@ export class AuthServiceService {
   private userUpdatedSubject = new BehaviorSubject<void>(undefined);
   public userUpdated$ = this.userUpdatedSubject.asObservable();
 
-  constructor(private http: HttpClient, private userService: UserServiceService) {}
-
+  constructor(private http: HttpClient, private userService: UserServiceService,private websocketService:WebsocketService) {}
   // Get token from local storage
   getToken(): string | null {
     return localStorage.getItem('authToken');
@@ -94,12 +94,22 @@ export class AuthServiceService {
     });
   }
   
-  logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('currentUser');
-    this.currentUserSubject.next(null); // Clear BehaviorSubject
-  }
+// In your auth service or component
+logout() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // First disconnect WebSocket
+  this.websocketService.disconnect(user.id);
+  
+  // Then clear storage after a small delay
+  setTimeout(() => {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('currentUser');
+      this.currentUserSubject.next(null);
+  }, 500);
+  
+}
   verifyPassword(userId: number, password: string): Observable<any> {
     const body = { userId, password };
     return this.http.post(`${this.apiUrl}/verify-password`, body); // Ensure the URL matches the backend

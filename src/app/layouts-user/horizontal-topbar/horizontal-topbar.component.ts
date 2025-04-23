@@ -81,20 +81,10 @@ export class HorizontalTopbarComponent {
         }
       }
     }
-    const moreMenuItem = {
-      id: "more",
-      label: "More",
-      icon: 'ri-briefcase-2-line',
-      subItems: hiddenItems,
-      link: "/#",
-      stateVariables: this.isMoreMenu,
-      click: (e: any) => {
-        e.preventDefault();
-        this.isMoreMenu = !this.isMoreMenu;
-      },
-    };
 
-    const updatedMenuItems = [...visibleItems, moreMenuItem];
+
+    const updatedMenuItems = [...visibleItems
+    ];
     this.menuItems = updatedMenuItems;
 
   }

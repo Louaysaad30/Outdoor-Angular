@@ -20,7 +20,7 @@ export class roleGuard implements CanActivate {
     const requiredRole = route.data['role'];
     const userRole = user.authorities[0]?.authority;
 
-    if (requiredRole && userRole !== requiredRole) {
+    if (userRole !== requiredRole) {
       // Rôle incorrect → redirection vers une page d'erreur
       this.router.navigate(['/auth/errors/503']); // ou '404' ou autre selon ce que tu veux
       return false;

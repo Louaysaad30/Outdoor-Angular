@@ -4,6 +4,10 @@ import { ChartOptions } from "./column.model";
 /**
  * Series Data
  */
+
+
+// Then make sure you're using this interface for the data in question
+
 export const dataSeries = [
   [
     {
@@ -2389,11 +2393,17 @@ const rangeColumnChart: ChartOptions = {
 /**
  * Dynamin Loaded Chart
  */
+// Add this interface at the top of your data.ts file, after the import statement
+interface FilterOptions {
+  type?: string;
+  value?: number;
+}
+
 const dynamicLoadedChart: ChartOptions = {
   series: [{
     name: "year",
     data: makeData(),
-  }, ],
+  }],
   chart: {
     id: "barYear",
     height: 400,
@@ -2428,26 +2438,26 @@ const dynamicLoadedChart: ChartOptions = {
   },
   plotOptions: {
     bar: {
-        distributed: true,
-        horizontal: true,
-        barHeight: "75%",
-        dataLabels: {
-            position: "bottom",
-        },
+      distributed: true,
+      horizontal: true,
+      barHeight: "75%",
+      dataLabels: {
+        position: "bottom",
+      },
     },
   },
   dataLabels: {
     enabled: true,
     textAnchor: "start",
     style: {
-        colors: ["#fff"],
+      colors: ["#fff"],
     },
     formatter: function (val, opt) {
-        return opt.w.globals.labels[opt.dataPointIndex];
+      return opt.w.globals.labels[opt.dataPointIndex];
     },
     offsetX: 0,
     dropShadow: {
-        enabled: true,
+      enabled: true,
     },
   },
   colors: colors,
@@ -2463,11 +2473,12 @@ const dynamicLoadedChart: ChartOptions = {
             type: "darken",
 
         },
+
     },
   },
   tooltip: {
     x: {
-        show: false,
+      show: false,
     },
   },
   title: {
@@ -2475,19 +2486,18 @@ const dynamicLoadedChart: ChartOptions = {
     offsetX: 15,
   },
   subtitle: {
-      text: "(Click on bar to see details)",
-      offsetX: 15,
+    text: "(Click on bar to see details)",
+    offsetX: 15,
   },
   yaxis: {
-      labels: {
-          show: false,
-      },
+    labels: {
+      show: false,
+    },
   },
   legend: {
-      show: false
+    show: false
   }
 };
-
 /**
  * Dynamin Quarter Loaded Chart
  */
