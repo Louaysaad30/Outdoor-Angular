@@ -4,7 +4,6 @@ import { VehiculeService } from '../../services/vehicule.service';
 import { ReservationService } from '../../services/reservation.service';
 import { Vehicule } from '../../models/vehicule.model';
 import { Reservation } from '../../models/reservation.model';
-import * as ApexCharts from 'apexcharts';
 
 @Component({
   selector: 'app-dashboard-agence',

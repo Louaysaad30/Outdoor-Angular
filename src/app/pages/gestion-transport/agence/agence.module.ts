@@ -20,6 +20,8 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 
 
+
+
 @NgModule({
   declarations: [
     AddVehiculeComponent,
@@ -39,7 +41,9 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
     ProgressbarModule.forRoot(),
     ModalModule.forRoot(),
     BsDatepickerModule.forRoot(),
-    NgxEchartsModule.forRoot({ echarts: () => import('echarts') }),
+    NgxEchartsModule.forRoot({
+      echarts: () => import('echarts'),
+    }),
     NgApexchartsModule,
     FlatpickrModule.forRoot(),
     NgbPaginationModule    

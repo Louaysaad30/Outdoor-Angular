@@ -1,0 +1,50 @@
+@media print {
+    body * {
+      visibility: hidden;
+    }
+    #invoice, #invoice * {
+      visibility: visible;
+    }
+    #invoice {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+    .d-print-none {
+      display: none !important;
+    }
+  }
+  
+  .invoice-effect-top {
+    z-index: 0;
+    opacity: 0.5;
+  }
+  
+  #invoice {
+    .card-body {
+      background-color: white;
+    }
+    
+    table {
+      width: 100%;
+      
+      th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+    }
+    
+    .table-active {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+  
+  .btn {
+    i {
+      margin-right: 5px;
+    }
+  }

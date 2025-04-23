@@ -10,6 +10,8 @@ import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { LocationFormComponent } from './location-form/location-form.component';
 import { ReservationsComponent } from './reservations/reservations.component';
+import { NgxSliderModule } from '@angular-slider/ngx-slider';
+
 
 
 @NgModule({
@@ -28,6 +30,8 @@ import { ReservationsComponent } from './reservations/reservations.component';
     RouterModule,
     ReactiveFormsModule,
     CommonModule,
+    NgxSliderModule,
+    AccordionModule.forRoot(),
   ]
 })
 export class UserModule { }

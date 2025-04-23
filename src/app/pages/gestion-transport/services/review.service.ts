@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable } from 'rxjs';
 import { Vehicule } from '../models/vehicule.model';
 import { Review } from '../models/review.model';
 
@@ -31,7 +31,12 @@ export class ReviewService {
     return this.http.post<Review>(`${this.baseUrl}/${vehiculeId}`, review);
   }
 
-  deleteReview(id: number) {
-    return this.http.delete(`${this.baseUrl}/${id}`);
+  deleteReview(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/${id}`).pipe(
+      catchError(error => {
+        console.error('Delete review error:', error);
+        throw error; 
+      })
+    );
   }
 }
