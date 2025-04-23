@@ -1,22 +1,22 @@
 <div class="container mt-4">
-  <h2 class="text-center">Réservation de Véhicule</h2>
+  <h2 class="text-center">Vehicle Reservation</h2>
   <form [formGroup]="reservationForm" (ngSubmit)="onSubmit()">
 
-    <!-- Nom complet -->
+    <!-- Full Name -->
     <div class="mb-3">
-      <label for="fullName" class="form-label">Nom Complet</label>
+      <label for="fullName" class="form-label">Full Name</label>
       <input type="text" id="fullName" class="form-control" formControlName="fullName" required>
     </div>
 
-    <!-- Téléphone -->
+    <!-- Phone -->
     <div class="mb-3">
-      <label for="phone" class="form-label">Téléphone</label>
+      <label for="phone" class="form-label">Phone</label>
       <input type="text" id="phone" class="form-control" formControlName="phone" required>
     </div>
 
-    <!-- Véhicule -->
+    <!-- Vehicle -->
     <div class="mb-3">
-      <label for="vehicule" class="form-label">Véhicule</label>
+      <label for="vehicule" class="form-label">Vehicle</label>
       <select id="vehicule" class="form-control" formControlName="vehicule" required>
         <option *ngFor="let vehicule of vehicules" [value]="vehicule.id">
           {{ vehicule.marque }} - {{ vehicule.modele }}
@@ -24,32 +24,31 @@
       </select>
     </div>
 
-    <!-- Date début location -->
+    <!-- Rental Start Date -->
     <div class="mb-3">
-      <label for="debutLocation" class="form-label">Début Location</label>
+      <label for="debutLocation" class="form-label">Rental Start</label>
       <input type="datetime-local" id="debutLocation" class="form-control" formControlName="debutLocation" required>
     </div>
 
-    <!-- Date fin location -->
+    <!-- Rental End Date -->
     <div class="mb-3">
-      <label for="finLocation" class="form-label">Fin Location</label>
+      <label for="finLocation" class="form-label">Rental End</label>
       <input type="datetime-local" id="finLocation" class="form-control" formControlName="finLocation" required>
     </div>
 
-        <!-- Lieu de prise en charge -->
-<div class="mb-3">
-  <label class="form-label">Lieu de prise en charge</label>
-  <input type="text" class="form-control" formControlName="pickupLocation" readonly>
-  <div #pickupMap id="pickupMap" class="leaflet-map" style="height: 300px;"></div>
-</div>
+    <!-- Pickup Location -->
+    <div class="mb-3">
+      <label class="form-label">Pickup Location</label>
+      <input type="text" class="form-control" formControlName="pickupLocation" readonly>
+      <div #pickupMap id="pickupMap" class="leaflet-map" style="height: 300px;"></div>
+    </div>
 
+    <!-- Status (Hidden, always "PENDING") -->
+    <input type="hidden" formControlName="statut" value="PENDING">
 
-    <!-- Statut (Masqué, toujours "EN_ATTENTE") -->
-    <input type="hidden" formControlName="statut" value="EN_ATTENTE">
-
-    <!-- Bouton de soumission -->
+    <!-- Submit Button -->
     <button type="submit" class="btn btn-primary w-100" [disabled]="!reservationForm.valid || vehicleUnavailable">
-      Réserver
+      Book
     </button>
   </form>
 </div>

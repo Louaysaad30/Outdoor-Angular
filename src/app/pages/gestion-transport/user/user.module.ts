@@ -11,6 +11,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { LocationFormComponent } from './location-form/location-form.component';
 import { ReservationsComponent } from './reservations/reservations.component';
 import { NgxSliderModule } from '@angular-slider/ngx-slider';
+import { PaginationModule } from 'ngx-bootstrap/pagination';
 
 
 
@@ -32,6 +33,8 @@ import { NgxSliderModule } from '@angular-slider/ngx-slider';
     CommonModule,
     NgxSliderModule,
     AccordionModule.forRoot(),
+    PaginationModule.forRoot(),
+    
   ]
 })
 export class UserModule { }

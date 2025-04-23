@@ -172,7 +172,8 @@
             </ul>
           </div>
           <button class="btn btn-primary" (click)="toggleReviewForm()">
-            <i class="bi bi-pencil-square me-1"></i>{{ showForm ? 'Cancel' : 'Add Review' }}
+            <i class="bi bi-pencil-square me-1"></i>
+            {{ userReview ? (isEditing ? 'Cancel Edit' : 'Edit Review') : 'Add Review' }}
           </button>
         </div>
       </div>
@@ -180,7 +181,7 @@
       <!-- Review Form -->
       <div *ngIf="showForm" class="card border-0 bg-light mb-4">
         <div class="card-body p-4">
-          <h5 class="mb-3">Write a Review</h5>
+          <h5 class="mb-3">{{ isEditing ? 'Edit Your Review' : 'Write a Review' }}</h5>
           <div *ngIf="badWordsDetected" class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i> Your review contained inappropriate language which has been filtered.
           </div>
@@ -208,16 +209,16 @@
                 rows="4"
                 placeholder="Share your experience with this vehicle..."></textarea>
               <small class="text-danger" *ngIf="reviewForm.get('comment')?.invalid && reviewForm.get('comment')?.touched">
-                Review must be at least 5 characters
+                Review must be between 5-500 characters
               </small>
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline-secondary" (click)="toggleReviewForm()">
+              <button type="button" class="btn btn-outline-secondary" (click)="isEditing ? cancelEdit() : toggleReviewForm()">
                 Cancel
               </button>
               <button type="submit" class="btn btn-primary" [disabled]="reviewForm.invalid">
-                Submit Review
+                {{ isEditing ? 'Update Review' : 'Submit Review' }}
               </button>
             </div>
           </form>
@@ -257,6 +258,9 @@
                 <p class="mb-0">{{ review.comment }}</p>
                 
                 <div class="mt-3 pt-2 border-top text-end" *ngIf="currentUser?.id === review.userId">
+                  <button class="btn btn-sm btn-outline-primary me-2" (click)="startEdit(review)">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                  </button>
                   <button class="btn btn-sm btn-outline-danger" (click)="deleteReview(review.id!)">
                     <i class="bi bi-trash me-1"></i>Delete
                   </button>
@@ -275,5 +279,11 @@
         </div>
       </ng-template>
     </div>
+  </div>
+</div>
+
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
   </div>
 </div>

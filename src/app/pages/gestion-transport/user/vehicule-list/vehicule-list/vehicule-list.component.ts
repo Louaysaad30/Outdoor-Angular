@@ -5,6 +5,7 @@ import { debounceTime } from 'rxjs/operators';
 import { Vehicule } from '../../../models/vehicule.model';
 import { Router } from '@angular/router';
 import { Options } from '@angular-slider/ngx-slider';
+import { PageChangedEvent } from 'ngx-bootstrap/pagination';
 
 @Component({
   selector: 'app-vehicule-list',
@@ -16,6 +17,11 @@ export class VehiculeListComponent implements OnInit {
   vehicules: Vehicule[] = [];
   filteredVehicules: Vehicule[] = [];
   isLoading: boolean = true;
+
+  // Pagination properties
+  pagedItems: any[] = [];
+  itemsPerPage: number = 8; // You can adjust this number
+  currentPage: number = 1;
 
   // Search
   searchTerm: string = '';
@@ -59,7 +65,16 @@ export class VehiculeListComponent implements OnInit {
   ngOnInit(): void {
     this.getVehicules();
     this.setupSearchDebounce();
+    this.pageChanged({ itemsPerPage: this.itemsPerPage, page: 1 });
   }
+
+
+  pageChanged(event: PageChangedEvent): void {
+    const startItem = (event.page - 1) * event.itemsPerPage;
+    const endItem = event.page * event.itemsPerPage;
+    this.pagedItems = this.filteredVehicules.slice(startItem, endItem);
+    this.currentPage = event.page;
+}
 
   // Fetch vehicles from service
   getVehicules(): void {
@@ -151,6 +166,7 @@ export class VehiculeListComponent implements OnInit {
   // Apply all active filters (changed from private to public)
   applyFilters(): void {
     this.filteredVehicules = this.vehicules.filter(vehicule => {
+
       // Search term filter
       const matchesSearch = !this.searchTerm || 
         vehicule.modele.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -165,8 +181,12 @@ export class VehiculeListComponent implements OnInit {
       // Brand filter
       const matchesBrand = this.selectedBrands.length === 0 || 
         (vehicule.agence?.nom && this.selectedBrands.includes(vehicule.agence.nom));
+
+      this.pageChanged({ itemsPerPage: this.itemsPerPage, page: this.currentPage });
       
       return matchesSearch && matchesType && matchesPrice && matchesBrand;
+
+      
     });
   }
 }

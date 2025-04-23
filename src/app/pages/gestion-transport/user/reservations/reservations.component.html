@@ -1,8 +1,8 @@
 <div class="container my-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Mes Réservations</h2>
+        <h2 class="mb-0"><i class="bi bi-calendar-check me-2"></i>My Reservations</h2>
         <button (click)="getReservations()" class="btn btn-outline-primary" [disabled]="isLoading">
-            <span *ngIf="!isLoading"><i class="bi bi-arrow-clockwise me-1"></i>Rafraîchir</span>
+            <span *ngIf="!isLoading"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</span>
             <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         </button>
     </div>
@@ -14,9 +14,9 @@
 
     <div *ngIf="isLoading" class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Chargement...</span>
+            <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-2">Chargement de vos réservations...</p>
+        <p class="mt-2">Loading your reservations...</p>
     </div>
 
     <div *ngIf="!isLoading">
@@ -25,16 +25,16 @@
                 <div class="card-header bg-white">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h5 class="mb-0">Liste des réservations</h5>
+                            <h5 class="mb-0">Reservations List</h5>
                         </div>
                         <div class="col-md-6">
                             <div class="input-group">
-                                <input type="text" class="form-control" placeholder="Rechercher..." [(ngModel)]="searchText">
+                                <input type="text" class="form-control" placeholder="Search..." [(ngModel)]="searchText">
                                 <select class="form-select" [(ngModel)]="statusFilter">
-                                    <option value="">Tous les statuts</option>
-                                    <option value="EN_ATTENTE">En attente</option>
-                                    <option value="APPROUVÉE">Approuvée</option>
-                                    <option value="REJETÉE">Rejetée</option>
+                                    <option value="">All statuses</option>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="APPROVED">Approved</option>
+                                    <option value="REJECTED">Rejected</option>
                                 </select>
                             </div>
                         </div>
@@ -44,12 +44,12 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th (click)="sortReservations('vehicule.modele')">Véhicule <i class="bi bi-arrow-down-up"></i></th>
-                                <th (click)="sortReservations('prixTotal')">Prix <i class="bi bi-arrow-down-up"></i></th>
-                                <th (click)="sortReservations('debutLocation')">Début <i class="bi bi-arrow-down-up"></i></th>
-                                <th (click)="sortReservations('finLocation')">Fin <i class="bi bi-arrow-down-up"></i></th>
-                                <th>Lieu</th>
-                                <th (click)="sortReservations('statut')">Statut <i class="bi bi-arrow-down-up"></i></th>
+                                <th (click)="sortReservations('vehicule.modele')">Vehicle <i class="bi bi-arrow-down-up"></i></th>
+                                <th (click)="sortReservations('prixTotal')">Price <i class="bi bi-arrow-down-up"></i></th>
+                                <th (click)="sortReservations('debutLocation')">Start <i class="bi bi-arrow-down-up"></i></th>
+                                <th (click)="sortReservations('finLocation')">End <i class="bi bi-arrow-down-up"></i></th>
+                                <th>Location</th>
+                                <th (click)="sortReservations('statut')">Status <i class="bi bi-arrow-down-up"></i></th>
                                 <th>Actions</th> 
                             </tr>
                         </thead>
@@ -82,7 +82,7 @@
                                         <button *ngIf="res.statut === 'APPROUVÉE'" 
                                                 (click)="viewInvoice(res)"
                                                 class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-receipt"></i> Facture
+                                            <i class="bi bi-receipt"></i> Invoice
                                         </button>
                                     </div>
                                 </td>
@@ -94,22 +94,22 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <select class="form-select form-select-sm" [(ngModel)]="itemsPerPage" style="width: auto">
-                                <option value="5">5 par page</option>
-                                <option value="10">10 par page</option>
-                                <option value="20">20 par page</option>
+                                <option value="5">5 per page</option>
+                                <option value="10">10 per page</option>
+                                <option value="20">20 per page</option>
                             </select>
                         </div>
                         <div>
                             <nav>
                                 <ul class="pagination pagination-sm mb-0">
                                     <li class="page-item" [class.disabled]="currentPage === 1">
-                                        <a class="page-link" (click)="prevPage()">Précédent</a>
+                                        <a class="page-link" (click)="prevPage()">Previous</a>
                                     </li>
                                     <li class="page-item" *ngFor="let page of getPages()" [class.active]="page === currentPage">
                                         <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
                                     </li>
                                     <li class="page-item" [class.disabled]="currentPage === totalPages">
-                                        <a class="page-link" (click)="nextPage()">Suivant</a>
+                                        <a class="page-link" (click)="nextPage()">Next</a>
                                     </li>
                                 </ul>
                             </nav>
@@ -122,10 +122,10 @@
         <ng-template #noData>
             <div class="text-center py-5">
                 <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
-                <h4 class="mt-3">Aucune réservation trouvée</h4>
-                <p class="text-muted">Vous n'avez effectué aucune réservation pour le moment.</p>
+                <h4 class="mt-3">No reservations found</h4>
+                <p class="text-muted">You haven't made any reservations yet.</p>
                 <button class="btn btn-primary mt-3">
-                    <i class="bi bi-plus-circle me-1"></i>Nouvelle réservation
+                    <i class="bi bi-plus-circle me-1"></i>New Reservation
                 </button>
             </div>
         </ng-template>

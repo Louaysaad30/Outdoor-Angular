@@ -27,6 +27,7 @@ export class ReservationsComponent implements OnInit {
   // Sorting
   sortColumn: string = 'debutLocation';
   sortDirection: 'asc' | 'desc' = 'desc';
+Math: any;
 
   constructor(private reservationService: ReservationService , 
     private router: Router

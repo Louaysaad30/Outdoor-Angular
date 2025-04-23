@@ -17,7 +17,10 @@ export class ReviewService {
   }
 
 
-  
+  getUserReview(vehiculeId: number, userId: number): Observable<Review | null> {
+    return this.http.get<Review | null>(`${this.baseUrl}/user/${vehiculeId}/${userId}`);
+  }
+
   getAllReviews(): Observable<Review[]> {
   return this.http.get<Review[]>(`${this.baseUrl}/all`);
 }
@@ -39,4 +42,9 @@ export class ReviewService {
       })
     );
   }
+
+  updateReview(reviewId: number, review: Partial<Review>): Observable<Review> {
+    return this.http.patch<Review>(`${this.baseUrl}/${reviewId}`, review);
+  }
+
 }

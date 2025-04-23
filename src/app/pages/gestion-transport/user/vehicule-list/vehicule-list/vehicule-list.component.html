@@ -1,152 +1,61 @@
 <div class="container-fluid">
-    <div class="row">
-      <!-- Filter Sidebar -->
-      <div class="col-lg-3 col-md-4">
-        <div class="card shadow-sm sticky-top" style="top: 20px;">
-          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Filters</h5>
-            <button class="btn btn-sm btn-outline-light" (click)="clearAllFilters()">
-              Clear All
-            </button>
-          </div>
-          <div class="card-body">
-            <!-- Search Box -->
-            <div class="mb-4">
-              <label for="searchResultList" class="form-label">Search Vehicles</label>
-              <div class="input-group">
-                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control" id="searchResultList" 
-                       placeholder="Model, brand..." [(ngModel)]="searchTerm" 
-                       (ngModelChange)="performSearch()">
-              </div>
-            </div>
-  
-            <!-- Vehicle Type Filter -->
-            <div class="mb-4">
-              <h6 class="fw-bold mb-3">Vehicle Type</h6>
-              <div class="d-flex flex-wrap gap-2">
-                <button *ngFor="let type of vehiculeTypes" 
-                        class="btn btn-sm btn-outline-primary rounded-pill"
-                        [class.active]="activeTypeFilter === type"
-                        (click)="vehiculeTypeFilter(type)">
-                  {{type}}
-                </button>
-              </div>
-            </div>
-  
-            <!-- Price Filter -->
-        <div class="card mb-3">
-            <div class="card-header">
-                <h5 class="mb-0">Price Range (TND)</h5>
-            </div>
-        <div class="card-body">
-      <!-- Your price filter content here -->
-        <ngx-slider 
-        [(value)]="minVal" 
-        [(highValue)]="maxVal" 
-        [options]="priceOptions" 
-        (valueChange)="valueChange($event, true)"
-        (highValueChange)="valueChange($event, false)">
-        </ngx-slider>
-      <div class="d-flex align-items-center gap-3 mt-3">
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-light">Min</span>
-          <input type="number" class="form-control" [(ngModel)]="minVal" (ngModelChange)="applyFilters()">
-        </div>
-        <div class="text-muted">to</div>
-        <div class="input-group input-group-sm">
-          <span class="input-group-text bg-light">Max</span>
-          <input type="number" class="form-control" [(ngModel)]="maxVal" (ngModelChange)="applyFilters()">
-        </div>
-      </div>
-    </div>
-  </div>
-  
-            <!-- Brand Filter -->
-            <div class="mb-3">
-              <h6 class="fw-bold mb-3">Brand</h6>
-              <div class="form-group">
-                <select class="form-select" multiple [(ngModel)]="selectedBrands" (change)="filterByBrand()">
-                  <option *ngFor="let brand of vehiculeBrands" [value]="brand">{{brand}}</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Main Content -->
-      <div class="col-lg-9 col-md-8">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h2 class="mb-0">Available Vehicles</h2>
-            <p class="text-muted mb-0">
-              Showing <strong>{{filteredVehicules.length}}</strong> of <strong>{{vehicules.length}}</strong> vehicles
-            </p>
-          </div>
-          <button class="btn btn-primary" routerLink="/transportfront/user/reservations">
-            <i class="bi bi-calendar-check me-2"></i>My Reservations
+  <div class="row">
+    <!-- Filter Sidebar -->
+    <div class="col-lg-3 col-md-4">
+      <div class="card shadow-sm sticky-top" style="top: 20px;">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Filters</h5>
+          <button class="btn btn-sm btn-outline-light" (click)="clearAllFilters()">
+            Clear All
           </button>
         </div>
-  
-        <!-- Loading Indicator -->
-        <div *ngIf="isLoading" class="text-center py-5">
-          <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <div class="card-body">
+          <!-- Search Box -->
+          <div class="mb-4">
+            <label for="searchResultList" class="form-label">Search Vehicles</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control" id="searchResultList" 
+                     placeholder="Model, brand..." [(ngModel)]="searchTerm" 
+                     (ngModelChange)="performSearch()">
+            </div>
           </div>
-          <p class="mt-3">Loading vehicles...</p>
-        </div>
-  
-        <!-- Vehicle Grid -->
-        <div *ngIf="!isLoading">
-          <div *ngIf="filteredVehicules.length === 0" class="text-center py-5">
-            <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
-            <h4 class="mt-3">No vehicles found</h4>
-            <p class="text-muted">Try adjusting your filters or search term</p>
-            <button class="btn btn-outline-primary" (click)="clearAllFilters()">
-              Clear all filters
-            </button>
+
+          <!-- Vehicle Type Filter -->
+          <div class="mb-4">
+            <h6 class="fw-bold mb-3">Vehicle Type</h6>
+            <div class="d-flex flex-wrap gap-2">
+              <button *ngFor="let type of vehiculeTypes" 
+                      class="btn btn-sm btn-outline-primary rounded-pill"
+                      [class.active]="activeTypeFilter === type"
+                      (click)="vehiculeTypeFilter(type)">
+                {{type}}
+              </button>
+            </div>
           </div>
-  
-          <div class="row g-4">
-            <div class="col-xl-3 col-lg-4 col-md-6" *ngFor="let vehicule of filteredVehicules">
-              <div class="card h-100 shadow-sm hover-effect">
-                <div class="position-relative">
-                  <img [src]="vehicule.image || 'assets/images/default-vehicle.jpg'" 
-                       class="card-img-top vehicle-image" 
-                       alt="{{vehicule.modele}}"
-                       style="height: 180px; object-fit: cover;">
-                  <span class="badge bg-success position-absolute top-0 end-0 m-2">
-                    {{vehicule.disponible ? 'Available' : 'Booked'}}
-                  </span>
-                  <span class="badge bg-warning position-absolute top-0 start-0 m-2">
-                    <i class="bi bi-star-fill me-1"></i> {{vehicule.rating || 'N/A'}}
-                  </span>
+
+          <!-- Price Filter -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">Price Range (TND)</h5>
+            </div>
+            <div class="card-body">
+              <ngx-slider 
+                [(value)]="minVal" 
+                [(highValue)]="maxVal" 
+                [options]="priceOptions" 
+                (valueChange)="valueChange($event, true)"
+                (highValueChange)="valueChange($event, false)">
+              </ngx-slider>
+              <div class="d-flex align-items-center gap-3 mt-3">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light">Min</span>
+                  <input type="number" class="form-control" [(ngModel)]="minVal" (ngModelChange)="applyFilters()">
                 </div>
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="card-title mb-0">{{vehicule.modele}}</h5>
-                    <span class="text-primary fw-bold">{{vehicule.prixParJour}} TND/day</span>
-                  </div>
-                  <p class="text-muted small mb-2">
-                    <i class="bi bi-car-front me-1"></i> {{vehicule.type}}
-                    <span class="mx-2">|</span>
-                    <i class="bi bi-people me-1"></i> {{vehicule.nbPlace}} seats
-                  </p>
-                  <p class="text-muted small mb-3">
-                    <i class="bi bi-geo-alt me-1"></i> {{vehicule.localisation}}
-                  </p>
-                  <div class="d-grid gap-2">
-                    <button class="btn btn-primary" 
-                            [disabled]="!vehicule.disponible"
-                            [routerLink]="['/transportfront/user/reservation', vehicule.id]">
-                      <i class="bi bi-calendar-plus me-1"></i> Book Now
-                    </button>
-                    <button class="btn btn-outline-secondary" 
-                            (click)="goToDetail(vehicule.id)">
-                      <i class="bi bi-eye me-1"></i> View Details
-                    </button>
-                  </div>
+                <div class="text-muted">to</div>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light">Max</span>
+                  <input type="number" class="form-control" [(ngModel)]="maxVal" (ngModelChange)="applyFilters()">
                 </div>
               </div>
             </div>
@@ -154,4 +63,106 @@
         </div>
       </div>
     </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9 col-md-8">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-0">Available Vehicles</h2>
+          <p class="text-muted mb-0">
+            Showing <strong>{{filteredVehicules.length}}</strong> of <strong>{{vehicules.length}}</strong> vehicles
+          </p>
+        </div>
+        <button class="btn btn-primary" routerLink="/transportfront/user/reservations">
+          <i class="bi bi-calendar-check me-2"></i>My Reservations
+        </button>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Loading vehicles...</p>
+      </div>
+
+      <!-- Vehicle Grid -->
+      <div *ngIf="!isLoading">
+        <div *ngIf="filteredVehicules.length === 0" class="text-center py-5">
+          <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
+          <h4 class="mt-3">No vehicles found</h4>
+          <p class="text-muted">Try adjusting your filters or search term</p>
+          <button class="btn btn-outline-primary" (click)="clearAllFilters()">
+            Clear all filters
+          </button>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-xl-3 col-lg-4 col-md-6" *ngFor="let vehicule of pagedItems">
+            <div class="card h-100 shadow-sm hover-effect d-flex flex-column">
+              <div class="position-relative" style="height: 180px; overflow: hidden;">
+                <img [src]="vehicule.image || 'assets/images/default-vehicle.jpg'" 
+                     class="card-img-top vehicle-image w-100 h-100" 
+                     alt="{{vehicule.modele}}"
+                     style="object-fit: cover;">
+                <span class="badge bg-success position-absolute top-0 end-0 m-2">
+                  {{vehicule.disponible ? 'Available' : 'Booked'}}
+                </span>
+                <span class="badge bg-warning position-absolute top-0 start-0 m-2">
+                  <i class="bi bi-star-fill me-1"></i> {{vehicule.rating || 'N/A'}}
+                </span>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h5 class="card-title mb-0 text-truncate" style="max-width: 70%;">{{vehicule.modele}}</h5>
+                  <span class="text-primary fw-bold">{{vehicule.prixParJour}} TND/day</span>
+                </div>
+                <p class="text-muted small mb-2">
+                  <i class="bi bi-car-front me-1"></i> {{vehicule.type}}
+                  <span class="mx-2">|</span>
+                  <i class="bi bi-people me-1"></i> {{vehicule.nbPlace}} seats
+                </p>
+                <p class="text-muted small mb-3 text-truncate">
+                  <i class="bi bi-geo-alt me-1"></i> {{vehicule.localisation}}
+                </p>
+                <div class="mt-auto d-grid gap-2">
+                  <button class="btn btn-primary" 
+                          [disabled]="!vehicule.disponible"
+                          [routerLink]="['/transportfront/user/reservation', vehicule.id]">
+                    <i class="bi bi-calendar-plus me-1"></i> Book Now
+                  </button>
+                  <button class="btn btn-outline-secondary" 
+                          (click)="goToDetail(vehicule.id)">
+                    <i class="bi bi-eye me-1"></i> View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Pagination Control -->
+        <div class="row mt-4 align-items-center" *ngIf="filteredVehicules.length > itemsPerPage">
+          <div class="col-sm">
+            <div class="text-muted">
+              Page {{currentPage}} - Showing <span class="fw-semibold">{{pagedItems.length}}</span> of <span class="fw-semibold">{{filteredVehicules.length}}</span> vehicles
+            </div>
+          </div>
+          <div class="col-sm-auto mt-3 mt-sm-0">
+            <pagination [boundaryLinks]="true" 
+                        [totalItems]="filteredVehicules.length"
+                        [itemsPerPage]="itemsPerPage"
+                        [(ngModel)]="currentPage"
+                        (pageChanged)="pageChanged($event)"
+                        previousText="&lsaquo;" 
+                        nextText="&rsaquo;" 
+                        firstText="&laquo;" 
+                        lastText="&raquo;"
+                        class="pagination-wrap hstack gap-2 justify-content-center">
+            </pagination>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
