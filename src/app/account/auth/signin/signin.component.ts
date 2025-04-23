@@ -71,7 +71,8 @@ maxAttempts = 3;
                 if (authority === 'ADMIN') {
                   this.router.navigate(['/userback']);
                 } else if (authority === 'USER') {
-                  this.router.navigate(['/userfront']);
+                  //achanger landing pages
+                  this.router.navigate(['/forumfront/user/forumPost']);
                 } else if (authority === 'AGENCE') {
                   this.router.navigate(['/transportback']);
                 } else if (authority === 'OWNER') {
@@ -79,7 +80,7 @@ maxAttempts = 3;
                 } else if (authority === 'FORMATEUR') {
                   this.router.navigate(['/formationback']);
                 } else if (authority === 'EVENT_MANAGER') {
-                  this.router.navigate(['/eventback']);
+                  this.router.navigate(['/eventback/event-manager']);
                 } else {
                   this.router.navigate(['/auth/signin']);
                 }

@@ -114,9 +114,9 @@
           <div *ngIf="user.churnResult" class="mt-2 text-center">
             <span class="badge rounded-pill"
                   [ngClass]="{
-                    'bg-success': user.churnResult.includes('fidele'),
-                    'bg-danger': user.churnResult.includes('churner')
-                  }">
+                    'bg-success': user.churnResult.includes('1'),
+                    'bg-danger': user.churnResult.includes('0')
+                  }">--
               {{ user.churnResult }}
             </span>
           </div>

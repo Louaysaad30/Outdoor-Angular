@@ -3,6 +3,7 @@ export interface ChatMessage {
     sender: any;
     recipient: any;
     content: string;
+    imageUrl?: string; 
     timestamp?: Date;
     isRead?: boolean;
   }

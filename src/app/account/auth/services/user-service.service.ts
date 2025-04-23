@@ -14,8 +14,8 @@ export class UserServiceService {
   constructor(private http: HttpClient) {}
 
   // Get all users
-  getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/all`);
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/all`);
   }
 
   getUsersWithConversations(userId: string) {

@@ -43,14 +43,27 @@ export class ConversationComponent implements OnInit, OnChanges {
     this.connectToWebSocket();
     this.loadMessages();
 
-    // Subscribe to WebSocket messages
+
     this.websocket.messages$.subscribe(message => {
       if (message) {
         console.log('Received message:', message);
-        //this.messages.push(message); // Add the new message to the conversation
-        this.loadMessages(); // Reload messages to ensure the view is updated
+                this.loadMessages();
+        // Mark as read if it's received by the current user
       }
     });
+    this.websocket.messages$.subscribe(message => {
+      if (message?.type === 'message-read') {
+          // Update specific message
+          const msg = this.messages.find(m => m.id === message.messageId);
+          if (msg) {
+              msg.isRead = true;
+          }
+      } else {
+          // Handle other messages
+          this.loadMessages();
+      }
+  });
+  
   }
   
 
@@ -61,39 +74,28 @@ export class ConversationComponent implements OnInit, OnChanges {
     }
   }
 
-  
   loadMessages() {
     const senderId = this.currentUser.id;
     const recipientId = this.user.id;
   
-    console.log('Loading messages for sender:', senderId, 'and recipient:', recipientId);
-  
     this.chatService.getChatMessages(senderId, recipientId).subscribe((msgs: ChatMessage[]) => {
-      console.log('Loaded messages:', msgs);
-  
-      // Ensure isRead is a boolean
       this.messages = msgs.map(msg => ({
         ...msg,
         isRead: !!msg.isRead
       }));
   
-      // Mark messages as read if current user is the recipient
+      // Mark unread messages as read
       this.messages.forEach(message => {
         if (this.currentUser.id === message.recipient && !message.isRead) {
           this.chatService.markMessageAsRead(message.id).subscribe(() => {
-            message.isRead = true; // Update the UI
-  
-            // Emit messageRead event to server to notify sender
-            this.websocket.stompClient?.publish({
-              destination: '/app/readMessage', // Path where the server listens
-              body: JSON.stringify({ messageId: message.id, senderId: this.currentUser.id })
-            });
+            message.isRead = true;
+            // Only send via websocket, don't mark again
+            this.websocket.markMessageAsRead(message.id, this.currentUser.id);
           });
         }
       });
     });
   }
-
   connectToWebSocket() {
     if (!this.token) {
       console.error('No authentication token found');

@@ -39,11 +39,16 @@ export class WebsocketService {
       this.connectionSubject.next(true);
       this.sendOnlineStatus(userId);
       // WebSocketService: Add a subscription to the notifications channel
-      this.stompClient?.subscribe('/user/queue/notifications', (message) => {
-        console.log('Received notification:', message.body);
-        this.messageSubject.next(JSON.parse(message.body)); // Handle the notification
-      });
-      
+     // In your connect method
+      // In your connect() method, add this subscription:
+      this.stompClient?.subscribe('/queue/read-receipts', (message) => {
+        const receipt = JSON.parse(message.body);
+        console.log('Read receipt received:', receipt);
+        this.messageSubject.next({
+            type: 'message-read',
+            messageId: receipt.messageId
+        });
+      });      
       
 
       this.stompClient?.subscribe('/queue/messages', (message) => {
@@ -115,4 +120,16 @@ export class WebsocketService {
     }, 1000); // Give it some time to send the message
 
   }
+  markMessageAsRead(messageId: number, senderId: number) {
+    if (this.stompClient && this.stompClient.connected) {
+      this.stompClient.publish({
+        destination: '/app/readMessage',
+        body: JSON.stringify({ messageId, senderId })
+      });
+
+    } else {
+      console.error('WebSocket is not connected. Unable to mark message as read.');
+    }
+  }
+  
 }

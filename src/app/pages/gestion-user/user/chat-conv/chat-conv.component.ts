@@ -3,14 +3,11 @@ import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Store } from '@ngrx/store';
-import { cloneDeep } from 'lodash';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 import { SimplebarAngularModule } from 'simplebar-angular';
 import { PickerModule } from '@ctrl/ngx-emoji-mart';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { fetchattachmentData, fetchbookmarkData, fetchcallsData, fetchchannnelData, fetchchatData, fetchcontactData, fetchmessagesData } from 'src/app/store/chat/chat.action';
-import { selectattachmentData, selectbookmarkData, selectcallData, selectcallslistData, selectchannelData, selectcontactData, selectData } from 'src/app/store/chat/chat.selector';
 import { UserServiceService } from 'src/app/account/auth/services/user-service.service';
 import { ChatService } from '../../services/chat.service';
 import { UserListComponent } from "../user-list/user-list.component";
@@ -44,6 +41,8 @@ import { WebsocketService } from '../../services/websocket.service';
 export class ChatConvComponent implements OnDestroy  {
     private subscriptions = new Subscription();
     channeldata: any
+    isChatVisible: boolean = true;
+    isUserListVisible: boolean = false;
     contactData: any
     chatData: any
     searchText: any;
@@ -73,12 +72,17 @@ export class ChatConvComponent implements OnDestroy  {
     bookmarkData: any;
     users: any[] = [];
     selectedUser:any;
+    allUsers: any[] = [];
     currentUser: any;
     messages: ChatMessage[] | undefined;
+    chatRoomId: any;
     constructor(    private websocketService: WebsocketService
 ,        private userService: UserServiceService, private chatService: ChatService,public formBuilder: UntypedFormBuilder, private datePipe: DatePipe, public store: Store) { }
 
     ngOnInit(): void {
+        this.currentTab = 'chats'; // Default to the chats tab
+        this.isChatVisible = true;
+        this.isUserListVisible = false;
       this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
       console.log("Utilisateur connecté :", this.currentUser.id);
       this.userService.incrementNavigation(this.currentUser.id).subscribe();
@@ -100,17 +104,43 @@ export class ChatConvComponent implements OnDestroy  {
 
     }
   
-    loadUsers() {
-        this.userService.getUsersWithConversations(this.currentUser.id).subscribe((res) => {
-          this.users = res;
-          console.log('Initial users loaded:', this.users);
+    selectUser1(user: any): void {
+        this.selectedUser = user;
+      
+        this.chatService.checkChatRoom(this.currentUser.id, user.id).subscribe(
+          (response: any) => {
+            // Chat room exists
+            this.chatRoomId = response; // use 'idChat' from your backend
+            console.log('Chat room exists with ID:', this.chatRoomId);
+          },
+          (error) => {
+              // Chat room doesn't exist — create one
+              this.chatService.createChatRoom(this.currentUser.id, user.id).subscribe(
+                (createdRoom: any) => {
+                  this.chatRoomId = createdRoom.id;
+                  console.log('Chat room created with ID:', this.chatRoomId);
+                },
+                (err) => console.error('Error creating chat room', err)
+              );
+            } 
           
-          // After loading users, check if we have any connected users data
-          if (this.websocketService.connectedUsersSubject.value.length > 0) {
-            this.updateUserStatuses(this.websocketService.connectedUsersSubject.value);
-          }
+        );
+      }
+      
+    loadUsers() {
+        this.userService.getAllUsers().subscribe((res) => {
+            console.log(res); // what each user object looks like
+    
+           // Filter out users who already have a conversation or are the current user
+            this.users = res.filter(user => 
+            user.id !== this.currentUser.id && 
+            !this.users.some(convoUser => convoUser.id === user.id)
+            
+           );
+            console.log('Filtered users (no convo, not self):', this.allUsers);
         });
       }
+   
       
     
     selectUser(user: any): void {
@@ -139,26 +169,36 @@ export class ChatConvComponent implements OnDestroy  {
         console.log('Updated users list:', this.users);
       }
 
-  ngOnDestroy() {
-    this.subscriptions.unsubscribe();
-    this.websocketService.disconnect(this.currentUser.id);
-  }
+    ngOnDestroy() {
+        this.subscriptions.unsubscribe();
+        this.websocketService.disconnect(this.currentUser.id);
+    }
     loadChatForUser(user: any): void {
-        // Fetch and load messages for the selected user
         const senderId = this.currentUser.id;
         const recipientId = user.id;
-    
+      
         this.chatService.checkChatRoom(senderId, recipientId).subscribe({
-            next: (room) => {
+          next: (room) => {
             this.loadMessages(room);
-            console.log('Room:', room, 'Sender:', senderId, 'Recipient:', recipientId);
-            },
-            error: (err) => {
-            console.error('Error checking chat room:', err);
-            }
+            console.log('Room exists:', room, 'Sender:', senderId, 'Recipient:', recipientId);
+          },
+          error: (err) => {
+              console.warn('No room found. Creating new room...');
+      
+              this.chatService.createChatRoom(senderId, recipientId).subscribe({
+                next: (createdRoom) => {
+                  this.loadMessages(createdRoom);
+                  console.log('Room created:', createdRoom, 'Sender:', senderId, 'Recipient:', recipientId);
+                },
+                error: (createErr) => {
+                  console.error('Error creating chat room:', createErr);
+                }
+              });
+      
+          }
         });
-        
-    }
+      }
+      
   
     loadMessages( chatRoomId: number) {
 
@@ -185,9 +225,14 @@ export class ChatConvComponent implements OnDestroy  {
         document.querySelector('.backdrop1')?.classList.add('show')
     }
 
-    // Change Tab Content
-    changeTab(tab: string) {
+    changeTab(tab: string): void {
         this.currentTab = tab;
+        this.isChatVisible = tab === 'chats';
+        this.isUserListVisible = tab === 'users';
+      }
+    openUserList(): void {
+    this.isChatVisible = false;
+    this.isUserListVisible = true;
     }
 
     /**
