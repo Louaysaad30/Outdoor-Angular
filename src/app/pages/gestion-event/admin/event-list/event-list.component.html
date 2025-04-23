@@ -46,17 +46,16 @@
                 }
               </div>
 
-              <div class="d-flex mb-2">
-                <div class="flex-grow-1 d-flex align-items-center">
-                  <div class="flex-shrink-0 me-3">
-                    <i class="ri-calendar-event-line text-muted fs-lg"></i>
-                  </div>
-                  @if(editEvent.start){
-                    <div class="flex-grow-1">
-                      <h6 class="d-block fw-semibold mb-0" id="event-start-date-tag">FROM : {{editEvent.start | date: 'dd MMMM yyyy'}}  TO  :  {{editEvent.end | date: 'dd MMMM yyyy'}}</h6>
-                    </div>
-                  }
+              <br>
+              <div class="d-flex align-items-center mb-2">
+                <div class="flex-shrink-0 me-3">
+                  <i class="ri-calendar-event-line text-muted fs-lg"></i>
                 </div>
+                @if(editEvent.start){
+                  <div class="flex-grow-1">
+                    <h6 class="d-block fw-semibold mb-0" id="event-start-date-tag">FROM   {{editEvent.start | date: 'dd MMMM yyyy'}}   TO     {{editEvent.end | date: 'dd MMMM yyyy'}}</h6>
+                  </div>
+                }
               </div>
               <div class="d-flex align-items-center mb-2">
                 <div class="flex-shrink-0 me-3">
