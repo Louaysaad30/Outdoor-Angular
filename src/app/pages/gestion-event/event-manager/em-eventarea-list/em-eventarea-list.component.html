@@ -1,5 +1,5 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs title="Event Areas" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<app-breadcrumbs title="My Event Areas" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
 <!-- End Breadcrumbs -->
 
 <div class="row">
@@ -9,22 +9,21 @@
         <div class="row g-3">
           <div class="col-xl-3 col-sm-6">
             <div class="search-box">
-              <input type="text" class="form-control search" placeholder="Search products, price etc..." [(ngModel)]="term" (keyup)="searchList()">
+              <input type="text" class="form-control search" placeholder="Search properties..." [(ngModel)]="term" (keyup)="searchList()">
               <i class="ri-search-line search-icon"></i>
             </div>
           </div>
           <div class="col-xl-2 col-sm-6">
             <select class="form-control" id="idType" (change)="selectstatus()">
-              <option value="all">Select All Type</option>
-              <option value="Villa">PENDING</option>
-              <option value="Apartment">REJECTED</option>
-              <option value="Apartment">ACCEPTED</option>
-
+              <option value="">All Statuses</option>
+              <option value="PENDING">PENDING</option>
+              <option value="REJECTED">REJECTED</option>
+              <option value="APPROVED">APPROVED</option>
             </select>
           </div>
 
           <div class="col-xl col-sm-6">
-            <button class="btn btn-primary w-100" (click)="addProperty.show()">Add Property</button>
+            <button class="btn btn-primary w-100" (click)="addProperty.show()">Add Event Area</button>
           </div>
         </div><!--end row-->
       </div><!--end card-body-->
@@ -32,26 +31,27 @@
   </div>
 </div>
 
+
 <div class="card">
   <div class="card-body p-0">
     <div class="row g-0">
       <div class="col-xl-5">
         <div class="card-header">
-  <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
-    <b>{{ allEventAreas.length }}</b> event areas
-    <div class="vr"></div>
-    <span class="badge bg-primary-subtle text-primary" *ngIf="term">
+          <div class="d-flex align-items-center flex-wrap gap-2 text-muted">
+            <b>{{ allEventAreas.length }}</b> event areas
+            <div class="vr"></div>
+            <span class="badge bg-primary-subtle text-primary" *ngIf="term">
       <i class="bi bi-search me-1"></i>{{ term }}
     </span>
-    <span class="badge bg-success-subtle text-success">
+            <span class="badge bg-success-subtle text-success">
       <i class="bi bi-building me-1"></i>{{ eventAreas.length }} shown
     </span>
-    <div class="vr"></div>
-    <a href="javascript:void(0);" class="badge border text-reset">
-      <i class="bi bi-people me-1"></i>Total Capacity: {{ calculateTotalCapacity() }}
-    </a>
-  </div>
-</div>
+            <div class="vr"></div>
+            <a href="javascript:void(0);" class="badge border text-reset">
+              <i class="bi bi-people me-1"></i>Total Capacity: {{ calculateTotalCapacity() }}
+            </a>
+          </div>
+        </div>
 
         @for (data of eventAreas; track $index) {
           <div class="card-body border-bottom">
@@ -102,8 +102,8 @@
 
                   </ul>
                   <div class="border-top border-dashed mt-auto pt-3 d-flex align-items-center justify-content-between gap-3">
-                  <!--<h5 class="mb-0">${{data.name}}</h5>-->
-                  <a [routerLink]="['/eventback/admin/event-area-details', data.id]" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>                  </div>
+                    <!--<h5 class="mb-0">${{data.name}}</h5>-->
+                    <a [routerLink]="['/eventback/event-manager/event-area-details', data.id]" class="link-effect">Read More <i class="bi bi-chevron-right align-baseline ms-1"></i></a>                  </div>
                 </div>
               </div><!--end col-->
             </div><!--end row-->
@@ -129,16 +129,16 @@
           </div><!--end row-->
         </div><!--end card-body-->
       </div><!--end col-->
-       <div class="col-xl-7">
-          <div
-            id="leaflet-map-group-control1"
-            leaflet
-            [leafletOptions]="options"
-            [leafletLayers]="mapMarkers"
-            (leafletClick)="handleMapClick($event)"
-            class="leaflet-map leaflet-gray rounded"
-            style="height: 750px !important;">
-          </div>
+      <div class="col-xl-7">
+        <div
+          id="leaflet-map-group-control1"
+          leaflet
+          [leafletOptions]="options"
+          [leafletLayers]="mapMarkers"
+          (leafletClick)="handleMapClick($event)"
+          class="leaflet-map leaflet-gray rounded"
+          style="height: 750px !important;">
+        </div>
       </div><!--end col-->
     </div><!--end row-->
   </div>
@@ -162,42 +162,42 @@
           <input type="hidden" id="rating-field">
           <input type="hidden" id="discount-field">
 
-<div class="mb-3">
-  <label class="form-label">Event Area Image<span class="text-danger">*</span></label>
+          <div class="mb-3">
+            <label class="form-label">Event Area Image<span class="text-danger">*</span></label>
 
-  <!-- Image source selection -->
-  <div class="btn-group mb-3 w-100" role="group">
-    <input type="radio" class="btn-check" name="imageSource" id="upload-option"
-           [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
-    <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
+            <!-- Image source selection -->
+            <div class="btn-group mb-3 w-100" role="group">
+              <input type="radio" class="btn-check" name="imageSource" id="upload-option"
+                     [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
+              <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
 
-    <input type="radio" class="btn-check" name="imageSource" id="generate-option"
-           [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
-    <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
-  </div>
+              <input type="radio" class="btn-check" name="imageSource" id="generate-option"
+                     [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
+              <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
+            </div>
 
-  <!-- Upload image option -->
-  <div *ngIf="imageSource === 'upload'">
-    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
-  </div>
+            <!-- Upload image option -->
+            <div *ngIf="imageSource === 'upload'">
+              <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+            </div>
 
-  <!-- Generate image option -->
-  <div *ngIf="imageSource === 'generate'" class="mb-3">
-    <button type="button" [disabled]="!propertyForm.controls['location'].value || isGeneratingImage"
-            class="btn btn-primary w-100" (click)="generateImageFromDescription()">
-      <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
-      {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
-    </button>
-    <small class="form-text text-muted">
-      Image will be generated based on your description text.
-    </small>
-  </div>
+            <!-- Generate image option -->
+            <div *ngIf="imageSource === 'generate'" class="mb-3">
+              <button type="button" [disabled]="!propertyForm.controls['location'].value || isGeneratingImage"
+                      class="btn btn-primary w-100" (click)="generateImageFromDescription()">
+                <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
+                {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
+              </button>
+              <small class="form-text text-muted">
+                Image will be generated based on your description text.
+              </small>
+            </div>
 
-  <!-- Image preview -->
-  <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
-    <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
-  </div>
-</div>
+            <!-- Image preview -->
+            <div *ngIf="propertyForm.controls['img'].value" class="mt-2">
+              <img [src]="propertyForm.controls['img'].value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+            </div>
+          </div>
 
 
           <div class="mb-3">

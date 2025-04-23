@@ -45,17 +45,16 @@
                        style="max-height: 300px; width: 100%; border: 1px solid #ddd; padding: 5px;">
                 }
               </div>
-
               <br>
               <div class="d-flex align-items-center mb-2">
-                <div class="flex-shrink-0 me-3">
-                  <i class="ri-calendar-event-line text-muted fs-lg"></i>
-                </div>
-                @if(editEvent.start){
-                  <div class="flex-grow-1">
-                    <h6 class="d-block fw-semibold mb-0" id="event-start-date-tag">FROM   {{editEvent.start | date: 'dd MMMM yyyy'}}   TO     {{editEvent.end | date: 'dd MMMM yyyy'}}</h6>
+                  <div class="flex-shrink-0 me-3">
+                    <i class="ri-calendar-event-line text-muted fs-lg"></i>
                   </div>
-                }
+                  @if(editEvent.start){
+                    <div class="flex-grow-1">
+                      <h6 class="d-block fw-semibold mb-0" id="event-start-date-tag">FROM   {{editEvent.start | date: 'dd MMMM yyyy'}}    TO     {{editEvent.end | date: 'dd MMMM yyyy'}}</h6>
+                    </div>
+                  }
               </div>
               <div class="d-flex align-items-center mb-2">
                 <div class="flex-shrink-0 me-3">
@@ -64,14 +63,13 @@
                 <div class="flex-grow-1">
                   @if(editEvent.start){
                     <h6 class="d-block fw-semibold mb-0">
-                      <span id="event-timepicker1-tag"></span> {{editEvent.start | date: 'h:mm a'}} - {{editEvent.end | date:'h:mm a'}} <span id="event-timepicker2-tag"></span>
+                      <span id="event-start-time-tag"></span> {{editEvent.start | date: 'h:mm a'}} - {{editEvent.end | date:'h:mm a'}} <span id="event-end-time-tag"></span>
                     </h6>
                   }@else {
                     <h6 class="d-block fw-semibold mb-0">
-                      <span id="event-timepicker1-tag"></span> - <span id="event-timepicker2-tag"></span>
+                      <span id="event-start-time-placeholder"></span> - <span id="event-end-time-placeholder"></span>
                     </h6>
                   }
-
                 </div>
               </div>
               <div class="d-flex align-items-center mb-2">
@@ -102,43 +100,43 @@
           }
           <div class="row event-form">
             <div class="col-12">
-  <div class="mb-3">
-    <label class="form-label">Event Image</label>
+              <div class="mb-3">
+                <label class="form-label">Event Image</label>
 
-    <!-- Image source selection -->
-    <div class="btn-group mb-3 w-100" role="group">
-      <input type="radio" class="btn-check" name="imageSource" id="upload-option"
-             [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
-      <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
+                <!-- Image source selection -->
+                <div class="btn-group mb-3 w-100" role="group">
+                  <input type="radio" class="btn-check" name="imageSource" id="upload-option"
+                         [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'upload'">
+                  <label class="btn btn-outline-secondary" for="upload-option">Upload Image</label>
 
-      <input type="radio" class="btn-check" name="imageSource" id="generate-option"
-             [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
-      <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
-    </div>
+                  <input type="radio" class="btn-check" name="imageSource" id="generate-option"
+                         [(ngModel)]="imageSource" [ngModelOptions]="{standalone: true}" [value]="'generate'">
+                  <label class="btn btn-outline-secondary" for="generate-option">Generate from Description</label>
+                </div>
 
-    <!-- Upload image option -->
-    <div *ngIf="imageSource === 'upload'">
-      <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
-    </div>
+                <!-- Upload image option -->
+                <div *ngIf="imageSource === 'upload'">
+                  <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+                </div>
 
-    <!-- Generate image option -->
-    <div *ngIf="imageSource === 'generate'" class="mb-3">
-      <button type="button" [disabled]="!formData.get('description')?.value || isGeneratingImage"
-              class="btn btn-primary w-100" (click)="generateImageFromDescription()">
-        <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
-        {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
-      </button>
-      <small class="form-text text-muted">
-        Image will be generated based on your description text.
-      </small>
-    </div>
+                <!-- Generate image option -->
+                <div *ngIf="imageSource === 'generate'" class="mb-3">
+                  <button type="button" [disabled]="!formData.get('description')?.value || isGeneratingImage"
+                          class="btn btn-primary w-100" (click)="generateImageFromDescription()">
+                    <i class="bi" [ngClass]="isGeneratingImage ? 'bi-hourglass' : 'bi-magic'"></i>
+                    {{ isGeneratingImage ? 'Generating...' : 'Generate Image' }}
+                  </button>
+                  <small class="form-text text-muted">
+                    Image will be generated based on your description text.
+                  </small>
+                </div>
 
-    <!-- Image preview -->
-    <div *ngIf="formData.get('imageUrl')?.value" class="mt-2">
-      <img [src]="formData.get('imageUrl')?.value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
-    </div>
-  </div>
-</div>
+                <!-- Image preview -->
+                <div *ngIf="formData.get('imageUrl')?.value" class="mt-2">
+                  <img [src]="formData.get('imageUrl')?.value" alt="Image Preview" class="img-fluid rounded" style="max-height: 150px;">
+                </div>
+              </div>
+            </div>
 
             <div class="col-12">
               <div class="mb-3">
@@ -155,13 +153,13 @@
                     <label class="form-label">Start Date and Time</label>
                     <div class="input-group">
                       <input id="timepicker1" type="text" mwlFlatpickr
-                        [noCalendar]="false"
-                        [enableTime]="true"
-                        [dateFormat]="'Y-m-d H:i'"
-                        formControlName="startDate"
-                        class="form-control flatpickr flatpickr-input"
-                        placeholder="Select start date and time"
-                        readonly>
+                             [noCalendar]="false"
+                             [enableTime]="true"
+                             [dateFormat]="'Y-m-d H:i'"
+                             formControlName="startDate"
+                             class="form-control flatpickr flatpickr-input"
+                             placeholder="Select start date and time"
+                             readonly>
                       <span class="input-group-text"><i class="ri-time-line"></i></span>
                     </div>
                   </div>
@@ -171,13 +169,13 @@
                     <label class="form-label">End Date and Time</label>
                     <div class="input-group">
                       <input id="timepicker2" type="text" mwlFlatpickr
-                        [noCalendar]="false"
-                        [enableTime]="true"
-                        [dateFormat]="'Y-m-d H:i'"
-                        formControlName="endDate"
-                        class="form-control flatpickr flatpickr-input"
-                        placeholder="Select end date and time"
-                        readonly>
+                             [noCalendar]="false"
+                             [enableTime]="true"
+                             [dateFormat]="'Y-m-d H:i'"
+                             formControlName="endDate"
+                             class="form-control flatpickr flatpickr-input"
+                             placeholder="Select end date and time"
+                             readonly>
                       <span class="input-group-text"><i class="ri-time-line"></i></span>
                     </div>
                   </div>
@@ -187,39 +185,39 @@
             <!--end col-->
 
             <input type="hidden" id="eventid" name="eventid" value="">
-<div class="col-12">
-  <div class="mb-3">
-    <label class="form-label">Description</label>
+            <div class="col-12">
+              <div class="mb-3">
+                <label class="form-label">Description</label>
 
-    <div class="d-flex align-items-center mb-2">
-      <button type="button" class="btn btn-sm btn-outline-primary"
-              (click)="previewImprovedText()" [disabled]="isProcessingText || !formData.get('description')?.value">
-        <i class="ri-magic-line me-1"></i>Improve Text
-      </button>
-      <div *ngIf="isProcessingText" class="ms-2">
-        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-        <span class="ms-1">Processing...</span>
-      </div>
-    </div>
+                <div class="d-flex align-items-center mb-2">
+                  <button type="button" class="btn btn-sm btn-outline-primary"
+                          (click)="previewImprovedText()" [disabled]="isProcessingText || !formData.get('description')?.value">
+                    <i class="ri-magic-line me-1"></i>Improve Text
+                  </button>
+                  <div *ngIf="isProcessingText" class="ms-2">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <span class="ms-1">Processing...</span>
+                  </div>
+                </div>
 
-    <textarea class="form-control" id="event-description" placeholder="Enter a description"
-              rows="3" formControlName="description" spellcheck="false"></textarea>
+                <textarea class="form-control" id="event-description" placeholder="Enter a description"
+                          rows="3" formControlName="description" spellcheck="false"></textarea>
 
-    <div *ngIf="improvedText" class="mt-3">
-      <div class="card bg-light border">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h6 class="mb-0">Improved Version</h6>
-          <button type="button" class="btn btn-sm btn-success" (click)="applyImprovedText()">
-            Apply
-          </button>
-        </div>
-        <div class="card-body">
-          <p class="mb-0">{{improvedText}}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                <div *ngIf="improvedText" class="mt-3">
+                  <div class="card bg-light border">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Improved Version</h6>
+                      <button type="button" class="btn btn-sm btn-success" (click)="applyImprovedText()">
+                        Apply
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <p class="mb-0">{{improvedText}}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <!--end col-->
             <div class="col-12">
               <div class="mb-3">
@@ -291,29 +289,29 @@
           <div *ngIf="filteredParticipants.length" class="table-responsive">
             <table class="table table-centered table-hover">
               <thead class="table-light">
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Tickets</th>
-                </tr>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Tickets</th>
+              </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let participant of filteredParticipants; let i = index">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="avatar-xs me-2">
-                        <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
-                          {{participant.user.prenom?.charAt(0) || 'U'}}
-                        </div>
+              <tr *ngFor="let participant of filteredParticipants; let i = index">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-xs me-2">
+                      <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                        {{participant.user.prenom?.charAt(0) || 'U'}}
                       </div>
-                      <div>{{participant.user.prenom}} {{participant.user.nom}}</div>
                     </div>
-                  </td>
-                  <td>{{participant.user.email}}</td>
-                  <td>
-                    <span class="badge bg-success">{{participant.ticketCount}}</span>
-                  </td>
-                </tr>
+                    <div>{{participant.user.prenom}} {{participant.user.nom}}</div>
+                  </div>
+                </td>
+                <td>{{participant.user.email}}</td>
+                <td>
+                  <span class="badge bg-success">{{participant.ticketCount}}</span>
+                </td>
+              </tr>
               </tbody>
             </table>
           </div>
