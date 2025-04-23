@@ -228,8 +228,8 @@
                                                     <p class="text-muted mb-2">Order Status</p>
                                                     <span class="badge" [ngClass]="{
                                                         'bg-success': order.etat === 'DELIVERED',
-                                                        'bg-info': order.etat === 'IN_PROGRESS' || order.etat === 'SHIPPED',
-
+                                                        'bg-info': order.etat === 'IN_PROGRESS',
+                                                        'bg-warning': order.etat === 'ON_HOLD',
                                                         'bg-danger': order.etat === 'CANCELED'
                                                     }">
                                                         {{ order.etat }}
@@ -379,48 +379,42 @@
                                 <div class="card">
                                     <div class="card-header d-flex align-items-center flex-wrap gap-2">
                                         <h6 class="card-title flex-grow-1 mb-0">Order Status</h6>
-
                                     </div>
                                     <div class="card-body">
                                         <div class="progress progress-step-arrow progress-info mb-4">
-                                            <a href="javascript:void(0);" class="progress-bar active" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
-                                                <i class="ph-bag align-baseline me-1 d-none d-lg-inline-block"></i> Order Placed
-                                            </a>
+                                            <!-- Order Placed: Always active -->
                                             <a href="javascript:void(0);"
-                                               class="progress-bar d-none d-xxl-inline-block"
+                                               class="progress-bar active"
                                                role="progressbar"
-                                               style="width: 100%"
-                                               aria-valuenow="30"
+                                               style="width: 33%"
+                                               aria-valuenow="33"
+                                               aria-valuemin="0"
+                                               aria-valuemax="100">
+                                                <i class="ph-bag align-baseline me-1"></i> Order Placed
+                                            </a>
+
+                                            <!-- Processing: Active when IN_PROGRESS or when order is DELIVERED -->
+                                            <a href="javascript:void(0);"
+                                               [ngClass]="{'active': order.etat === 'IN_PROGRESS' || order.livraison?.etatLivraison === 'DELIVERED'}"
+                                               class="progress-bar"
+                                               role="progressbar"
+                                               style="width: 33%"
+                                               aria-valuenow="33"
                                                aria-valuemin="0"
                                                aria-valuemax="100">
                                                 <i class="ph-package align-middle me-1"></i> Processing
                                             </a>
+
+                                            <!-- Delivered: Active only when DELIVERED -->
                                             <a href="javascript:void(0);"
-                                               class="progress-bar d-none d-md-inline-block"
-                                               role="progressbar"
-                                               style="width: 100%"
-                                               aria-valuenow="30"
-                                               aria-valuemin="0"
-                                               aria-valuemax="100">
-                                                <i class="ph-truck align-baseline me-1 d-none d-lg-inline-block"></i> Shipped
-                                            </a>
-                                            <a href="javascript:void(0);"
-                                               class="progress-bar d-none d-md-inline-block"
-                                               role="progressbar"
-                                               style="width: 100%"
-                                               aria-valuenow="20"
-                                               aria-valuemin="0"
-                                               aria-valuemax="100">
-                                                <i class="ph-bicycle align-baseline me-1 d-none d-lg-inline-block"></i> Out For Delivery
-                                            </a>
-                                            <a href="javascript:void(0);"
+                                               [ngClass]="{'active': order.livraison?.etatLivraison === 'DELIVERED'}"
                                                class="progress-bar"
                                                role="progressbar"
-                                               style="width: 100%"
-                                               aria-valuenow="20"
+                                               style="width: 34%"
+                                               aria-valuenow="34"
                                                aria-valuemin="0"
                                                aria-valuemax="100">
-                                                <i class="ph-house-line align-baseline me-1 d-none d-lg-inline-block"></i> Delivered
+                                                <i class="ph-house-line align-baseline me-1"></i> Delivered
                                             </a>
                                         </div>
                                     </div>

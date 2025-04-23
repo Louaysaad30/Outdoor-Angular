@@ -1,4 +1,4 @@
-import { Component, QueryList, ViewChild, ViewChildren, OnInit } from '@angular/core';
+import { Component, QueryList, ViewChild, ViewChildren, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ModalDirective } from 'ngx-bootstrap/modal';
@@ -8,13 +8,19 @@ import { PageChangedEvent } from 'ngx-bootstrap/pagination';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Status } from '../../models/Status';
+import { UserService } from '../../services/user-service/user.service';
+import { take } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
+import { DeliveryService } from '../../services/livraison/delivery.service';
+import { Livraison } from '../../models/Livraison';
 
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.component.html',
-  providers: [DecimalPipe, DatePipe]
+  providers: [DecimalPipe, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements OnInit, AfterViewInit {
   Status = Status;
   term: any;
   // bread crumb items
@@ -25,6 +31,8 @@ export class OrdersComponent implements OnInit {
   masterSelected!: boolean;
   Orderlist: Commande[] = [];
   Order: Commande[] = [];
+  deliveryPersons: any[] = [];
+
   // Table data
   deleteId: any;
   sortValue: any = 'dateCommande';
@@ -45,6 +53,7 @@ export class OrdersComponent implements OnInit {
   revenueDelivered: number = 0;
   revenueCancelled: number = 0;
 
+
   // Chart data
   ordersByDate: Map<string, number> = new Map();
 
@@ -54,21 +63,22 @@ export class OrdersComponent implements OnInit {
   constructor(
     private formBuilder: UntypedFormBuilder,
     private checkoutService: CheckoutService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private userService: UserService, // Assuming you have a UserService to fetch delivery persons
+    private deliveryService: DeliveryService, // Add this line
+    private cdr: ChangeDetectorRef,
+    private toastr: ToastrService,
   ) { }
 
   ngOnInit(): void {
-    /**
-     * BreadCrumb
-     */
+    setTimeout(() => {
+      this.loadDeliveryPersons();
+      this.loadRealOrderData();
+    });
     this.breadCrumbItems = [
       { label: 'Ecommerce', active: true },
       { label: 'Orders', active: true }
     ];
-
-    /**
-     * Form Validation
-     */
     this.orderForm = this.formBuilder.group({
       id: [''],
       nom: ['', [Validators.required]],
@@ -78,12 +88,28 @@ export class OrdersComponent implements OnInit {
       shippingMethod: ['', [Validators.required]],
       etat: ['', [Validators.required]]
     });
-
-    // Initialize chart
     this._linebasicChart('["--tb-primary", "--tb-secondary"]');
+  }
 
-    // Fetch real data from API
-    this.loadRealOrderData();
+  ngAfterViewInit() {
+    // Force chart update after view is initialized
+    setTimeout(() => {
+      this.prepareChartData(this.Orderlist);
+      this.cdr.detectChanges();
+    }, 100);
+  }
+
+  loadDeliveryPersons(): void {
+    this.userService.getUsersByRoleLivreur().subscribe({
+      next: (data) => {
+        console.log('Delivery persons:', data);
+        this.deliveryPersons = data;
+        this.cdr.detectChanges(); // Add this line to trigger change detection
+      },
+      error: (error) => {
+        console.error('Error loading delivery persons:', error);
+      }
+    });
   }
 
   /**
@@ -175,12 +201,15 @@ export class OrdersComponent implements OnInit {
     const ordersByDate = new Map<string, number>();
     const returnsByDate = new Map<string, number>();
 
-    // Initialize last 28 days
+    // Initialize last 28 days with proper date formatting
     const today = new Date();
+    const dateLabels: string[] = [];
+
     for (let i = 27; i >= 0; i--) {
       const date = new Date();
       date.setDate(today.getDate() - i);
       const formattedDate = this.datePipe.transform(date, 'MM/dd/yyyy') || '';
+      dateLabels.push(formattedDate);
       ordersByDate.set(formattedDate, 0);
       returnsByDate.set(formattedDate, 0);
     }
@@ -200,19 +229,19 @@ export class OrdersComponent implements OnInit {
       }
     });
 
-    // Convert to arrays for chart
-    const dates = Array.from(ordersByDate.keys());
-    const orderCounts = Array.from(ordersByDate.values());
-    const returnCounts = Array.from(returnsByDate.values());
+    // Convert to arrays for chart, preserving the order
+    const orderCounts = dateLabels.map(date => ordersByDate.get(date) || 0);
+    const returnCounts = dateLabels.map(date => returnsByDate.get(date) || 0);
 
     // Update chart data safely
     if (this.linebasicChart && this.linebasicChart.series) {
       this.linebasicChart.series[0].data = orderCounts;
       this.linebasicChart.series[1].data = returnCounts;
+      this.linebasicChart.xaxis.categories = dateLabels;
 
-      if (this.linebasicChart.xaxis) {
-        this.linebasicChart.xaxis.categories = dates;
-      }
+      // Force chart update
+      this.linebasicChart = {...this.linebasicChart};
+      this.cdr.detectChanges();
     }
   }
 
@@ -288,36 +317,28 @@ export class OrdersComponent implements OnInit {
       },
       colors: colors,
       xaxis: {
-        type: 'datetime',
-        categories: this.getLast28Days()
+        // Change to category type
+        type: 'category',
+        categories: this.getLast28Days().map(date =>
+          this.datePipe.transform(date, 'MM/dd/yyyy') || '')
       },
       yaxis: {
         show: false,
       }
     };
-
-    const attributeToMonitor = 'data-theme';
-
-    const observer = new MutationObserver(() => {
-      this._linebasicChart('["--tb-primary", "--tb-secondary"]');
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: [attributeToMonitor]
-    });
   }
 
   /**
    * Get array of last 28 days formatted for chart
    */
-  getLast28Days(): string[] {
-    const result = [];
+  getLast28Days(): Date[] {
+    const result: Date[] = [];
     const today = new Date();
 
     for (let i = 27; i >= 0; i--) {
       const date = new Date();
       date.setDate(today.getDate() - i);
-      result.push(this.datePipe.transform(date, 'MM/dd/yyyy GMT') || '');
+      result.push(date);
     }
 
     return result;
@@ -611,13 +632,14 @@ export class OrdersComponent implements OnInit {
    */
   productNamesCache: Map<number, string[]> = new Map();
 
+  // Replace the getProductName method with this improved version
   getProductName(order: Commande): string {
-    // Si l'ID de commande n'est pas valide, retourner une valeur par défaut
+    // If the ID of order is not valid, return a default value
     if (!order.idCommande) {
       return 'Aucun produit';
     }
 
-    // Vérifier si nous avons déjà les noms de produits en cache
+    // Check if product names are already in cache
     if (this.productNamesCache.has(order.idCommande)) {
       const names = this.productNamesCache.get(order.idCommande);
       if (names && names.length > 0) {
@@ -631,43 +653,72 @@ export class OrdersComponent implements OnInit {
       }
     }
 
-    // Sinon, charger les noms de produits depuis l'API
-    this.checkoutService.getProductNamesByCommandeId(order.idCommande).subscribe({
-      next: (names: string[]) => {
-        this.productNamesCache.set(order.idCommande!, names);
-        // Forcer la mise à jour de l'affichage
-        this.Order = [...this.Order];
-      },
-      error: (error) => {
-        console.error('Error loading product names:', error);
-        this.productNamesCache.set(order.idCommande!, []);
-      }
-    });
+    // Set a placeholder while loading - crucial to prevent loops
+    this.productNamesCache.set(order.idCommande, ['Chargement...']);
 
-    // Retourner un message de chargement en attendant la réponse de l'API
+    // Load product names from API, but only if not already loading
+    this.checkoutService.getProductNamesByCommandeId(order.idCommande)
+      .pipe(
+        // Only take the first result to prevent multiple subscribers
+        take(1)
+      )
+      .subscribe({
+        next: (names: string[]) => {
+          this.productNamesCache.set(order.idCommande!, names);
+          // Force view update with OnPush change detection
+          this.Order = [...this.Order];
+          this.cdr.detectChanges(); // Add this line
+        },
+        error: (error) => {
+          console.error('Error loading product names:', error);
+          this.productNamesCache.set(order.idCommande!, []);
+          this.cdr.detectChanges(); // Add this line
+        }
+      });
+
+    // Return loading indicator
     return 'Chargement...';
   }
 
   // Méthode pour précharger les noms de produits
   preloadProductNames(orders: Commande[]) {
-    // Filtrer uniquement les commandes avec un ID valide
-    const orderIds = orders
-      .filter(order => order.idCommande !== undefined)
+    // Filter only orders with valid IDs and not already in cache
+    const orderIdsToLoad = orders
+      .filter(order =>
+        order.idCommande !== undefined &&
+        !this.productNamesCache.has(order.idCommande)
+      )
       .map(order => order.idCommande!);
 
-    // Pour chaque ID de commande, charger les noms de produits
-    orderIds.forEach(id => {
-      this.checkoutService.getProductNamesByCommandeId(id).subscribe({
-        next: (names) => {
-          this.productNamesCache.set(id, names);
-          // Forcer la mise à jour de l'affichage
-          this.Order = [...this.Order];
-        },
-        error: (err) => {
-          console.error(`Error loading product names for order ${id}:`, err);
-          this.productNamesCache.set(id, []);
-        }
-      });
+    // Skip if no orders need loading
+    if (orderIdsToLoad.length === 0) {
+      return;
+    }
+
+    console.log(`Preloading product names for ${orderIdsToLoad.length} orders`);
+
+    // Prefill cache with loading placeholders to prevent duplicate requests
+    orderIdsToLoad.forEach(id => {
+      this.productNamesCache.set(id, ['Chargement...']);
+    });
+
+    // Load product names for each order
+    orderIdsToLoad.forEach(id => {
+      this.checkoutService.getProductNamesByCommandeId(id)
+        .pipe(take(1))
+        .subscribe({
+          next: (names) => {
+            this.productNamesCache.set(id, names);
+            // Only update view once all are loaded to reduce refresh cycles
+            if (orderIdsToLoad.indexOf(id) === orderIdsToLoad.length - 1) {
+              this.Order = [...this.Order];
+            }
+          },
+          error: (err) => {
+            console.error(`Error loading product names for order ${id}:`, err);
+            this.productNamesCache.set(id, []);
+          }
+        });
     });
   }
 
@@ -686,4 +737,109 @@ export class OrdersComponent implements OnInit {
       // reader.readAsDataURL(file);
     }
   }
+
+  trackByOrderId(index: number, item: Commande): number {
+    return item.idCommande || index;
+  }
+
+
+  assignDeliveryPerson(orderId: number, livreurId: string): void {
+    console.log('Assigning delivery person - Order ID:', orderId, 'Delivery Person ID:', livreurId);
+
+    if (!orderId) {
+      this.toastr.error('Missing order ID');
+      return;
+    }
+
+    if (!livreurId || livreurId === '') {
+      this.toastr.warning('Please select a delivery person');
+      return;
+    }
+
+    // Convert livreurId to number - add explicit logging
+    const livreurIdNumber = Number(livreurId);
+    console.log('Converted livreurId to number:', livreurIdNumber, 'Original value:', livreurId);
+
+    if (isNaN(livreurIdNumber)) {
+      this.toastr.error('Invalid delivery person ID');
+      return;
+    }
+
+    this.toastr.info('Assigning delivery person...', 'Processing');
+
+    // First get the order to have its details
+    this.checkoutService.getCommande(orderId).subscribe({
+      next: (order) => {
+        // Create a new Livraison object
+        const newLivraison = new Livraison();
+        newLivraison.dateLivraison = new Date(); // Current date
+        newLivraison.adresseLivraison = order.adresse || 'Address not provided';
+
+        // Always set a specific status for a new delivery - don't use order.etat
+        newLivraison.etatLivraison = Status.IN_PROGRESS; // Set explicitly to IN_PROGRESS
+
+        newLivraison.livreurId = livreurIdNumber; // For your Java backend
+
+        newLivraison.montantCommande = order.montantCommande || 0;
+        newLivraison.paymentMethod = order.paymentMethod || 'cod';
+        newLivraison.OrderNumber = order.OrderNumber || `ORD-${order.idCommande}`;
+
+        console.log('Creating delivery record with data:', newLivraison);
+
+        // Add the livraison first
+        this.deliveryService.addLivraison(newLivraison).subscribe({
+          next: (createdLivraison) => {
+            console.log('Livraison created successfully:', createdLivraison);
+
+            // Now assign the livraison to the order - THIS IS THE ONLY OPERATION NEEDED
+            this.checkoutService.affecterLivraisonACommande(orderId, createdLivraison.idLivraison!).subscribe({
+              next: (updatedOrder) => {
+                console.log('Order updated with livraison:', updatedOrder);
+
+                // Just update our UI with the returned order - no need for another API call
+                this.updateOrderInLists(updatedOrder);
+                this.toastr.success('Delivery person assigned successfully');
+              },
+              error: (error) => {
+                console.error('Error assigning delivery to order:', error);
+                this.toastr.error('Failed to assign delivery to order');
+              }
+            });
+          },
+          error: (error) => {
+            console.error('Error creating delivery:', error);
+            this.toastr.error('Failed to create delivery record');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error fetching order details:', error);
+        this.toastr.error('Failed to load order details');
+      }
+    });
+  }
+
+  // Helper method to update order in both Order and Orderlist arrays
+  private updateOrderInLists(updatedOrder: Commande): void {
+    const index = this.Order.findIndex(o => o.idCommande === updatedOrder.idCommande);
+    if (index !== -1) {
+      this.Order[index] = updatedOrder;
+    }
+
+    // Also update in the full orders list
+    const fullIndex = this.Orderlist.findIndex(o => o.idCommande === updatedOrder.idCommande);
+    if (fullIndex !== -1) {
+      this.Orderlist[fullIndex] = updatedOrder;
+    }
+
+    // Recalculate statistics
+    this.calculateOrderStatistics(this.Orderlist);
+
+    // Force update with OnPush change detection
+    this.Order = [...this.Order];
+    this.cdr.detectChanges();
+  }
+
+
+
 }

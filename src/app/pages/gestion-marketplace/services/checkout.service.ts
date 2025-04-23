@@ -192,4 +192,30 @@ export class CheckoutService {
         })
       );
   }
+
+
+
+  affecterLivraisonACommande(commandeId: number, livraisonId: number): Observable<Commande> {
+    return this.http.put<Commande>(
+      `${this.baseUrl}/affecterLivreurACommande/${commandeId}/${livraisonId}`,
+      {}
+    ).pipe(
+      tap(order => console.log(`Delivery person ${livraisonId} assigned to order ${commandeId}`)),
+      catchError(error => {
+        console.error(`Error assigning delivery person ${livraisonId} to order ${commandeId}:`, error);
+        throw error;
+      })
+    );
+  }
+
+  getCommandeByLivraisonId(livraisonId: number): Observable<Commande[]> {
+    return this.http.get<Commande[]>(`${this.baseUrl}/getByLivraisonId/${livraisonId}`)
+      .pipe(
+        tap(orders => console.log(`Found ${orders.length} orders for delivery person ${livraisonId}`)),
+        catchError(error => {
+          console.error('Error fetching orders by delivery person:', error);
+          throw error;
+        })
+      );
+  }
 }

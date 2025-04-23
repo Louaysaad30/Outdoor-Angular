@@ -155,3 +155,18 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* Add this to your component's CSS */
+.delivery-person select {
+  min-width: 120px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.delivery-person select:disabled {
+  background-color: #e9ecef;
+  opacity: 0.65;
+}

@@ -19,6 +19,9 @@ import { LigneCommande } from '../../models/LigneCommande';
 import { UpdateQuantiteDTO } from '../../models/DTO/UpdateQuantiteDTO';
 import { LignedecommandeService } from '../../services/lignedecommande.service';
 import { CartUpdateService } from '../../services/cart-update.service';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { ReviewService } from '../../services/review/review.service';
+import { Review } from '../../models/Review';
 
 @Component({
   selector: 'app-product-details',
@@ -30,7 +33,6 @@ export class ProductDetailsComponent implements OnInit {
 
   // bread crumb items
   breadCrumbItems!: Array<{}>;
-  reviewForm!: UntypedFormGroup;
   productdetail: Product | null = null;
   submitted: boolean = false;
   deleteId: any;
@@ -59,6 +61,25 @@ export class ProductDetailsComponent implements OnInit {
   isHovered: boolean = false;
   hoveredIndex: number = -1;
 
+  // Add these properties to your component class
+  reviewForm: FormGroup = new FormGroup({});
+  productReviews: Review[] = [];
+  loadingReviews: boolean = false;
+  showReviewForm: boolean = false;
+  reviewFormSubmitted: boolean = false;
+  isSubmittingReview: boolean = false;
+  averageRating: number = 0;
+
+  // Add these properties to your component
+  isDeletingReview = false;
+  deletingReviewId: number | null = null;
+
+  // Add these properties to your component
+  reviewToDeleteId: number | null = null;
+
+  // Add this ViewChild reference
+  @ViewChild('deleteConfirmModal', { static: false }) deleteConfirmModal?: ModalDirective;
+
   constructor(
     private formBuilder: UntypedFormBuilder,
     private http: HttpClient,
@@ -72,7 +93,8 @@ export class ProductDetailsComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private ligneCommandeService: LignedecommandeService,
     private cartUpdateService: CartUpdateService,
-    private cartService: CartUpdateService // Add this if not already present
+    private cartService: CartUpdateService, // Add this if not already present
+    private reviewService: ReviewService
   ) { }
 
   ngOnInit(): void {
@@ -93,6 +115,19 @@ export class ProductDetailsComponent implements OnInit {
           this.checkIfFavorited(productId);
         }
       }, 100);
+    });
+
+    // Initialize the review form
+    this.reviewForm = this.formBuilder.group({
+      rating: [null, Validators.required],
+      reviewText: ['', Validators.required]
+    });
+
+    // Load reviews when product details are loaded
+    this.route.params.subscribe(params => {
+      const productId = +params['id'];
+      this.loadProductDetails(productId);
+      this.loadProductReviews(productId);
     });
   }
 
@@ -619,6 +654,194 @@ export class ProductDetailsComponent implements OnInit {
       });
     } else {
       this.cartUpdateService.updateCartCount(0);
+    }
+  }
+
+  // Add these methods to your class
+  loadProductReviews(productId: number): void {
+    this.loadingReviews = true;
+
+    // Use the product-specific endpoint we added
+    this.reviewService.getReviewsByProductId(productId).subscribe({
+      next: (reviews) => {
+        console.log('Reviews for product', productId, ':', reviews);
+        this.productReviews = reviews;
+
+        // Calculate average rating
+        if (this.productReviews.length > 0) {
+          const totalRating = this.productReviews.reduce((sum, review) =>
+            sum + (review.rating || 0), 0);
+          this.averageRating = totalRating / this.productReviews.length;
+        } else {
+          this.averageRating = 0;
+        }
+
+        this.loadingReviews = false;
+      },
+      error: (error) => {
+        console.error('Error loading reviews for product:', error);
+        this.loadingReviews = false;
+      }
+    });
+  }
+
+  setRating(rating: number): void {
+    this.reviewForm.patchValue({ rating });
+  }
+
+  submitReview(): void {
+    this.reviewFormSubmitted = true;
+
+    if (this.reviewForm.invalid) {
+      return;
+    }
+
+    if (!this.currentUser || !this.productdetail) {
+      this.toastr.error('You must be logged in to submit a review', 'Error');
+      return;
+    }
+
+    if (!this.productdetail.idProduit) {
+      this.toastr.error('Cannot submit review for this product', 'Error');
+      return;
+    }
+
+    this.isSubmittingReview = true;
+
+    // Créer un objet review avec le produit correctement formaté
+    const newReview: Review = {
+      rating: this.reviewForm.get('rating')?.value,
+      reviewText: this.reviewForm.get('reviewText')?.value,
+      userId: this.currentUser.id,
+      userName: this.currentUser.nom + ' ' + this.currentUser.prenom,
+      dateCreation: new Date(),
+      image: this.currentUser.image,
+      dateDeNaissance: this.currentUser.dateNaissance,
+      // C'est ici la clé - inclure un objet product avec seulement l'ID
+      product: {
+        idProduit: this.productdetail.idProduit
+      }
+    };
+
+    console.log('Submitting review:', newReview);
+
+    this.reviewService.addReview(newReview).subscribe({
+      next: (response) => {
+        this.toastr.success('Your review has been submitted', 'Success');
+        this.isSubmittingReview = false;
+        this.showReviewForm = false;
+        this.reviewForm.reset();
+        this.reviewFormSubmitted = false;
+
+        // Reload reviews to show the new one
+        if (this.productdetail && this.productdetail.idProduit) {
+          this.loadProductReviews(this.productdetail.idProduit);
+        }
+      },
+      error: (error) => {
+        console.error('Error submitting review:', error);
+        this.toastr.error('There was an error submitting your review', 'Error');
+        this.isSubmittingReview = false;
+      }
+    });
+  }
+
+  // Check if the review belongs to the current user and has a valid ID
+  isUserReview(review: any): boolean {
+    return this.currentUser &&
+           review.userId === this.currentUser.id &&
+           review.idReview !== undefined;
+  }
+
+  // Delete review method
+  deleteReview(reviewId: number | undefined): void {
+    // Check if reviewId is defined
+    if (!reviewId) {
+      this.toastr.error('Cannot delete review: Invalid review ID');
+      return;
+    }
+
+    // Show confirmation dialog
+    if (confirm('Are you sure you want to delete this review?')) {
+      this.isDeletingReview = true;
+      this.deletingReviewId = reviewId;
+
+      // Call your service to delete the review
+      this.reviewService.deleteReview(reviewId).subscribe({
+        next: () => {
+          // Remove the review from the list on success
+          this.productReviews = this.productReviews.filter(r => r.idReview !== reviewId);
+
+          // Recalculate average rating if needed
+          this.calculateAverageRating();
+
+          // Show success message
+          this.toastr.success('Your review has been deleted successfully');
+        },
+        error: (error) => {
+          console.error('Error deleting review:', error);
+          this.toastr.error('Failed to delete review. Please try again later.');
+        },
+        complete: () => {
+          this.isDeletingReview = false;
+          this.deletingReviewId = null;
+        }
+      });
+    }
+  }
+
+  // Recalculate average rating after deletion
+  calculateAverageRating(): void {
+    if (this.productReviews.length === 0) {
+      this.averageRating = 0;
+      return;
+    }
+
+    const sum = this.productReviews.reduce((total, review) => total + (review.rating || 0), 0);
+    this.averageRating = sum / this.productReviews.length;
+  }
+
+  // Open the delete confirmation modal
+  openDeleteModal(reviewId: number) {
+    this.reviewToDeleteId = reviewId;
+    if (this.deleteConfirmModal) {
+      this.deleteConfirmModal.show();
+    }
+  }
+
+  // Confirm delete action from modal
+  confirmDeleteReview() {
+    if (this.reviewToDeleteId) {
+      this.isDeletingReview = true;
+      this.deletingReviewId = this.reviewToDeleteId;
+
+      // Call your service to delete the review
+      this.reviewService.deleteReview(this.reviewToDeleteId).subscribe({
+        next: () => {
+          // Remove the review from the list on success
+          this.productReviews = this.productReviews.filter(r => r.idReview !== this.reviewToDeleteId);
+
+          // Recalculate average rating if needed
+          this.calculateAverageRating();
+
+          // Show success message
+          this.toastr.success('Your review has been deleted successfully');
+
+          // Hide the modal using ModalDirective
+          if (this.deleteConfirmModal) {
+            this.deleteConfirmModal.hide();
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting review:', error);
+          this.toastr.error('Failed to delete review. Please try again later.');
+        },
+        complete: () => {
+          this.isDeletingReview = false;
+          this.deletingReviewId = null;
+          this.reviewToDeleteId = null;
+        }
+      });
     }
   }
 }

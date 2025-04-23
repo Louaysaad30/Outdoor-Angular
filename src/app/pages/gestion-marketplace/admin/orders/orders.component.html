@@ -180,18 +180,6 @@
           <table class="table align-middle table-nowrap" id="orderTable">
             <thead class="text-muted table-light">
               <tr class="text-uppercase">
-                <th scope="col" style="width: 25px">
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="checkAll"
-                      value="option"
-                      [checked]="masterSelected"
-                      (change)="checkUncheckAll($event)"
-                    />
-                  </div>
-                </th>
                 <th
 
                   scope="col"
@@ -200,9 +188,7 @@
                 >
                   Order ID <i class="bi bi-sort-down-alt"></i>
                 </th>
-                <!-- Add customer name column header -->
                 <th
-
                   scope="col"
                   style="width: 15%"
                   (click)="sortBy('nom', 'Customer')"
@@ -210,13 +196,18 @@
                   Customer Name <i class="bi bi-sort-down-alt"></i>
                 </th>
                 <th
-
-                  style="width: 30%"
+                  scope="col"
+                  style="width: 15%"
                 >
                   Product
                 </th>
                 <th
-
+                  scope="col"
+                  style="width: 15%"
+                >
+                  Delivery Person
+                </th>
+                <th
                   scope="col"
                   style="width: 15%"
                   (click)="sortBy('dateCommande', 'Order Date')"
@@ -249,82 +240,44 @@
               </tr>
             </thead>
             <tbody class="list form-check-all">
-              <tr *ngFor="let item of Order; let i = index">
-                <th scope="row">
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="chk_child"
-                      [checked]="item.etat"
-                      value="option1"
-                      (change)="onCheckboxChange($event)"
-                    />
-                  </div>
-                </th>
+              <tr *ngFor="let item of Order; let i = index; trackBy: trackByOrderId">
+
                 <td class="orderId">
                   <span class="fw-medium">{{
                     item.OrderNumber || "ORD-" + item.idCommande
                   }}</span>
                 </td>
-                <!-- Add customer name cell -->
                 <td class="customer">
                   <span>{{item.nom}}</span>
                 </td>
-                <td class="product position-relative">
-                  <!-- Affichage du nom avec badge si plusieurs produits -->
-                  <div
-                    class="d-flex align-items-center product-name-container"
-                    [ngClass]="{ 'cursor-pointer': hasMultipleProducts(item) }"
-                    [tooltip]="
-                      hasMultipleProducts(item) ? tooltipTemplate : undefined
-                    "
-                    placement="right"
-                    container="body"
-                    tooltipClass="product-tooltip"
-                  >
-                    <!-- Improved product name display with animation -->
-                    <div class="product-text">
-                      <span>{{ getProductName(item) }}</span>
-
-                      <!-- Subtle interactive underline indicator -->
-                      <div
-                        class="hover-indicator"
-                        *ngIf="hasMultipleProducts(item)"
-                      ></div>
-                    </div>
-
-                    <!-- Enhanced badge with better animation -->
-                    <span
-                      *ngIf="hasMultipleProducts(item)"
-                      class="ms-2 badge-container"
-                    >
-                      <span class="badge rounded-pill bg-info-subtle text-info">
-                        <i class="ri-information-line"></i>
-                      </span>
-                      <!-- Add pulse effect ring -->
-                      <span class="pulse-ring"></span>
-                    </span>
+                <td class="product">
+                  <div>
+                    {{ getProductName(item) }}
+                    <span *ngIf="hasMultipleProducts(item)" class="badge bg-info ms-1"
+                          [tooltip]="getProductNamesList(item)">+</span>
                   </div>
-
-                  <!-- Template pour le tooltip -->
-                  <ng-template #tooltipTemplate>
-                    <div class="p-2 product-tooltip-content">
-                      <h6 class="mb-2 tooltip-title">Liste des produits</h6>
-                      <div class="tooltip-products">
-                        <div
-                          *ngFor="
-                            let name of productNamesCache.get(item.idCommande!);
-                            let i = index
-                          "
-                          class="product-item d-flex align-items-start mb-1"
-                        >
-                          <span class="badge bg-primary me-2">{{ i + 1 }}</span>
-                          <span>{{ name }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </ng-template>
+                </td>
+                <td class="deliveryPerson">
+                  <div class="d-flex align-items-center gap-2">
+                    <select
+                      #deliveryPersonSelect
+                      class="form-select form-select-sm"
+                      [disabled]="item.etat === 'DELIVERED' || item.etat === 'CANCELED' || item.livraison?.livreurId"
+                      [value]="item.livraison?.livreurId">
+                      <option value="">Select Delivery Person</option>
+                      <option *ngFor="let livreur of deliveryPersons"
+                              [value]="livreur.id"
+                              [selected]="item.livraison?.livreurId === livreur.id">
+                        {{livreur.nom}} {{livreur.prenom}}
+                      </option>
+                    </select>
+                    <button
+                      class="btn btn-sm btn-primary"
+                      [disabled]="item.etat === 'DELIVERED' || item.etat === 'CANCELED' || item.livraison?.livreurId"
+                      (click)="assignDeliveryPerson(item.idCommande!, deliveryPersonSelect.value)">
+                      <i class="ri-user-add-line"></i> Assign
+                    </button>
+                  </div>
                 </td>
                 <td class="date">
                   {{ formatDate(item.dateCommande) }}
@@ -333,7 +286,7 @@
                   ${{ item.montantCommande | number : "1.2-2" }}
                 </td>
                 <td class="payment">
-                  {{ item.shippingMethod || "Standard" }}
+                  {{ item.paymentMethod || "cod" }}
                 </td>
                 <td class="status">
                   <span

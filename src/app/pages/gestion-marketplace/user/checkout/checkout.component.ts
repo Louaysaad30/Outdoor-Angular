@@ -351,7 +351,7 @@ export class CheckoutComponent implements OnInit {
                 return ligneCmd;
             }),
             userId: this.CurrentUser.id, // Use the actual user ID from your auth service
-            etat: Status.IN_PROGRESS, // Default status
+            etat: Status.ON_HOLD, // Default status
             OrderNumber: this.generateOrderNumber(),
             paymentMethod: this.selectedPaymentMethod // Add the selected payment method
 
