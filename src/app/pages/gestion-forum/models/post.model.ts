@@ -14,5 +14,6 @@ export class Post {
   comments?: ForumComment[];
   reactions?: Reaction[];
   newComment?: string; // Add this property
+  userProfilePic?: string; // Added property
 
 }

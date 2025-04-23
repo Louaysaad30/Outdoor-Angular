@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-  import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 
 // Component
 import { LayoutComponent } from './layouts/layout.component';
@@ -7,6 +7,7 @@ import { AuthlayoutComponent } from './authlayout/authlayout.component';
 import { authGuard } from './account/auth/core/guards/auth.guard';
 import { roleGuard } from './account/auth/core/guards/role.guard';
 import { AuthGuard } from './core/guards/auth.guard';
+
 import {LayoutsUserComponent} from "./layouts-user/layouts-user.component";
 import { Error404Component } from './account/auth/errors/error404/error404.component';
 
@@ -29,10 +30,9 @@ const routes: Routes = [
   { path: 'transportback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule)  },
   { path: 'transportfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule)  },
   { path: '**', component: Error404Component }
-
-
-  @NgModule({
-    imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
-    exports: [RouterModule]
-  })
-  export class AppRoutingModule { }
+]
+@NgModule({
+  imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }

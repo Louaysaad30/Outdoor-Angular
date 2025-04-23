@@ -42,14 +42,14 @@ maxAttempts = 3;
   
   onSubmit() {
     this.errorLoginMessage = '';
-  
+
     if (this.loginForm.valid) {
       const loginUser = {
         email: this.loginForm.get('email')?.value,
         motDePasse: this.loginForm.get('motDePasse')?.value,
         recaptchaToken: this.loginForm.get('recaptcha')?.value
       };
-  
+
       this.authService.authenticate(loginUser).subscribe(
         (response: any) => {
           // Reset failed attempts on success
@@ -62,7 +62,7 @@ maxAttempts = 3;
               const authority = this.currentUser.authorities[0]?.authority;
   
               this.websocketService.connect(localStorage.getItem('authToken'), this.currentUser.id); // pass userId too
-  
+
               Swal.fire({
                 icon: 'success',
                 title: 'Login Successful',
@@ -71,8 +71,8 @@ maxAttempts = 3;
                 if (authority === 'ADMIN') {
                   this.router.navigate(['/userback']);
                 } else if (authority === 'USER') {
-                  //achanger landing pages
-                  this.router.navigate(['/forumfront/user/forumPost']);
+                  this.router.navigate(['/forumfront/user/forumpost']);
+
                 } else if (authority === 'AGENCE') {
                   this.router.navigate(['/transportback']);
                 } else if (authority === 'OWNER') {
@@ -104,6 +104,21 @@ maxAttempts = 3;
           } else {
             errorMessage = error?.error?.message || 'Login failed. Please check your credentials.';
           }
+
+          this.errorLoginMessage = errorMessage;
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Login Failed',
+            text: errorMessage
+          });
+        }
+      );
+    }
+  }
+
+
+
   
           this.failedAttempts++;
   
@@ -141,5 +156,5 @@ maxAttempts = 3;
     this.fieldTextType = !this.fieldTextType;
   }
 
- 
+
 }
