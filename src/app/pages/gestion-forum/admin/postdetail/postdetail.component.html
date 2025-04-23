@@ -1,1 +1,433 @@
-<p>postdetail works!</p>
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs [title]="'Post Details'" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Loading post details...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error && !loading) {
+    <div class="col-12">
+      <div class="alert alert-danger" role="alert">
+        <i class="ph-warning-circle me-2"></i> {{error}}
+      </div>
+    </div>
+  }
+
+  <!-- Post Content -->
+  @if (post && !loading) {
+    <div class="col-xxl-4">
+      <div class="card p-3 sticky-side-div">
+        <!-- User Profile -->
+        <div class="card-header bg-white d-flex align-items-center p-2 border-bottom">
+          <div class="avatar-container me-2">
+            <img [src]="post.userProfilePic" alt="User" class="avatar-image">
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="mb-0 fs-sm fw-semibold">{{post.username || 'User'}}</h6>
+            <small class="text-muted fs-xs">{{formatDate(post.createdAt)}}</small>
+          </div>
+        </div>
+
+        <!-- Media Display -->
+<div class="product-img-slider w-100">
+  <!-- Main Carousel -->
+  <ngx-slick-carousel class="carousel swiper product-thumbnail-slider p-2 rounded bg-light custom-arrow"
+    [config]="slideConfig" #slickModal="slick-carousel" (afterChange)="slickChange($event)">
+    @for (item of post?.media; track $index) {
+      <div ngxSlickItem class="slide">
+        <div class="media-container d-flex align-items-center justify-content-center" style="height: 320px; width: 100%;">
+          @if (isVideo(item.mediaUrl)) {
+            <video controls class="w-100 h-100" style="object-fit: cover;">
+              <source [src]="item.mediaUrl" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          } @else {
+            <img [src]="item.mediaUrl" alt="" class="w-100 h-100" style="object-fit: cover;">
+          }
+        </div>
+      </div>
+    }
+  </ngx-slick-carousel>
+
+  <!-- Thumbnail Navigation -->
+  <ngx-slick-carousel class="carousel swiper product-nav-slider mt-2" [config]="slidesConfig">
+    @for (item of post?.media; track $index) {
+      <div ngxSlickItem class="swiper-slide swiperlist me-2" (click)="slidePreview($index,$event)">
+        <div class="nav-slide-item" style="height: 60px;">
+          @if (isVideo(item.mediaUrl)) {
+            <div class="position-relative h-100">
+              <img [src]="item.mediaUrl || 'assets/images/placeholder-image.jpg'" alt="" class="img-fluid d-block h-100 w-100" style="object-fit: cover;">
+              <span class="position-absolute top-50 start-50 translate-middle badge bg-dark rounded-circle p-1">
+                <i class="ph-play"></i>
+              </span>
+            </div>
+          } @else {
+            <img [src]="item.mediaUrl" alt="" class="img-fluid d-block h-100 w-100" style="object-fit: cover;">
+          }
+        </div>
+      </div>
+    }
+  </ngx-slick-carousel>
+</div>        <!-- No Media Fallback -->
+@if (!post?.media?.length) {
+          <div class="text-center p-4 bg-light rounded">
+            <i class="ph-image-square fs-1 text-muted"></i>
+            <p class="mt-2 text-muted">No media attached to this post</p>
+          </div>
+        }
+      </div>
+    </div>
+
+<div class="col-xxl-8">
+      <div class="card shadow-sm">
+        <!-- Post Header Section -->
+        <div class="card-header d-flex justify-content-between align-items-center bg-white border-bottom py-3">
+          <div>
+            <div class="d-flex align-items-center">
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-danger" (click)="deletePost()">
+              <i class="ph-trash me-1"></i> Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Post Content -->
+        <div class="card-body p-4">
+          <!-- Post Stats -->
+    <!-- Post Statistics Cards -->
+<div class="row g-3 mb-4">
+  <!-- Views Card -->
+<div class="col-sm-3">
+    <div class="card border-0 shadow-sm h-100 overflow-hidden">
+      <div class="card-body p-0">
+        <div class="d-flex align-items-center">
+          <div class="bg-success bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 100%;">
+            <i class="ph-smiley fs-1 text-success"></i>
+          </div>
+          <div class="p-3">
+            <div class="d-flex flex-column">
+              <div class="d-flex align-items-center mb-1">
+                <span class="badge bg-success me-1">+</span>
+                <h3 class="mb-0 fw-bold">{{positiveCommentCount}}</h3>
+              </div>
+              <div class="d-flex align-items-center">
+                <span class="badge bg-danger me-1">-</span>
+                <h3 class="mb-0 fw-bold">{{negativeCommentCount}}</h3>
+              </div>
+            </div>
+            <p class="text-muted mb-0 fs-sm">Sentiment Analysis</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-success opacity-10 position-absolute bottom-0 start-0 end-0" style="height: 3px;"></div>
+    </div>
+  </div>
+  <!-- Reactions Card -->
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm h-100 overflow-hidden">
+      <div class="card-body p-0">
+        <div class="d-flex align-items-center">
+          <div class="bg-success bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 100%;">
+            <i class="ph-thumbs-up fs-1 text-success"></i>
+          </div>
+          <div class="p-3">
+            <h2 class="mb-0 fw-bold">{{post.reactions?.length || 0}}</h2>
+            <p class="text-muted mb-0 fs-sm">Reactions</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-success opacity-10 position-absolute bottom-0 start-0 end-0" style="height: 3px;"></div>
+    </div>
+  </div>
+
+  <!-- Comments Card -->
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm h-100 overflow-hidden">
+      <div class="card-body p-0">
+        <div class="d-flex align-items-center">
+          <div class="bg-info bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 100%;">
+            <i class="ph-chat-dots fs-1 text-info"></i>
+          </div>
+          <div class="p-3">
+            <h2 class="mb-0 fw-bold">{{post.comments?.length || 0}}</h2>
+            <p class="text-muted mb-0 fs-sm">Comments</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-info opacity-10 position-absolute bottom-0 start-0 end-0" style="height: 3px;"></div>
+    </div>
+  </div>
+
+  <!-- Date Card -->
+  <div class="col-sm-3">
+    <div class="card border-0 shadow-sm h-100 overflow-hidden">
+      <div class="card-body p-0">
+        <div class="d-flex align-items-center">
+          <div class="bg-warning bg-opacity-10 p-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 100%;">
+            <i class="ph-calendar fs-1 text-warning"></i>
+          </div>
+          <div class="p-3">
+            <p class="mb-0 fw-semibold text-nowrap">{{formatDate(post.createdAt)}}</p>
+            <p class="text-muted mb-0 fs-sm">Published</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-warning opacity-10 position-absolute bottom-0 start-0 end-0" style="height: 3px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Post Content -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header d-flex align-items-center justify-content-between bg-light py-3">
+    <h5 class="card-title mb-0 d-flex align-items-center">
+      <i class="ph-text-t me-2 text-primary"></i>
+      <span>Post Content</span>
+    </h5>
+    <div class="dropdown">
+      <button class="btn btn-sm btn-icon btn-ghost-secondary" data-bs-toggle="dropdown">
+        <i class="ph-dots-three-vertical"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="javascript:void(0)"><i class="ph-copy me-2"></i>Copy Text</a></li>
+        <li><a class="dropdown-item" href="javascript:void(0)"><i class="ph-pencil-simple me-2"></i>Edit</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card-body p-4">
+    <div class="bg-light bg-opacity-50 p-3 rounded-3 border-start border-4 border-primary">
+      <p class="mb-0 white-space-pre-wrap">{{post.content}}</p>
+    </div>
+  </div>
+</div>
+
+          <!-- Comments Section -->
+<!-- Comments Section -->
+<div class="card shadow-sm">
+  <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+    <h5 class="card-title mb-0 fs-md">
+      <i class="ph-chat-circle-text me-2 text-primary"></i>
+      Comments ({{post.comments?.length || 0}})
+    </h5>
+  </div>
+
+  <div class="card-body p-0">
+    <!-- Comment List -->
+<div class="comments-section">
+      <div class="comments-wrapper p-4">
+        <!-- Comments list -->
+        @if (post.comments && post.comments.length > 0) {
+          <div class="comment-thread">
+            @for (comment of paginatedTopLevelComments; track comment.id) {
+              <ng-container *ngTemplateOutlet="commentTemplate; context: {comment: comment, level: 0}"></ng-container>
+            }
+          </div>
+
+          <div class="row mb-3 align-items-center" *ngIf="getTopLevelComments(post?.id!).length > commentsPerPage">
+            <!-- Results count on the left -->
+            <div class="col-md-6 text-md-start mb-2 mb-md-0">
+              <div class="text-muted">
+                Showing <span class="fw-semibold">{{paginatedTopLevelComments.length}}</span> of
+                <span class="fw-semibold">{{getTopLevelComments(post?.id!).length}}</span> Comments
+              </div>
+            </div>
+
+            <!-- Pagination on the right -->
+            <div class="col-md-6 text-md-end">
+              <pagination class="pagination-wrap hstack gap-2 justify-content-md-end"
+                        [totalItems]="getTopLevelComments(post?.id!).length"
+                        [(ngModel)]="currentPage"
+                        [itemsPerPage]="commentsPerPage"
+                        (pageChanged)="onPageChange($event.page)"
+                        previousText="«"
+                        nextText="»"
+                        firstText="‹‹"
+                        lastText="››">
+              </pagination>
+            </div>
+          </div>
+        } @else {
+          <!-- No comments state -->
+          <div class="text-center py-5 bg-soft-light rounded-3">
+            <i class="ph-chat-dots-light fs-1 text-muted opacity-50 d-block mb-3"></i>
+            <h6 class="text-muted fw-normal mb-2">No comments yet</h6>
+            <p class="text-muted small mb-0 opacity-75">Be the first to join the conversation!</p>
+          </div>
+        }
+      </div>
+    </div>
+    <!-- Recursive comment template -->
+    <ng-template #commentTemplate let-comment="comment" let-level="level">
+      <div class="comment-item" [class.mt-4]="level === 0" [class.mb-3]="level === 0">
+        <!-- Main comment container -->
+        <div class="d-flex position-relative">
+          <!-- User avatar with subtle border -->
+          <div class="comment-avatar me-3">
+            <img [src]="comment.userProfilePic || 'assets/images/users/avatar-' + ((level % 4) + 1) + '.jpg'"
+                 alt="User" class="rounded-circle shadow-sm border border-2 border-white"
+                 [width]="level === 0 ? 42 : 36" [height]="level === 0 ? 42 : 36">
+          </div>
+
+          <!-- Comment content with enhanced styling -->
+          <div class="comment-content flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start w-100">
+              <!-- Enhanced comment bubble -->
+              <div class="comment-bubble shadow-sm"
+                   [ngClass]="{'reply-bubble': level > 0, 'primary-bubble': level === 0}">
+                <div class="d-flex align-items-center mb-1">
+                  <h6 class="mb-0 fs-sm fw-semibold">{{ comment.username }}</h6>
+                  <!-- Add sentiment icon -->
+                  <!-- Before -->
+    @if (comment.sentiment === 'Positive') {
+                    <span class="ms-2 badge bg-success rounded-pill px-2 py-1 fs-xs">
+                      <i class="ph-thumbs-up me-1"></i>Positive
+                    </span>
+                  } @else if (comment.sentiment === 'Negative') {
+                    <span class="ms-2 badge bg-danger rounded-pill px-2 py-1 fs-xs">
+                      <i class="ph-thumbs-down me-1"></i>Negative
+                    </span>
+                  } @else if (comment.sentiment) {
+                    <span class="ms-2 badge bg-secondary rounded-pill px-2 py-1 fs-xs">
+                      <i class="ph-minus-circle me-1"></i>Neutral
+                    </span>
+                  }
+                </div>
+                <p class="mb-0 comment-text">{{ comment.content }}</p>
+              </div>
+
+              <!-- Enhanced admin actions -->
+              <div class="admin-actions ms-2">
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-icon btn-ghost-secondary rounded-circle"
+                          type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ph-dots-three-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                    <li><a class="dropdown-item" href="javascript:void(0)"><i class="ph-pencil-simple me-2 text-primary"></i>Edit</a></li>
+                    <li><a class="dropdown-item text-danger" href="javascript:void(0)"><i class="ph-trash me-2"></i>Delete</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)"><i class="ph-flag me-2 text-warning"></i>Mark as Inappropriate</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced comment actions -->
+            <div class="comment-actions d-flex align-items-center mt-2 ms-2">
+              <span class="comment-time me-3 text-muted fs-xs">
+                <i class="ph-clock me-1"></i>{{ comment.createdAt | date:'short' }}
+              </span>
+              <button class="btn btn-xs btn-soft-danger rounded-pill" title="Delete comment" (click)="deleteComment(comment.id)">
+                <i class="ph-trash me-1 fs-xs"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced nested replies with animated border -->
+        @if (comment.replies && comment.replies.length > 0) {
+          <div class="reply-thread ps-4 ms-4 mt-3 border-start border-2"
+               [ngClass]="{'border-primary': level === 0, 'border-secondary': level > 0}">
+            @for (reply of comment.replies; track reply.id) {
+              <ng-container *ngTemplateOutlet="commentTemplate; context: {comment: reply, level: level + 1}"></ng-container>
+            }
+          </div>
+        }
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<style>
+.comment-bubble {
+  background-color: #f8f9fa;
+  border-radius: 18px;
+  padding: 12px 16px;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  transition: all 0.2s ease;
+}
+
+.comment-bubble:hover {
+  background-color: #f0f2f5;
+}
+
+.primary-bubble {
+  border-left: 3px solid #556ee6;
+}
+
+.reply-bubble {
+  background-color: #f0f2f5;
+  border-radius: 16px;
+  padding: 10px 14px;
+  border-left: 2px solid #74788d;
+}
+
+.comment-text {
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.comment-actions {
+  padding-top: 4px;
+  font-size: 12px;
+}
+
+.comment-action {
+  color: #65676b;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.btn-soft-danger {
+  background-color: rgba(244, 106, 106, 0.1);
+  color: #f46a6a;
+  border: none;
+}
+
+.btn-soft-secondary {
+  background-color: rgba(116, 120, 141, 0.1);
+  color: #74788d;
+  border: none;
+}
+
+.bg-soft-light {
+  background-color: #f8f9fa;
+}
+
+/* Animation for reply thread */
+.reply-thread {
+  position: relative;
+  overflow: hidden;
+}
+
+.reply-thread::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -1px;
+  height: 100%;
+  width: 2px;
+  background: linear-gradient(transparent, currentColor, transparent);
+  opacity: 0.5;
+}
+</style><!-- Comments Section -->
+
+        </div>
+      </div>
+
+      <!-- Post Administration Card -->
+    </div>  }
+</div>
+

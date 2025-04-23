@@ -67,4 +67,12 @@ export class CommentService {
   getTolevel(postId: string): Observable<ForumComment[]> {
     return this.http.get<ForumComment[]>(`${this.apiUrl}/top-level/${postId}`);
   }
+
+  // In comment.service.ts
+// In comment.service.ts
+  getCommentWithUserDetails(commentId: string) {
+    return this.http.post<any>(`${this.apiUrl}/${commentId}/user-details`, {});
+  }
+
+
 }

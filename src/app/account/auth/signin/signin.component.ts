@@ -34,13 +34,13 @@ export class SigninComponent {
 
   onSubmit() {
     this.errorLoginMessage = '';
-  
+
     if (this.loginForm.valid) {
       const loginUser = {
         email: this.loginForm.get('email')?.value,
         motDePasse: this.loginForm.get('motDePasse')?.value
       };
-  
+
       this.authService.authenticate(loginUser).subscribe(
         (response: any) => {
           // Wait for user data before continuing
@@ -48,7 +48,7 @@ export class SigninComponent {
             (user: User) => {
               this.currentUser = user;
               const authority = this.currentUser.authorities[0]?.authority;
-  
+
               Swal.fire({
                 icon: 'success',
                 title: 'Login Successful',
@@ -57,7 +57,7 @@ export class SigninComponent {
                 if (authority === 'ADMIN') {
                   this.router.navigate(['/userback']);
                 } else if (authority === 'USER') {
-                  this.router.navigate(['/userfront']);
+                  this.router.navigate(['/forumfront/user/forumpost']);
                 } else if (authority === 'AGENCE') {
                   this.router.navigate(['/transportback']);
                 } else if (authority === 'OWNER') {
@@ -89,9 +89,9 @@ export class SigninComponent {
           } else {
             errorMessage = error || 'Login failed. Please check your credentials.';
           }
-  
+
           this.errorLoginMessage = errorMessage;
-  
+
           Swal.fire({
             icon: 'error',
             title: 'Login Failed',
@@ -101,12 +101,12 @@ export class SigninComponent {
       );
     }
   }
-  
-  
+
+
   // Toggle the visibility of the password
   toggleFieldTextType(): void {
     this.fieldTextType = !this.fieldTextType;
   }
 
- 
+
 }

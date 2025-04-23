@@ -7,4 +7,7 @@ export class Media {
   mediaUrl?: string;
   mediaType?: 'IMAGE' | 'VIDEO';
   post?: Post
+  thumbnailUrl?: string; // Optional property for video thumbnails
+
+
 }

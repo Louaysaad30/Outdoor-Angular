@@ -1,6 +1,9 @@
 // models/user.model.ts
 
 export interface User {
+  image: string;
+  prenom: string;
+  nom: string;
     sub: string;            // This is usually the user ID
     email: string;
     fullName?: string;      // If you're adding fullName as a claim in the backend

@@ -1,4 +1,4 @@
-import {Component, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
 import {NgxSliderModule} from "ngx-slider-v2";
@@ -15,6 +15,10 @@ import {selectData} from "../../../../store/Product/product.selector";
 import {PostService} from "../../services/post.service";
 import {Post} from "../../models/post.model";
 import {DatePipe} from "@angular/common";
+import {UserServiceService} from "../../../../account/auth/services/user-service.service";
+import { FormsModule } from '@angular/forms'; // Add this import
+
+import { switchMap, map, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-posts',
@@ -27,12 +31,14 @@ import {DatePipe} from "@angular/common";
     RouterLink,
     SharedModule,
     UiSwitchModule,
-    DatePipe
+    DatePipe,
+    FormsModule  // Add FormsModule here
+
   ],
   templateUrl: './posts.component.html',
   styleUrl: './posts.component.scss'
 })
-export class PostsComponent {
+export class PostsComponent implements OnInit {
 
   endItem: any
   // bread crumb items
@@ -43,7 +49,6 @@ export class PostsComponent {
   // Table data
   productList!: Observable<productgridModel[]>;
   searchResults: any;
-  searchTerm: any;
   // Price Slider
   pricevalue: number = 100;
   minVal: number = 100;
@@ -57,37 +62,16 @@ export class PostsComponent {
     },
   };
 
+  searchTerm: string = '';
+  filteredPosts: Post[] = [];
+  sortOption: string = 'All';
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
 
-  constructor(public store: Store ,   private postService: PostService
+  constructor(public store: Store ,   private postService: PostService,  private userService: UserServiceService // Add this service
+
   ) {}
   posts: Post[] = [];
   allPosts: Post[] = [];
-  ngOnInit(): void {
-    /**
-     * BreadCrumb
-     */
-    this.breadCrumbItems = [
-      { label: 'Ecommerce', active: true },
-      { label: 'Products Grid', active: true }
-    ];
-
-    setTimeout(() => {
-      this.postService.getPosts().subscribe({
-        next: (data) => {
-          this.posts = data;
-          this.allPosts = data;
-          this.posts = this.allPosts.slice(0, 12);
-        },
-        error: (error) => {
-          console.error('Error fetching posts:', error);
-        },
-        complete: () => {
-          document.getElementById('elmLoader')?.classList.add('d-none');
-        }
-      });
-    }, 1000);
-  }
 
 
   // Add this method to your component class
@@ -123,62 +107,168 @@ export class PostsComponent {
     this.deleteRecordModal?.show()
   }
 
-  confirmDelete() {
-    this.store.dispatch(deleteproductsList({ id: this.deleteId.toString() }));
-    this.deleteRecordModal?.hide()
-  }
 
-  // Category Filter
-  categoryFilter(category: any) {
-    this.products = this.productlist.filter((product: any) => {
-      return product.category == category
-    });
-    this.products = this.products.slice(0, 10);
-    if (this.products.length == 0) {
-      (document.getElementById('search-result-elem') as HTMLElement).style.display = 'block'
-    } else {
-      (document.getElementById('search-result-elem') as HTMLElement).style.display = 'none'
-    }
-  }
 
-  discountRates: number[] = [];
+  currentPage: number = 1;
+  itemsPerPage: number = 9;
 
-  // Discount Filter
-  changeDiscount(e: any) {
-    if (e.target.checked) {
-      this.discountRates.push(e.target.defaultValue)
+  // After loading posts from your API
+ngOnInit() {
+  this.loadPosts();
 
-      this.products = this.productlist.filter((product: any) => {
-        return product.ratings > e.target.defaultValue;
-      });
-    } else {
-      for (var i = 0; i < this.discountRates.length; i++) {
-        if (this.discountRates[i] === e.target.defaultValue) {
-          this.discountRates.splice(i, 1)
-        }
+  this.filteredPosts = this.posts; // Initialize filtered posts with all posts
+
+}
+
+
+loadPosts(): void {
+  this.postService.getPosts().pipe(
+    switchMap(posts => {
+      this.allPosts = posts;
+
+      if (posts.length === 0) {
+        return of([]); // Return empty observable if no posts
       }
-    }
-  }
 
-  // Search Data
-  performSearch(): void {
-    this.searchResults = this.productlist.filter((item: any) => {
-      return item.category.toLowerCase().includes(this.searchTerm.toLowerCase())
-        || item.title.toLowerCase().includes(this.searchTerm.toLowerCase())
+      // Create an array of user data requests for each post
+      const userRequests = posts.map(post =>
+        this.userService.getUserById(post.userId!).pipe(
+          map(user => ({
+            post,
+            username: user.nom + ' ' + user.prenom,
+            userImage: user.image || 'assets/images/users/avatar-1.jpg' // Default image if none
+          }))
+        )
+      );
+
+      // Execute all requests in parallel
+      return forkJoin(userRequests);
     })
-    this.products = this.searchResults.slice(0, 10);
-    if (this.searchResults.length == 0) {
-      (document.getElementById('search-result-elem') as HTMLElement).style.display = 'block'
-    } else {
-      (document.getElementById('search-result-elem') as HTMLElement).style.display = 'none'
+  ).subscribe({
+    next: (results) => {
+      // Update each post with user information
+      results.forEach(result => {
+        const index = this.allPosts.findIndex(p => p.id === result.post.id);
+        if (index !== -1) {
+          this.allPosts[index].username = result.username;
+          this.allPosts[index].userProfilePic = result.userImage;
+        }
+      });
+
+      this.updateDisplayedPosts();
+      this.filteredPosts = this.posts; // Initialize filtered posts with all posts
+    },
+    error: (error) => {
+      console.error('Error loading posts:', error);
     }
+  });
+}
+
+
+
+  searchPosts(): void {
+    if (!this.searchTerm.trim()) {
+      this.filteredPosts = this.allPosts; // Search against ALL posts
+    } else {
+      const term = this.searchTerm.toLowerCase();
+      this.filteredPosts = this.allPosts.filter(post => // Filter all posts, not just current page
+        post.content?.toLowerCase().includes(term) ||
+        post.username?.toLowerCase().includes(term)
+      );
+    }
+
+    // Reset to first page after search
+    this.currentPage = 1;
+
+    // Update displayed posts based on filtered results
+    this.updateDisplayedPostsAfterFilter();
   }
 
-  // Page changed
-  pageChanged(event: PageChangedEvent): void {
-    const startItem = (event.page - 1) * event.itemsPerPage;
-    this.endItem = event.page * event.itemsPerPage;
-    this.products = this.productlist.slice(startItem, this.endItem);
+
+
+  sortPosts(): void {
+    switch (this.sortOption) {
+      case 'Newest':
+        this.filteredPosts = [...this.allPosts].sort((a, b) => // Sort all posts
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        break;
+      case 'Best Rated':
+        this.filteredPosts = [...this.allPosts].sort((a, b) => // Sort all posts
+          (b.reactions?.length || 0) - (a.reactions?.length || 0)
+        );
+        break;
+      default:
+        this.filteredPosts = this.allPosts;
+    }
+
+    // Reset to first page after sorting
+    this.currentPage = 1;
+
+    // Update displayed posts based on filtered results
+    this.updateDisplayedPostsAfterFilter();
+  }
+
+  // Add this new method to handle pagination of filtered results
+  updateDisplayedPostsAfterFilter() {
+    const startItem = (this.currentPage - 1) * this.itemsPerPage;
+    const endItem = this.currentPage * this.itemsPerPage;
+    this.posts = this.filteredPosts.slice(startItem, endItem);
+  }
+
+  // Update this method to handle pagination
+  pageChanged(event: any) {
+    this.currentPage = event.page;
+    this.updateDisplayedPostsAfterFilter();
+  }
+
+
+
+
+  // Update this method to handle pagination
+
+  // Add this method to update displayed posts
+  updateDisplayedPosts() {
+    const startItem = (this.currentPage - 1) * this.itemsPerPage;
+    const endItem = this.currentPage * this.itemsPerPage;
+    this.posts = this.allPosts.slice(startItem, endItem);
+  }
+  // Add these methods to your component class
+  resetFilters() {
+    this.searchTerm = '';
+    this.sortOption = 'All';
+    this.currentPage = 1;
+    this.loadPosts();
+  }
+
+  getCommentCount(): number {
+    return this.allPosts?.reduce((sum, post) => sum + (post.comments?.length || 0), 0) || 0;
+  }
+
+  getReactionCount(): number {
+    return this.allPosts?.reduce((sum, post) => sum + (post.reactions?.length || 0), 0) || 0;
+  }
+
+  // Add this to your class imports at the top
+  Math = Math;
+
+  // Add this to handle actual deletion
+  confirmDelete() {
+    if (this.deleteId) {
+      // Call your delete service
+      this.postService.deletePost(this.deleteId).subscribe({
+        next: () => {
+          // Remove post from arrays
+          this.allPosts = this.allPosts.filter(p => p.id !== this.deleteId);
+          this.filteredPosts = this.filteredPosts.filter(p => p.id !== this.deleteId);
+          this.updateDisplayedPostsAfterFilter();
+          this.deleteRecordModal?.hide();
+        },
+        error: (error) => {
+          console.error('Failed to delete post:', error);
+        }
+      });
+    }
   }
 
 }
