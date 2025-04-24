@@ -1,0 +1,475 @@
+
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="Real Estate" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+
+
+
+
+<div class="row">
+  <div class="col-xxl-3 col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <div class="d-flex flex-column h-100">
+              <p class="fs-md text-muted mb-4">Posts</p>
+              <h3 class="mb-0 mt-auto"><span class="counter-value" [countUp]="totalPosts"></span>
+                <!-- Posts card -->
+<small class="{{weeklyTrends?.posts?.isPositive ? 'text-success' : 'text-danger'}} fs-xs mb-0 ms-1">
+                  <i class="bi bi-arrow-{{weeklyTrends?.posts?.isPositive ? 'up' : 'down'}} me-1"></i>
+                  {{(weeklyTrends?.posts?.percentage || 0) | number:'1.2-2'}}%
+                </small>
+              </h3>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <div id="property_sale" class="apex-charts" dir="ltr">
+              <apx-chart [series]="saleChart.series" [chart]="saleChart.chart" [plotOptions]="saleChart.plotOptions" [grid]="saleChart.grid" [stroke]="saleChart.stroke" [labels]="saleChart.labels" [colors]="saleChart.colors" dir="ltr"></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--end col-->
+  <div class="col-xxl-3 col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <div class="d-flex flex-column h-100">
+              <p class="fs-md text-muted mb-4">Comments</p>
+              <h3 class="mb-0 mt-auto"><span class="counter-value" [countUp]="totalComments"></span>
+<small class="{{weeklyTrends?.comments?.isPositive ? 'text-success' : 'text-danger'}} fs-xs mb-0 ms-1">
+                  <i class="bi bi-arrow-{{weeklyTrends?.comments?.isPositive ? 'up' : 'down'}} me-1"></i>
+                  {{(weeklyTrends?.comments?.percentage || 0) | number:'1.2-2'}}%
+                </small>
+              </h3>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <div id="property_rent" class="apex-charts" dir="ltr">
+              <apx-chart [series]="visitorsChart.series" [chart]="visitorsChart.chart" [plotOptions]="visitorsChart.plotOptions" [grid]="visitorsChart.grid" [stroke]="visitorsChart.stroke" [labels]="visitorsChart.labels" [colors]="visitorsChart.colors" dir="ltr"></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--end col-->
+  <div class="col-xxl-3 col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <div class="d-flex flex-column h-100">
+              <p class="fs-md text-muted mb-4">Media</p>
+              <h3 class="mb-0 mt-auto"><span class="counter-value" [countUp]="totalMedia"></span>
+<small class="{{weeklyTrends?.media?.isPositive ? 'text-success' : 'text-danger'}} fs-xs mb-0 ms-1">
+                  <i class="bi bi-arrow-{{weeklyTrends?.media?.isPositive ? 'up' : 'down'}} me-1"></i>
+                  {{(weeklyTrends?.media?.percentage || 0) | number:'1.2-2'}}%
+                </small>
+              </h3>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <div id="visitors_chart" class="apex-charts" dir="ltr">
+              <apx-chart [series]="rentChart.series" [chart]="rentChart.chart" [plotOptions]="rentChart.plotOptions" [grid]="rentChart.grid" [stroke]="rentChart.stroke" [labels]="rentChart.labels" [colors]="rentChart.colors"></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--end col-->
+  <div class="col-xxl-3 col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <div class="d-flex flex-column h-100">
+              <p class="fs-md text-muted mb-4">Reactions</p>
+              <h3 class="mb-0 mt-auto"><span class="counter-value" [countUp]="totalReactions"></span>
+<small class="{{weeklyTrends?.reactions?.isPositive ? 'text-success' : 'text-danger'}} fs-xs mb-0 ms-1">
+                  <i class="bi bi-arrow-{{weeklyTrends?.reactions?.isPositive ? 'up' : 'down'}} me-1"></i>
+                  {{(weeklyTrends?.reactions?.percentage || 0) | number:'1.2-2'}}%
+                </small>
+              </h3>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <div id="residency_property" class="apex-charts" dir="ltr">
+              <apx-chart [series]="residencypropertyChart.series" [chart]="residencypropertyChart.chart" [plotOptions]="residencypropertyChart.plotOptions" [grid]="residencypropertyChart.grid" [stroke]="residencypropertyChart.stroke" [labels]="residencypropertyChart.labels" [colors]="residencypropertyChart.colors" dir="ltr"></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--end col-->
+</div><!--end row-->
+
+
+
+
+<!-- File: src/app/pages/gestion-forum/admin/dashboard-forum/dashboard-forum.component.html -->
+<!-- HTML -->
+<div class="row mb-4">
+
+
+  <div class="col-xxl-4 order-last order-xxl-first">
+<div class="card h-100">
+      <div class="card-header d-flex">
+        <h4 class="card-title mb-0 flex-grow-1">Activité Quotidienne</h4>
+        <div class="flex-shrink-0">
+          <input type="text"
+                 class="form-control form-control-sm"
+                 id="exampleInputPassword1"
+                 mwlFlatpickr
+                 [(ngModel)]="currentDate"
+                 (ngModelChange)="onDateChange($event)"
+                 altFormat="d M, Y"
+                 dateFormat="d M, Y"
+                 mode="range"
+                 [altInput]="true"
+                 [convertModelValue]="true"
+                 placeholder="Aujourd'hui">
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h6 class="mb-0">Date sélectionnée:</h6>
+                <p class="text-muted mb-0">{{currentDate?.from | date:'dd MMMM yyyy'}}
+                  <span *ngIf="currentDate?.to && currentDate.to !== currentDate.from">
+                    - {{currentDate?.to | date:'dd MMMM yyyy'}}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="dataFound; else noData">
+          <div echarts
+               [options]="propertytypeChart"
+               id="property_type"
+               style="height: 336px;"></div>
+        </div>
+        <ng-template #noData>
+          <div class="text-center p-5">
+            <div class="avatar-md mx-auto mb-3">
+              <div class="avatar-title rounded-circle bg-light text-primary">
+                <i class="bi bi-bar-chart-line fs-3"></i>
+              </div>
+            </div>
+            <h5>Aucune donnée trouvée</h5>
+            <p class="text-muted">Aucune activité enregistrée pour cette période.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div><!--end col-->
+
+
+  <div class="col-xxl-8">
+    <div class="card h-100" >
+      <div class="card-header d-flex align-items-center">
+        <h4 class="card-title mb-0 flex-grow-1">Activité du Forum</h4>
+        <div class="flex-shrink-0">
+          <div class="form-group position-relative mb-0">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              id="calendarDatePicker"
+              placeholder="Choisir une date"
+              mwlFlatpickr
+              [(ngModel)]="selectedDate"
+              (ngModelChange)="onCalendarDateChange($event)"
+              altFormat="d M, Y"
+              dateFormat="d M, Y"
+              [altInput]="true"
+              [convertModelValue]="true">
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h6 class="mb-0">Date sélectionnée:</h6>
+                <p class="text-muted mb-0">{{selectedDate | date:'dd MMMM yyyy'}}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6" *ngIf="peakHoursData">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h6 class="mb-0">Heure de pointe:</h6>
+                <p class="text-muted mb-0">
+                  <span class="badge bg-success-subtle text-success">{{peakHoursData.peakHourFormatted}}</span>
+                  <span class="ms-2">{{peakHoursData.peakCount}} activités:
+                    <span class="badge bg-primary-subtle text-primary me-1">Posts: {{peakHoursData.hourlyBreakdown[peakHoursData.peakHour]?.posts || 0}}</span>
+                    <span class="badge bg-info-subtle text-info me-1">Comments: {{peakHoursData.hourlyBreakdown[peakHoursData.peakHour]?.comments || 0}}</span>
+                    <span class="badge bg-warning-subtle text-warning">Reactions: {{peakHoursData.hourlyBreakdown[peakHoursData.peakHour]?.reactions || 0}}</span>
+                  </span>                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="total_income" class="apex-charts" dir="ltr">
+          <apx-chart
+            [series]="propertysaleChart.series"
+            [chart]="propertysaleChart.chart"
+            [plotOptions]="propertysaleChart.plotOptions"
+            [grid]="propertysaleChart.grid"
+            [colors]="propertysaleChart.colors"
+            [fill]="propertysaleChart.fill"
+            [dataLabels]="propertysaleChart.dataLabels"
+            [yaxis]="propertysaleChart.yaxis"
+            [legend]="propertysaleChart.legend"
+            [xaxis]="propertysaleChart.xaxis"
+            dir="ltr">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--end row-->
+
+
+
+<div class="row mb-4">
+
+  <div class="col-xxl-8">
+    <div class="card h-100" id="propertyList">
+      <div class="card-header align-items-center d-flex">
+        <h4 class="card-title mb-0 flex-grow-1">Publications récentes</h4>
+        <div class="flex-shrink-0">
+          <a [routerLink]="['/forumback/admin/posts']" class="btn btn-sm btn-soft-info">
+            <i class="ph-list-plus me-1"></i> Afficher plus
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
+            <thead class="text-muted table-light">
+            <tr>
+              <th>Catégorie</th>
+              <th>Contenu</th>
+              <th>Nbre Comments</th>
+              <th>Nbre Reactions</th>
+              <th>Date</th>
+              <th>Signalés</th>
+              <th>Action</th>
+            </tr>
+            </thead>
+            <tbody class="list">
+              @for (post of recentPosts; track post.id) {
+                <tr>
+                  <td class="propert_type">
+                    {{ 'General'}}
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2 position-relative">
+                      <!-- Single container for thumbnail with conditional rendering -->
+                      <div class="media-thumbnail" style="width: 48px; height: 35px; overflow: hidden; flex-shrink: 0;">
+                        <ng-container *ngIf="post.media && post.media.length > 0">
+                          <img *ngIf="post.media[0].mediaType === 'VIDEO'"
+                               src="assets/images/imagesForum/video.jpg"
+                               alt="Video"
+                               class="w-100 h-100 object-fit-cover rounded">
+                          <img *ngIf="post.media[0].mediaType !== 'VIDEO'"
+                               [src]="post.media[0].mediaUrl"
+                               alt=""
+                               class="w-100 h-100 object-fit-cover rounded">
+                        </ng-container>
+                        <img *ngIf="!post.media || post.media.length === 0"
+                             src="assets/images/imagesForum/image.jpg"
+                             alt=""
+                             class="w-100 h-100 object-fit-cover rounded">
+                      </div>
+
+                      <a [routerLink]="['/gestion-forum/post', post.id]"
+                         class="propert_name text-reset stretched-link">
+                        {{(post.content?.length ?? 0) > 25 ? post.content?.substring(0, 25) + '...' : post.content}}
+                      </a>
+                    </div>
+                  </td>
+                  <td>
+                    {{post.comments?.length || 0}}
+                  </td>
+                  <td>
+                    {{post.reactions?.length || 0}}
+                  </td>
+                  <td>
+                    <span class="fw-medium">{{post.createdAt | date:'dd MMM yyyy'}}</span>
+                  </td>
+                  <td>
+                  <span class="badge">
+                  </span>
+                  </td>
+                  <td>
+                    <ul class="d-flex gap-2 list-unstyled mb-0">
+                      <li>
+                        <a [routerLink]="['/gestion-forum/post', post.id]"
+                           class="btn btn-subtle-primary btn-icon btn-sm">
+                          <i class="ph-eye"></i>
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          class="btn btn-subtle-danger btn-icon btn-sm remove-item-btn">
+                          <i class="ph-trash"></i>
+                        </a>
+                      </li>
+                    </ul>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="noresult" [style.display]="recentPosts.length === 0 ? 'block' : 'none'">
+            <div class="text-center">
+              <lord-icon src="https://cdn.lordicon.com/msoeawqm.json"
+                         trigger="loop"
+                         colors="primary:#405189,secondary:#0ab39c"
+                         style="width:75px;height:75px">
+              </lord-icon>
+              <h5 class="mt-2">Aucun post trouvé</h5>
+              <p class="text-muted mb-0">Aucun post n'est disponible actuellement.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!--end col-->
+  </div>
+
+  <div class="col-xxl-4 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex align-items-center">
+        <h4 class="card-title mb-0 flex-grow-1">Publications Populaires</h4>
+      </div>
+      <div class="card-body">
+        <div *ngIf="topRatedPosts.length > 0; else noPopularPosts" class="d-flex flex-column h-100">
+          @for (post of topRatedPosts.slice(0, 5); track $index) {
+            <div class="d-flex gap-3 align-items-start position-relative mb-3">
+              <div class="flex-shrink-0">
+                <!-- Image pour les médias de type IMAGE -->
+                <img *ngIf="post.post.hasMedia && post.post.media && post.post.media.length > 0 && post.post.media[0].mediaType === 'IMAGE'"
+                     [src]="post.post.media[0].mediaUrl"
+                     alt=""
+                     height="50"
+                     width="50"
+                     class="object-fit-cover rounded">
+                <!-- Image placeholder pour les vidéos -->
+                <img *ngIf="post.post.hasMedia && post.post.media && post.post.media.length > 0 && post.post.media[0].mediaType === 'VIDEO'"
+                     src="assets/images/imagesForum/video.jpg"
+                     alt="Video"
+                     height="50"
+                     width="50"
+                     class="object-fit-cover rounded">
+                <!-- Fallback pour les posts sans média -->
+                <div *ngIf="!post.post.hasMedia || !post.post.media || post.post.media.length === 0"
+                     class="avatar avatar-sm bg-light-subtle text-primary d-flex align-items-center justify-content-center"
+                     style="height: 50px; width: 50px;">
+                  <i class="bi bi-file-text fs-5"></i>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <!-- Le reste du contenu reste inchangé -->
+                <div class="d-flex align-items-start justify-content-between mb-1">
+                  <a routerLink="/pages/gestion-forum/post/{{post.post.id}}" class="stretched-link">
+                    <h6 class="mb-1 text-truncate" style="max-width: 200px;">
+                      {{post.post.content | slice:0:36}}{{post.post.content.length > 36 ? '...' : ''}}
+                    </h6>
+                  </a>
+                  <span class="badge bg-warning-subtle text-warning ms-2">
+                  <i class="bi bi-star-fill text-warning me-1"></i>{{post.rating}}
+                </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <p class="text-muted mb-0 fs-xs">
+                    <i class="bi bi-person text-primary me-1"></i>
+                    {{post.post.username}}
+                  </p>
+                  <small class="text-muted fs-xs">
+                    {{post.post.createdAt | date:'dd MMM'}}
+                  </small>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge bg-light-subtle text-body">
+                  <i class="bi bi-chat-dots text-primary me-1"></i>
+                  {{post.commentCount || 0}}
+                </span>
+                  <span class="badge bg-light-subtle text-body">
+                  <i class="bi bi-hand-thumbs-up text-primary me-1"></i>
+                    {{post.reactionCount || 0}}
+                </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <ng-template #noPopularPosts>
+          <div class="text-center p-4">
+            <div class="avatar-md mx-auto mb-3">
+              <div class="avatar-title rounded-circle bg-light text-primary">
+                <i class="bi bi-search fs-3"></i>
+              </div>
+            </div>
+            <h5>Aucune publication populaire</h5>
+            <p class="text-muted">Aucune publication populaire trouvée pour ce mois.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<div class="col-xxl-3 col-lg-6">
+  <div class="card h-100">
+    <div class="card-header d-flex align-items-center">
+      <h4 class="card-title mb-0 flex-grow-1">Customer Feedback</h4>
+      <div class="flex-shrink-0">
+        <a href="javascript:void(0);" class="text-muted">View All <i class="bi bi-chevron-right align-baseline"></i></a>
+      </div>
+    </div>
+    <div class="card-body px-0">
+      <ngx-simplebar style="max-height: 395px;">
+        @for (data of feedbackData; track $index) {
+          <div class="card border-bottom rounded-0 border-0 shadow-none mb-0">
+            <div class="card-body">
+              <div class="d-flex gap-2">
+                <div class="flex-shrink-0">
+                  <img src="{{data.img}}" alt="" class="avatar-sm rounded">
+                </div>
+                <div class="flex-grow-1">
+                  <span class="text-muted clearfix float-end">{{data.time}}</span>
+                  <h6 class="fs-md mb-1"><a href="javascript:void(0);" class="text-reset">{{data.name}}</a></h6>
+                  <div class="text-warning mb-2 fs-xs">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                  <p class="text-muted mb-0">{{data.content}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </ngx-simplebar>
+    </div>
+  </div><!--end card-->
+</div><!--end col-->
+
