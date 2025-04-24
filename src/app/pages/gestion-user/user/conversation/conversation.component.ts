@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, AfterViewChecked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { TabsModule } from 'ngx-bootstrap/tabs';
@@ -23,7 +23,9 @@ import { WebsocketService } from '../../services/websocket.service';
   templateUrl: './conversation.component.html',
   styleUrls: ['./conversation.component.scss']
 })
-export class ConversationComponent implements OnInit, OnChanges {
+export class ConversationComponent implements OnInit, OnChanges, AfterViewInit, AfterViewChecked {
+  @ViewChild('scrollMe') private myScrollContainer!: ElementRef;
+ 
   @Input() user: any; // Selected user for the conversation
   messages: ChatMessage[] = []; // Messages in the conversation
   messageText: string = ''; // Input message text
@@ -42,6 +44,7 @@ export class ConversationComponent implements OnInit, OnChanges {
 
     this.connectToWebSocket();
     this.loadMessages();
+    this.scrollToBottom();
 
 
     this.websocket.messages$.subscribe(message => {
@@ -65,8 +68,23 @@ export class ConversationComponent implements OnInit, OnChanges {
   });
   
   }
-  
+  ngAfterViewInit() {
+    this.scrollToBottom();
+  }
 
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+   scrollToBottom(): void {
+    if (this.myScrollContainer) {
+      try {
+        this.myScrollContainer.nativeElement.scrollTop =
+          this.myScrollContainer.nativeElement.scrollHeight;
+      } catch (err) {
+        console.error('Scroll error:', err);
+      }
+    }
+  }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['user'] && !changes['user'].firstChange) {
       console.log('User input changed:', this.user);

@@ -42,6 +42,8 @@ export class StatisticsComponent implements OnInit {
   messagesByUserChartLabels: string[] = [];
   messagesByChatRoomChartData: any[] = [];
   messagesByChatRoomChartLabels: string[] = [];
+  churnData: any[] = [];
+  churnLabels: string[] = ['Churned Users', 'Active Users'];
 
   constructor(private statisticsService: StatisticsService) {}
 
@@ -63,7 +65,8 @@ export class StatisticsComponent implements OnInit {
       unreadMsgs: this.statisticsService.getUnreadMessages(),
       roles: this.statisticsService.getUsersByRole(),
       msgsByUser: this.statisticsService.getMessagesByUser(),
-      msgsByChat: this.statisticsService.getMessagesByChatRoom()
+      msgsByChat: this.statisticsService.getMessagesByChatRoom(),
+      churnStats: this.statisticsService.getChurnStatistics()
     }).subscribe({
       next: (res) => {
         // Destructuring the response data
@@ -82,6 +85,8 @@ export class StatisticsComponent implements OnInit {
         this.usersByRoleChartLabels = Object.keys(this.usersByRole);
         this.usersByRoleChartData = Object.values(this.usersByRole);
       
+        this.churnData = [res.churnStats.churn, res.churnStats.notChurn];
+
   
         // Messages by User chart
         this.messagesByUserChartLabels = Object.keys(this.messagesByUser).map(userId => `User ${userId}`);
@@ -110,4 +115,26 @@ export class StatisticsComponent implements OnInit {
       }
     });
   }
+  isSendingEmails: boolean = false;
+  emailSentMessage: string = '';
+
+  sendChurnEmails(): void {
+    this.isSendingEmails = true;
+    this.emailSentMessage = '';
+    
+    this.statisticsService.sendChurnEmails().subscribe({
+      next: (response: string) => {
+        this.emailSentMessage = response;
+        this.isSendingEmails = false;  // Set to false on success
+      },
+      error: (error) => {
+        this.emailSentMessage = error || 'Failed to send emails';
+        this.isSendingEmails = false;
+      },
+      complete: () => {
+        this.isSendingEmails = false;
+      }
+    });
+  }
+  
 }

@@ -1108,7 +1108,7 @@ export const MENU = {
     {
         id: 4,
         label: 'Statistics',
-        icon: 'ph-analytics',
+        icon: 'ph-chart-bar',
         subItems: [
           {
             id: 41,
@@ -1127,10 +1127,11 @@ export const MENU = {
     {
       id: 5,
       label: 'User management',
-      icon: 'ph-calendar',
+      icon: 'ph-user-gear',
       link: '/userback/admin/list-users',
       parentId: 3
     },
+   	
     {
       id: 7,
       label: 'Forum management',
@@ -1138,13 +1139,13 @@ export const MENU = {
       link: '/User/pages/offerUser',
       parentId: 3
     },
-    {
-      id: 6,
-      label: 'Applications',
-      icon: 'ph-calendar',
-      link: '/User/pages/applications',
-      parentId: 3
-    },
+    // {
+    //   id: 6,
+    //   label: 'Chats',
+    //   icon: ' ph-chat-circle',
+    //   link: '/userfront/user/chat',
+    //   parentId: 3
+    // },
 
   ],
   //navbar ADMIN
