@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ForumDetailComponent } from './forumDetail.component';
+import { ChatConvComponent } from './chat-conv.component';
 
-describe('ForumComponent', () => {
-  let component: ForumDetailComponent;
-  let fixture: ComponentFixture<ForumDetailComponent>;
+describe('ChatConvComponent', () => {
+  let component: ChatConvComponent;
+  let fixture: ComponentFixture<ChatConvComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ForumDetailComponent]
+      imports: [ChatConvComponent]
     })
     .compileComponents();
-
-    fixture = TestBed.createComponent(ForumDetailComponent);
+    
+    fixture = TestBed.createComponent(ChatConvComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

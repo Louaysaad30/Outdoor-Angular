@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, HostListener, Output, ViewChild } from '@angular/core';
 
 import { MenuItem } from './menu.model';
-import { MENU } from './menu';
+import {  MENU } from './menu';
 import { Router, NavigationEnd } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -13,18 +13,47 @@ import { TranslateService } from '@ngx-translate/core';
 export class SidebarComponent {
   menu: any;
   toggle: any = true;
-  menuItems: MenuItem[] = [];
+ //enuItems: MenuItem[] = [];
+
+  menuItems: any[] = [];
+
   @ViewChild('sideMenu') sideMenu!: ElementRef;
   @Output() mobileMenuButtonClicked = new EventEmitter();
   lastroute: any;
-
+  currentUser: any;
   constructor(private router: Router, public translate: TranslateService) {
     translate.setDefaultLang('en');
   }
 
   ngOnInit(): void {
+this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const userRole = this.currentUser?.authorities[0]?.authority ;
     // Menu Items
-    this.menuItems = MENU;
+    switch(userRole) {
+      case 'ADMIN':
+        this.menuItems = MENU.AdminMenu;
+        break;
+      case 'USER':
+        this.menuItems = MENU.UserMenu;
+        break;
+      case 'OWNER':
+        this.menuItems = MENU.OwnerMenu;
+        break;
+      case 'FORMATEUR':
+        this.menuItems = MENU.FormateurMenu;
+        break;
+      case 'EVENT_MANAGER':
+        this.menuItems = MENU.EventManagerMenu;
+        break;
+      case 'AGENCE':
+        this.menuItems = MENU.AgenceMenu;
+        break;
+      case 'LIVREUR':
+        this.menuItems = MENU.LivreurMenu;
+        break;
+      default:
+        this.menuItems = MENU.UserMenu;
+    }
 
     this.router.events.subscribe((event) => {
       if (document.documentElement.getAttribute('data-layout') == 'vertical' || document.documentElement.getAttribute('data-layout') == 'horizontal') {

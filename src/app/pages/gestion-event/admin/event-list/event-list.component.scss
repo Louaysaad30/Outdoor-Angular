@@ -40,3 +40,140 @@
           background-color: transparent !important;
         }
       }
+
+// Enhanced Modal Styling
+::ng-deep {
+  // Modal animations
+  .modal {
+    .modal-dialog {
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    &.show .modal-dialog {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    // Improved modal styling
+    .modal-content {
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+      .modal-title {
+        font-weight: 600;
+      }
+    }
+
+    // Nested participants modal effect
+    &.participants-modal {
+      background-color: rgba(0, 0, 0, 0.2);
+
+      .modal-dialog {
+        max-width: 90%;
+        margin: 1.75rem auto;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        animation: fadeInUp 0.3s forwards;
+      }
+
+      .modal-content {
+        border: none;
+      }
+    }
+  }
+
+  // Button hover effects
+  .modal-footer .btn,
+  .event-details .btn {
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  // Event details section styling
+  .event-details {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+
+    img {
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.02);
+      }
+    }
+
+    .d-flex {
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+
+      &:last-of-type {
+        border-bottom: none;
+      }
+
+      i {
+        color: #6c757d;
+        background-color: rgba(108, 117, 125, 0.1);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+      }
+    }
+  }
+
+  // Participants table enhancements
+  .table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+
+    .table {
+      margin-bottom: 0;
+
+      th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+      }
+
+      tr {
+        transition: background-color 0.2s ease;
+      }
+    }
+  }
+
+  // Animation keyframes
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translate(0, 20px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+  }
+}
+
+// Add backdrop for nested modal effect
+.modal-backdrop {
+  &.show + .modal-backdrop {
+    opacity: 0.3;
+  }
+}

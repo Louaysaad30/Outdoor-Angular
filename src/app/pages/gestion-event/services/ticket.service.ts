@@ -34,4 +34,12 @@ export class TicketService {
   deleteTicket(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  // Add to ticket.service.ts
+  applyDiscount(ticketId: number, code: string, percentage: number): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.apiUrl}/${ticketId}/discount`, {
+      code: code,
+      percentage: percentage
+    });
+  }
 }

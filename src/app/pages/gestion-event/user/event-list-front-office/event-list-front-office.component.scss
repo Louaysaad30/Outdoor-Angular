@@ -1,0 +1,104 @@
+
+  /* Animation and hover effects for event cards */
+.event-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transform: translateY(0);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.event-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+}
+
+.event-image-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.event-image {
+  transition: transform 0.7s ease;
+}
+
+.event-card:hover .event-image {
+  transform: scale(1.1);
+}
+
+.event-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.event-card:hover .event-overlay {
+  opacity: 1;
+}
+
+.heart-btn {
+  background-color: rgba(255,255,255,0.8);
+  transition: all 0.3s ease;
+  transform: scale(1);
+}
+
+.heart-btn:hover {
+  background-color: rgba(255,255,255,1);
+  transform: scale(1.1);
+  color: #ff5a5a;
+}
+
+.status-badge {
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.event-card:hover .status-badge {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.event-title {
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.event-card:hover .event-title {
+  color: var(--bs-primary);
+}
+
+.view-details-btn {
+  transition: all 0.3s ease;
+  border-radius: 50px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.view-details-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Glass effect for buttons */
+.btn-glass {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

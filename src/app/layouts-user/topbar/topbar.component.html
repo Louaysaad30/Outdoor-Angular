@@ -202,25 +202,27 @@
                     </div>
                 </div>
 
+                <!-- Cart dropdown section -->
                 <div dropdown #dropdown="bs-dropdown" [insideClick]="true" class="dropdown topbar-head-dropdown ms-1 header-item">
                     <button dropdownToggle type="button" class="btn btn-icon btn-topbar btn-ghost-dark rounded-circle" id="page-header-cart-dropdown">
                         <i class='bi bi-bag fs-2xl'></i>
-                        <span class="position-absolute topbar-badge cartitem-badge fs-3xs translate-middle badge rounded-pill bg-info">{{cartData?.length}}</span>
+                        <span class="position-absolute topbar-badge cartitem-badge fs-3xs translate-middle badge rounded-pill bg-info">{{cartItems?.length || 0}}</span>
                     </button>
                     <div *dropdownMenu class="dropdown-menu dropdown-menu-xl dropdown-menu-end p-0 product-list" aria-labelledby="page-header-cart-dropdown">
                         <div class="p-3 border-bottom">
                             <div class="row align-items-center">
                                 <div class="col">
-                                    <h6 class="m-0 fs-lg fw-semibold"> My Cart <span class="badge bg-secondary fs-sm cartitem-badge ms-1">{{cartData?.length}}</span></h6>
+                                    <h6 class="m-0 fs-lg fw-semibold"> My Cart <span class="badge bg-secondary fs-sm cartitem-badge ms-1">{{cartItems?.length || 0}}</span></h6>
                                 </div>
                                 <div class="col-auto">
-                                    <a href="javascript:void(0);">View All</a>
+                                    <a routerLink="/marketplacefront/user/cart" (click)="dropdown.hide()">View All</a>
                                 </div>
                             </div>
                         </div>
                         <ngx-simplebar style="max-height: 300px;">
                             <div class="p-3">
-                                @if (cartData?.length == 0) {
+                                <!-- Empty cart message -->
+                                @if (cartItems?.length == 0) {
                                 <div class="text-center empty-cart" id="empty-cart">
                                     <div class="avatar-md mx-auto my-3">
                                         <div class="avatar-title bg-info-subtle text-info fs-2 rounded-circle">
@@ -228,56 +230,61 @@
                                         </div>
                                     </div>
                                     <h5 class="mb-3">Your Cart is Empty!</h5>
-                                    <a href="javascript:void(0);" class="btn btn-success w-md mb-3">Shop Now</a>
+                                    <a routerLink="/marketplacefront/user/market-place" class="btn btn-success w-md mb-3" (click)="dropdown.hide()">Shop Now</a>
                                 </div>
                                 }
-                                @for (data of cartData; track $index) {
+
+                                <!-- Cart items (limited to 5) -->
+                                @for (item of cartItems | slice:0:5; track $index) {
                                 <div class="d-block dropdown-item product text-wrap p-2">
                                     <div class="d-flex">
                                         <div class="avatar-sm me-3 flex-shrink-0">
                                             <div class="avatar-title bg-light rounded">
-                                                <img src="{{data.img}}" class="avatar-xs" alt="user-pic">
+                                                <img [src]="item.produit && item.produit.imageProduit || 'assets/images/placeholder-product.jpg'" class="avatar-xs" alt="product">
                                             </div>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">{{data.category}}</p>
+                                            <p class="mb-1 fs-sm text-muted">{{item.produit?.categorie?.nomCategorie || 'Product'}}</p>
                                             <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="javascript:void(0);" class="text-reset">{{data.title}}</a>
+                                                <a href="javascript:void(0);" class="text-reset">{{item.produit?.nomProduit}}</a>
                                             </h6>
-                                            <div class="text-muted fw-medium d-none">$<span class="product-price">{{data.price}}</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus" (click)="increment(data.qty,$index,'0')">–</button>
-                                                <input type="number" class="product-quantity" [(ngModel)]="data.qty" min="0" max="100" readonly>
-                                                <button type="button" class="plus" (click)="increment(data.qty,$index,'1')">+</button>
+                                            <div class="d-flex">
+                                                <span class="text-muted me-2">Qty: {{item.quantite}}</span>
+                                                <span class="text-primary fw-medium">{{item.prix || item.produit?.prixProduit}} DT</span>
                                             </div>
                                         </div>
                                         <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button" class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn" (click)="removeCart($index)"><i class="ri-close-fill fs-lg"></i></button>
-                                            <h5 class="mb-0">$ <span class="product-line-price">{{data.total}}</span></h5>
+                                            <button type="button" class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn"
+                                                (click)="removeCartItem(item.idLigneCommande)">
+                                                <i class="ri-close-fill fs-lg"></i>
+                                            </button>
+                                            <h5 class="mb-0">{{((item.prix || item.produit?.prixProduit || 0) * item.quantite)}} DT</h5>
                                         </div>
                                     </div>
                                 </div>
-                            }
+                                }
 
-                                @if (cartData?.length != 0) {
+                                <!-- Show view all message if there are more than 5 items -->
+                                @if (cartItems && cartItems.length > 5) {
+                                <div class="dropdown-item text-center py-2">
+                                    <a routerLink="/marketplacefront/user/cart" class="text-primary" (click)="dropdown.hide()">
+                                        View all {{cartItems.length}} items <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                                }
+
+                                <!-- Cart summary only if items exist -->
+                                @if (cartItems?.length != 0) {
                                 <div id="count-table">
-                                    <table class="table table-borderless mb-0  fw-semibold">
+                                    <table class="table table-borderless mb-0 fw-semibold">
                                         <tbody>
                                             <tr>
                                                 <td>Sub Total :</td>
-                                                <td class="text-end cart-subtotal">${{subtotal}}</td>
+                                                <td class="text-end cart-subtotal">{{subtotal | number:'1.2-2'}} DT</td>
                                             </tr>
                                             <tr>
-                                                <td>Discount <span class="text-muted">(Steex15)</span>:</td>
-                                                <td class="text-end cart-discount">- ${{discount}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Shipping Charge :</td>
-                                                <td class="text-end cart-shipping">${{shippingRate}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Estimated Tax (12.5%) : </td>
-                                                <td class="text-end cart-tax">${{tax}}</td>
+                                                <td>Service Fee :</td>
+                                                <td class="text-end cart-tax">{{serviceFee | number:'1.2-2'}} DT</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -285,16 +292,18 @@
                                 }
                             </div>
                         </ngx-simplebar>
-                        @if (cartData?.length != 0) {
+
+                        <!-- Checkout section -->
+                        @if (cartItems?.length != 0) {
                         <div class="p-3 border-bottom-0 border-start-0 border-end-0 border-dashed border" id="checkout-elem">
                             <div class="d-flex justify-content-between align-items-center pb-3">
                                 <h5 class="m-0 text-muted">Total:</h5>
                                 <div class="px-2">
-                                    <h5 class="m-0 cart-total">${{totalsum}}</h5>
+                                    <h5 class="m-0 cart-total">{{totalPrice | number:'1.2-2'}} DT</h5>
                                 </div>
                             </div>
 
-                            <a routerLink="/ecommerce/checkout" class="btn btn-info text-center w-100" (click)="dropdown.hide()">
+                            <a routerLink="/marketplacefront/user/checkout" class="btn btn-info text-center w-100" (click)="dropdown.hide()">
                                 Checkout
                             </a>
                         </div>
@@ -424,16 +433,16 @@
                 <div dropdown class="dropdown ms-sm-3 header-item topbar-user">
                     <button dropdownToggle type="button" class="btn shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
-                            <img class="rounded-circle header-profile-user" src="assets/images/users/32/avatar-1.jpg" alt="Header Avatar">
+                            <img class="rounded-circle header-profile-user" [src]="image" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{userData?.first_name}} {{userData?.last_name}}</span>
-                                <span class="d-none d-xl-block ms-1 fs-sm user-name-sub-text">Ons hahaa</span>
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text"> {{currentUser.nom}} {{currentUser.prenom}}</span>
+                                <span class="d-none d-xl-block ms-1 fs-sm user-name-sub-text">{{currentUser?.authorities?.[0]?.authority}}</span>
                             </span>
                         </span>
                     </button>
                     <div *dropdownMenu class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
-                        <h6 class="dropdown-header">Welcome Richard!</h6>
+                        <h6 class="dropdown-header">Welcome {{currentUser.nom}}  {{currentUser.prenom}} !</h6>
                         <a class="dropdown-item" routerLink="/userfront/user/profile"><i class="mdi mdi-account-circle text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Profile </span></a>
                         <a class="dropdown-item" routerLink="/apps/chat"><i class="mdi mdi-message-text-outline text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Messages</span></a>
                         <a class="dropdown-item" routerLink="/tickets/overview"><i class="mdi mdi-calendar-check-outline text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Taskboard</span></a>
@@ -442,8 +451,11 @@
                         <a class="dropdown-item" routerLink="/pages/profile"><i class="mdi mdi-wallet text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Balance : <b>$8451.36</b></span></a>
                         <a class="dropdown-item" routerLink="/pages/profile-settings"><span class="badge bg-success-subtle text-success mt-1 float-end">New</span><i class="mdi mdi-cog-outline text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Settings</span></a>
                         <a class="dropdown-item" routerLink="/auth/lockscreen"><i class="mdi mdi-lock text-muted fs-lg align-middle me-1"></i> <span class="align-middle"> Lock screen</span></a>
-                        <a class="dropdown-item" href="javascript: void(0);" (click)="logout()"><i class="mdi mdi-logout text-muted fs-lg align-middle me-1"></i> <span class="align-middle" data-key="t-logout"> Logout</span></a>
-                    </div>
+                        <button class="dropdown-item" (click)="logout()" style="background: none; border: none; width: 100%;">
+                            <i class="mdi mdi-logout text-muted fs-lg align-middle me-1"></i>
+                            <span class="align-middle" data-key="t-logout">Logouttttt</span>
+                          </button>
+                                              </div>
                 </div>
             </div>
         </div>

@@ -1,0 +1,431 @@
+<div id="productList">
+  <div class="row">
+      <div class="col-lg-12">
+          <div class="card">
+              <div class="card-body">
+                  <div class="row g-3">
+                      <div class="col-xxl">
+                          <div class="search-box">
+                              <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterdata()" placeholder="Search products, price etc...">
+                              <i class="ri-search-line search-icon"></i>
+                          </div>
+                      </div><!--end col-->
+
+                      <div class="col-xxl-3 col-sm-6">
+                          <div>
+                              <select class="form-control" id="idCategory" [(ngModel)]="selectedCategory" (change)="filterByCategory()">
+                                  <option value="">All Categories</option>
+                                  <option *ngFor="let category of categories" [value]="category.idCategorie">
+                                      {{category.nomCategorie}}
+                                  </option>
+                              </select>
+                          </div>
+                      </div><!--end col-->
+
+                      <div class="col-xxl-auto col-sm-6">
+                          <button type="button" class="btn btn-secondary w-md"><i class="bi bi-funnel align-baseline me-1"></i> Filters</button>
+                      </div><!--end col-->
+                  </div><!--end row-->
+              </div>
+          </div>
+      </div><!--end col-->
+  </div><!--end row-->
+
+  <div class="row">
+      <div class="col-lg-12">
+          <div class="card">
+              <div class="card-header d-flex align-items-center">
+                  <div class="flex-grow-1">
+                      <h5 class="card-title mb-0">Products <span class="badge bg-dark-subtle text-dark ms-1">{{allproducts?.length || 0}}</span></h5>
+                  </div>
+                  <div class="flex-shrink-0">
+                      <div class="d-flex flex-wrap align-items-start gap-2">
+                          <button class="btn btn-subtle-danger d-none" id="remove-actions" (click)="deleteRecordModal.show()">
+                              <i class="ri-delete-bin-2-line"></i>
+                          </button>
+                          <button type="button" class="btn btn-primary add-btn" (click)="addModal.show()">
+                              <i class="bi bi-plus-circle align-baseline me-1"></i> Add Product
+                          </button>
+                      </div>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <div class="table-responsive">
+                      <table class="table align-middle table-nowrap" id="customerTable">
+                          <thead class="table-light">
+                              <tr>
+                                  <th class="sort" (click)="onSort('nomProduit')">Product Name</th>
+                                  <th>Image</th> <!-- Added column for image gallery -->
+                                  <th class="sort" (click)="onSort('categorie')">Category</th>
+                                  <th class="sort" (click)="onSort('prixProduit')">
+                                      Price
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'prixProduit' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'prixProduit' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'prixProduit'">
+                                          </i>
+                                      </span>
+                                  </th>
+                                  <th class="sort" (click)="onSort('stockProduit')">
+                                      Stock
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'stockProduit' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'stockProduit' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'stockProduit'">
+                                          </i>
+                                      </span>
+                                  </th>
+                                  <th class="sort" (click)="onSort('dateCreation')">
+                                      Created On
+                                      <span class="ms-1">
+                                          <i class="bi"
+                                             [class.bi-sort-up-alt]="currentSortColumn === 'dateCreation' && sortDirection === 'asc'"
+                                             [class.bi-sort-down]="currentSortColumn === 'dateCreation' && sortDirection === 'desc'"
+                                             [class.bi-filter]="currentSortColumn !== 'dateCreation'">
+                                          </i>
+                                      </span>
+                                  </th>
+                                  <th>Actions</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              <tr *ngFor="let product of products; let i = index">
+                                  <td>{{ product.nomProduit }}</td>
+
+                                  <!-- Product Image Gallery -->
+                                  <td>
+                                    <div class="position-relative" style="width: 150px; height: 100px;">
+                                      <!-- Main product image -->
+                                      <img [src]="(product.imageGallery && product.imageGallery.length > 0 && product.currentImageIndex !== undefined) ?
+                                                   product.imageGallery[product.currentImageIndex].imageUrl :
+                                                   product.imageProduit"
+                                           class="rounded product-image-transition"
+                                           style="width: 100%; height: 100%; object-fit: cover;"
+                                           alt="{{ product.nomProduit }}">
+
+                                      <!-- Navigation controls -->
+                                      <div *ngIf="product.imageGallery && product.imageGallery.length > 1" class="d-flex justify-content-between position-absolute w-100" style="top: 50%; transform: translateY(-50%);">
+                                        <button class="btn btn-sm btn-light rounded-circle"
+                                                style="width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                (click)="navigateProductImage(product, 'prev', $event)">
+                                          <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light rounded-circle"
+                                                style="width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                                (click)="navigateProductImage(product, 'next', $event)">
+                                          <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                      </div>
+
+                                      <!-- Image counter -->
+                                      <span *ngIf="product.imageGallery && product.imageGallery.length > 0"
+                                            class="badge bg-dark position-absolute bottom-0 end-0 m-1">
+                                        {{ (product.currentImageIndex !== undefined ? product.currentImageIndex : 0) + 1 }}/{{ getImageCount(product) }}
+                                      </span>
+                                    </div>
+                                  </td>
+
+                                  <td>{{ product.categorie?.nomCategorie }}</td>
+                                  <td>{{product.prixProduit | currency}}</td>
+                                  <td>{{product.stockProduit}}</td>
+                                  <td>
+                                      {{product.dateCreation | date:'medium'}}
+                                  </td>
+                                  <td>
+                                      <div class="d-flex gap-2">
+                                          <button class="btn btn-sm btn-danger" (click)="removeItem(product.idProduit)">
+                                              <i class="bi bi-trash"></i>
+                                          </button>
+
+                                          <button class="btn btn-sm edit-item-btn" (click)="editList(i)">
+                                            <i class="ph-pencil align-middle me-1"></i>
+                                          </button>
+                                      </div>
+                                  </td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div><!--end table-responsive-->
+
+                  <div class="noresult" style="display: none;">
+                      <div class="text-center py-4">
+                          <div class="avatar-md mx-auto mb-4">
+                              <div class="avatar-title bg-light text-primary rounded-circle fs-4xl">
+                                  <i class="bi bi-search"></i>
+                              </div>
+                          </div>
+                          <h5 class="mt-2">Sorry! No Result Found</h5>
+                          <p class="text-muted mb-0">We've searched more than 150+ products We did not find any
+                              products for you search.</p>
+                      </div>
+                  </div>
+                  <!-- end noresult -->
+
+                  <div class="row mt-3 align-items-center" id="pagination-element">
+                      <div class="col-sm">
+                          <div class="text-muted text-center text-sm-start">
+                              Showing <span class="fw-semibold">{{ products?.length || 0 }}</span> of <span class="fw-semibold">{{ allproducts?.length || 0 }}</span> Results
+                          </div>
+                      </div>
+
+                      <div class="col-sm-auto mt-3 mt-sm-0">
+                          <pagination
+                              class="pagination-wrap hstack gap-2 justify-content-center"
+                              [totalItems]="allproducts?.length || 0"
+                              [itemsPerPage]="itemsPerPage"
+                              [(ngModel)]="currentPage"
+                              (pageChanged)="pageChanged($event)">
+                          </pagination>
+                      </div>
+                  </div>
+                  <!-- end pagination-element -->
+              </div>
+          </div><!--end card-->
+      </div><!--end col-->
+  </div><!--end row-->
+</div>
+
+<!-- deleteRecordModal -->
+<div id="deleteRecordModal" class="modal fade zoomIn" bsModal #deleteRecordModal="bs-modal">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header">
+              <button type="button" class="btn-close" id="deleteRecord-close" (click)="deleteRecordModal.hide()"></button>
+          </div>
+          <div class="modal-body p-md-5">
+              <div class="text-center">
+                  <div class="text-danger">
+                      <i class="bi bi-trash display-4"></i>
+                  </div>
+                  <div class="mt-4">
+                      <h3 class="mb-2">Are you sure ?</h3>
+                      <p class="text-muted fs-lg mx-3 mb-0">Are you sure you want to remove this record ?</p>
+                  </div>
+              </div>
+              <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                  <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Close</button>
+                  <button type="button" class="btn w-sm btn-danger btn-hover" id="delete-record" (click)="deleteData(deleteId)">Yes, Delete It!</button>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" bsModal #showModal="bs-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header px-4 pt-4">
+                <h5 class="modal-title" id="exampleModalLabel">Edit Product</h5>
+                <button type="button" class="btn-close" (click)="showModal.hide()"></button>
+            </div>
+
+            <form [formGroup]="productForm" (ngSubmit)="saveProduct()" class="tablelist-form">
+                <div class="modal-body p-4">
+                    <!-- Product Name -->
+                    <div class="mb-3">
+                        <label class="form-label" for="product-name">Product Name <span class="text-danger">*</span></label>
+                        <input type="text"
+                               id="product-name"
+                               class="form-control"
+                               formControlName="nomProduit"
+                               [ngClass]="{'is-invalid': productForm.get('nomProduit')?.touched && productForm.get('nomProduit')?.invalid}">
+                        <div class="invalid-feedback" *ngIf="productForm.get('nomProduit')?.touched && productForm.get('nomProduit')?.invalid">
+                            Product name is required
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label" for="product-description">Description <span class="text-danger">*</span></label>
+                        <textarea id="product-description"
+                                  class="form-control"
+                                  rows="4"
+                                  formControlName="descriptionProduit"
+                                  [ngClass]="{'is-invalid': productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid}"></textarea>
+                        <div class="invalid-feedback" *ngIf="productForm.get('descriptionProduit')?.touched && productForm.get('descriptionProduit')?.invalid">
+                            <span *ngIf="productForm.get('descriptionProduit')?.errors?.['required']">Description is required</span>
+                            <span *ngIf="productForm.get('descriptionProduit')?.errors?.['minlength']">Description must be at least 10 characters</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="product-price">Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number"
+                                           id="product-price"
+                                           class="form-control"
+                                           formControlName="prixProduit"
+                                           [ngClass]="{'is-invalid': productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid}">
+                                </div>
+                                <div class="invalid-feedback" *ngIf="productForm.get('prixProduit')?.touched && productForm.get('prixProduit')?.invalid">
+                                    <span *ngIf="productForm.get('prixProduit')?.errors?.['required']">Price is required</span>
+                                    <span *ngIf="productForm.get('prixProduit')?.errors?.['min']">Price must be greater than 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="product-stock">Stock <span class="text-danger">*</span></label>
+                                <input type="number"
+                                       id="product-stock"
+                                       class="form-control"
+                                       formControlName="stockProduit"
+                                       [ngClass]="{'is-invalid': productForm.get('stockProduit')?.touched && productForm.get('stockProduit')?.invalid}">
+                                <div class="invalid-feedback" *ngIf="productForm.get('stockProduit')?.touched && productForm.get('stockProduit')?.invalid">
+                                    <span *ngIf="productForm.get('stockProduit')?.errors?.['required']">Stock is required</span>
+                                    <span *ngIf="productForm.get('stockProduit')?.errors?.['min']">Stock must be at least 1</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="product-category">Category</label>
+                        <select id="product-category"
+                               class="form-control"
+                               formControlName="categorie"
+                               [ngClass]="{'is-invalid': productForm.get('categorie')?.touched && productForm.get('categorie')?.invalid}">
+                            <option [ngValue]="null">Select Category</option>
+                            <option *ngFor="let cat of categories" [ngValue]="cat">{{cat.nomCategorie}}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+  <label class="form-label">Product Images</label>
+
+  <!-- Aperçu des images existantes et nouvelles -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <!-- Image principale actuelle -->
+    <div *ngIf="currentImage" class="position-relative">
+      <img [src]="currentImage"
+          class="rounded border border-primary"
+          style="height: 100px; width: 100px; object-fit: cover;">
+      <span class="badge bg-primary position-absolute bottom-0 end-0">Main</span>
+    </div>
+
+    <!-- Images de la galerie (si disponibles) -->
+    <div *ngFor="let image of productGalleryImages; let i = index" class="position-relative">
+      <img [src]="image.imageUrl"
+          class="rounded"
+          style="height: 100px; width: 100px; object-fit: cover;">
+      <!-- Remplacer le bouton de suppression d'image -->
+      <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
+              style="width: 25px; height: 25px; padding: 0 !important;"
+              (click)="showRemoveImageConfirm(image.idImage)">
+        <i class="bi bi-x"></i>
+      </button>
+      <!-- Remplacer le bouton pour définir l'image principale -->
+      <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 p-1"
+              style="width: 25px; height: 25px; padding: 0 !important;"
+              (click)="showSetMainImageConfirm(image.imageUrl)">
+        <i class="bi bi-star"></i>
+      </button>
+    </div>
+
+    <!-- Nouvelles images sélectionnées pour upload -->
+    <div *ngFor="let preview of newImagePreviewUrls; let i = index" class="position-relative">
+      <img [src]="preview"
+          class="rounded border border-warning"
+          style="height: 100px; width: 100px; object-fit: cover;">
+      <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1"
+              style="width: 25px; height: 25px; padding: 0 !important;"
+              (click)="removeNewImage(i)">
+        <i class="bi bi-x"></i>
+      </button>
+      <span class="badge bg-warning position-absolute bottom-0 start-0">New</span>
+    </div>
+  </div>
+
+  <!-- Input file multiple -->
+  <input type="file"
+        class="form-control"
+        (change)="onFileSelected($event)"
+        accept="image/*"
+        multiple>
+  <small class="text-muted mt-2">
+    Select multiple images to add to product gallery (max 5MB each)
+  </small>
+</div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" (click)="showModal.hide()">Cancel</button>
+                    <button type="submit"
+                            class="btn btn-primary"
+                            [disabled]="productForm.invalid && productForm.touched">
+                        <i class="bi bi-save me-1"></i> Update Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add Product Modal -->
+<div class="modal fade" bsModal #addModal="bs-modal">
+  <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+          <div class="modal-header px-4 pt-4">
+              <h5 class="modal-title">Add Product</h5>
+              <button type="button" class="btn-close" (click)="addModal.hide()"></button>
+          </div>
+
+          <app-add-product (productAdded)="refreshProducts()"></app-add-product>
+      </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation de suppression d'image -->
+<div bsModal #deleteImageModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Image Deletion</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="hideDeleteModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove this image?</p>
+        <div class="text-center">
+          <img *ngIf="imageToDelete && getImageToDeleteUrl()"
+               [src]="getImageToDeleteUrl()"
+               class="img-thumbnail" style="max-height: 150px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="hideDeleteModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmRemoveImage()">Delete Image</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation pour définir l'image principale -->
+<div bsModal #setMainImageModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Set as Main Product Image</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="hideSetMainModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p>Do you want to set this image as the main product image?</p>
+        <div class="text-center">
+          <img *ngIf="imageUrlToSetAsMain"
+               [src]="imageUrlToSetAsMain"
+               class="img-thumbnail" style="max-height: 150px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="hideSetMainModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="confirmSetMainImage()">Set as Main</button>
+      </div>
+    </div>
+  </div>
+</div>

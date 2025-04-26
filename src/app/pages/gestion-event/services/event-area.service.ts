@@ -1,8 +1,7 @@
-// src/app/services/event-area.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { EventArea } from '../models/event-area.model';
+import { EventArea, EventAreaStatus, EventAreaApprovalDTO } from '../models/event-area.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,17 +23,35 @@ export class EventAreaService {
     return this.http.post<EventArea>(this.apiUrl, eventArea);
   }
 
-  createEventAreaWithImage(eventArea: EventArea, imageFile: File): Observable<EventArea> {
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    formData.append('name', eventArea.name);
-    formData.append('capacity', eventArea.capacity.toString());
-    formData.append('latitude', eventArea.latitude.toString());
-    formData.append('longitude', eventArea.longitude.toString());
-    formData.append('description', eventArea.description);
+createEventAreaWithImage(eventArea: EventArea, image: File): Observable<EventArea> {
+  // Create FormData object
+  const formData = new FormData();
+  formData.append('image', image);
 
-    return this.http.post<EventArea>(`${this.apiUrl}/upload`, formData);
+  // Construct URL with query parameters
+  const url = `${this.apiUrl}/upload?name=${encodeURIComponent(eventArea.name)}&capacity=${eventArea.capacity}&latitude=${eventArea.latitude}&longitude=${eventArea.longitude}&description=${encodeURIComponent(eventArea.description)}`;
+
+  // Get user ID from local storage
+  const userId = this.getUserId();
+
+  // Set headers with User-ID
+  const headers = new HttpHeaders({
+    'User-ID': userId.toString()
+  });
+
+  // Make the request
+  return this.http.post<EventArea>(url, formData, { headers });
+}
+
+// Helper method to get current user ID
+private getUserId(): number {
+  const userJson = localStorage.getItem('user');
+  if (userJson) {
+    const user = JSON.parse(userJson);
+    return user.id;
   }
+  return 0; // Default or handle appropriately
+}
 
   updateEventArea(id: number, eventArea: EventArea, imageFile?: File): Observable<EventArea> {
     const formData = new FormData();
@@ -52,5 +69,56 @@ export class EventAreaService {
 
   deleteEventArea(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getPendingEventAreas(): Observable<EventArea[]> {
+    return this.http.get<EventArea[]>(`${this.apiUrl}/pending`);
+  }
+
+  getRejectedEventAreas(): Observable<EventArea[]> {
+    return this.http.get<EventArea[]>(`${this.apiUrl}/rejected`);
+  }
+
+  getApprovedEventAreas(): Observable<EventArea[]> {
+    return this.http.get<EventArea[]>(`${this.apiUrl}/approved`);
+  }
+
+  approveEventArea(id: number): Observable<EventArea> {
+    return this.http.post<EventArea>(`${this.apiUrl}/${id}/approve`, {});
+  }
+
+  rejectEventArea(id: number, rejectionMessage: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/reject`, {
+      message: rejectionMessage
+    }, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    });
+  }
+
+  resetEventAreaStatus(id: number): Observable<EventArea> {
+    const statusChangeDTO = {
+      newStatus: 'PENDING',
+      message: 'Status reset to pending by administrator'
+    };
+
+    return this.http.post<EventArea>(`${this.apiUrl}/${id}/change-status`, statusChangeDTO, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      })
+    });
+  }
+
+  getEventAreaWithUserDetails(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}/user`);
+  }
+
+  getEventsByEventArea(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${id}/events`);
+  }
+
+  getEventAreasByUserId(userId: number): Observable<EventArea[]> {
+    return this.http.get<EventArea[]>(`${this.apiUrl}/user/${userId}`);
   }
 }

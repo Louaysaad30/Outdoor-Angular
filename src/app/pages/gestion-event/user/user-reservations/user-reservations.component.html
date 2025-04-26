@@ -1,0 +1,117 @@
+<!-- Start Breadcrumbs -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Bold Reservation title on the left -->
+            <h5 class="fw-bold">Your Reservations</h5>
+
+            <!-- Breadcrumb navigation on the right -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a [routerLink]="['/eventfront/user/events']" class="breadcrumb-link-hover">Events</a></li>
+                <li class="breadcrumb-item active">MY Reservations</li>
+              </ol>
+            </nav>
+          </div>
+          <!-- End Breadcrumbs -->
+
+          <!-- Toast notification -->
+          <div *ngIf="showToast" class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="toast-header bg-{{toastType}}-subtle text-{{toastType}}">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" (click)="closeToast()"></button>
+              </div>
+              <div class="toast-body">
+                {{toastMessage}}
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading Spinner -->
+          <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-primary avatar-md" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <!-- No reservations message -->
+          <div *ngIf="!loading && userReservations.length === 0" class="text-center py-5">
+            <div class="avatar-lg mx-auto mb-4">
+              <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                <i class="bi bi-ticket-perforated"></i>
+              </div>
+            </div>
+            <h4>No Ticket Reservations</h4>
+            <p class="text-muted">You haven't reserved any tickets yet.</p>
+            <a routerLink="/eventfront/user/events" class="btn btn-primary">Browse Events</a>
+          </div>
+
+          <!-- Reservations Cards -->
+          <div *ngIf="!loading && userReservations.length > 0" class="row g-4">
+            <div class="col-xxl-3 col-lg-4 col-md-6" *ngFor="let reservation of displayedReservations">
+              <div class="card card-animate border-0 border-top border-2 border-{{getColorClass(reservation.ticket?.type || '')}}" *ngIf="reservation.ticket">
+                <div class="ribbon-box position-relative">
+                  <div class="ribbon ribbon-{{getColorClass(reservation.ticket.type)}} ribbon-shape">{{ reservation.ticket.type }}</div>
+                </div>
+
+                <div class="card-body m-2 p-4">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="ms-auto">
+                      <h2 class="mb-0">${{ reservation.finalPrice }} <small class="fs-sm text-muted">per ticket</small></h2>
+                    </div>
+                  </div>
+
+                  <p class="text-muted">{{ reservation.ticket.event?.title || 'No Event Name' }}</p>
+
+                  <ul class="list-unstyled vstack gap-3">
+                    <li *ngIf="reservation.reservationCode">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 text-success me-1">
+                          <i class="ri-barcode-fill fs-base align-middle"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                          Ticket Code: <b>{{ reservation.reservationCode }}</b>
+                        </div>
+                      </div>
+                    </li>
+                    <!-- When discount is applied -->
+                    <ng-container *ngIf="reservation.appliedDiscountCode; else noDiscount">
+                      <div class="d-flex align-items-center">
+                        <i class="ri-coupon-3-fill text-success me-1"></i>
+                        Discount Applied: <b>{{ reservation.appliedDiscountCode }}</b>
+                      </div>
+                    </ng-container>
+
+                    <!-- When no discount is applied -->
+                    <ng-template #noDiscount>
+                      <div class="d-flex align-items-center">
+                        <i class="ri-close-circle-line text-muted me-1"></i>
+                        <span class="text-muted">NO Discount Applied</span>
+                      </div>
+                    </ng-template>
+                  </ul>
+
+
+                  <div class="mt-3 pt-2">
+                    <button type="button" (click)="cancelReservation(reservation.id!)" class="btn btn-outline-danger w-100">
+                      <i class="bi bi-x-circle me-1"></i> Cancel Reservation
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination controls -->
+          <div class="row align-items-center mb-4 pt-3 mt-4" *ngIf="userReservations.length > itemsPerPage">
+            <div class="col-sm">
+              <div class="text-muted text-center text-sm-start">
+                Showing <span class="fw-semibold">{{ displayedReservations.length }}</span> of <span class="fw-semibold">{{ userReservations.length }}</span> Results
+              </div>
+            </div>
+            <div class="col-sm-auto mt-3 mt-sm-0">
+              <pagination class="pagination-wrap hstack justify-content-center gap-2"
+                          [totalItems]="userReservations.length"
+                          [itemsPerPage]="itemsPerPage"
+                          (pageChanged)="pageChanged($event)">
+              </pagination>           </div>
+          </div>
