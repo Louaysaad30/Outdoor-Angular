@@ -13,7 +13,9 @@ export const environment = {
     storageBucket: "picloud-f0de8.firebasestorage.app",
     messagingSenderId: "32442881641",
     appId: "1:32442881641:web:ce41dcb0fce2daafa534f8",
-    measurementId: "G-BLMYF1XFJZ"
+    measurementId: "G-BLMYF1XFJZ",
+    huggingFaceApiKey: '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' // Replace with your actual API key
+
   }
 };
 

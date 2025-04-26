@@ -45,6 +45,7 @@
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
     "@nicky-lenaers/ngx-scroll-to": "^14.0.0",
+    "@stripe/stripe-js": "^7.2.0",
     "@stomp/stompjs": "^7.1.1",
     "@types/file-saver": "^2.0.7",
     "@popperjs/core": "^2.11.8",

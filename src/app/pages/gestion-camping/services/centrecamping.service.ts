@@ -55,4 +55,7 @@ export class CentreCampingService {
     return this.http.put<CentreCamping>(`${this.apiUrl}/deactivate/${id}`, {});
   }
 
+  analyzeText(text: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/analyze-sentiment`, text);
+  }
 }
