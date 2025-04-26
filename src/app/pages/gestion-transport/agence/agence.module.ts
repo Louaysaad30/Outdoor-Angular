@@ -37,7 +37,6 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
     SharedModule,
     BsDropdownModule,
     CountUpModule,
-    PaginationModule.forRoot(),
     ProgressbarModule.forRoot(),
     ModalModule.forRoot(),
     BsDatepickerModule.forRoot(),
@@ -46,7 +45,7 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
     }),
     NgApexchartsModule,
     FlatpickrModule.forRoot(),
-    NgbPaginationModule    
+    NgbPaginationModule
   ]
 })
 export class AgenceModule {

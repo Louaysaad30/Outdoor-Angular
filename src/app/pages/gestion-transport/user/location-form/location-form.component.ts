@@ -1,93 +1,173 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VehiculeService } from '../../services/vehicule.service';
 import { ReservationService } from '../../services/reservation.service';
 import * as L from 'leaflet';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-location-form',
   templateUrl: './location-form.component.html',
-  styleUrl: './location-form.component.scss'
+  styleUrls: ['./location-form.component.scss']
 })
-export class LocationFormComponent implements OnInit {
+export class LocationFormComponent implements OnInit, AfterViewInit {
   reservationForm!: FormGroup;
   vehicules: any[] = [];
   vehicleUnavailable: boolean = false;
+  existingReservations: any[] = [];
   @ViewChild('pickupMap', { static: false }) pickupMapElement!: ElementRef;
   pickupMap!: L.Map;
   pickupMarker!: L.Marker;
   locationName: string = '';
+  currentUser: any;
+  loading: boolean = false;
+  minDate: string = new Date().toISOString().slice(0, 16);
+
+  formErrors = {
+    fullName: '',
+    phone: '',
+    vehicule: '',
+    debutLocation: '',
+    finLocation: '',
+    pickupLocation: ''
+  };
+
+  validationMessages = {
+    fullName: {
+      required: 'Full name is required',
+      minlength: 'Full name must be at least 3 characters'
+    },
+    phone: {
+      required: 'Phone number is required',
+      pattern: 'Please enter a valid phone number (8-15 digits)'
+    },
+    vehicule: {
+      required: 'Please select a vehicle'
+    },
+    debutLocation: {
+      required: 'Start date is required',
+      invalidDate: 'Start date must be in the future',
+      unavailable: 'Vehicle is not available for selected dates'
+    },
+    finLocation: {
+      required: 'End date is required',
+      invalidDate: 'End date must be after start date',
+      unavailable: 'Vehicle is not available for selected dates'
+    },
+    pickupLocation: {
+      required: 'Please select a pickup location'
+    }
+  };
 
   constructor(
     private fb: FormBuilder,
     private vehiculeService: VehiculeService,
     private reservationService: ReservationService,
-    private router: Router
+    private router: Router,
+    private cdRef: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || '{}');
     this.initForm();
-    this.loadVehicules();
+    this.loadInitialData();
+    this.setupFormListeners();
   }
 
-  initForm(): void {
-    this.reservationForm = this.fb.group({
-      fullName: ['', Validators.required],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]{8,15}$')]],
-      vehicule: [null, Validators.required], // ID of the selected vehicle
-      debutLocation: ['', Validators.required],
-      finLocation: ['', Validators.required],
-      pickupLocation: ['', Validators.required],
-      pickupLatitude: [null], // Hidden field
-      pickupLongitude: [null], // Hidden field
-      statut: ['EN_ATTENTE'] // Default value
-    });
-  }
-
-  loadVehicules(): void {
-    this.vehiculeService.getVehicules().subscribe(
-      (data) => {
-        this.vehicules = data;
-      },
-      (error) => {
-        console.error('Erreur lors du chargement des véhicules', error);
-      }
-    );
-  }
- 
   ngAfterViewInit(): void {
-    this.initMaps();
+    this.initializeMap();
   }
 
-  initMaps(): void {
-    const customIcon = L.icon({
-      iconUrl: 'assets/images/marker-icon.png', 
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32]
-    });
-
-    this.pickupMap = L.map(this.pickupMapElement.nativeElement).setView([36.8065, 10.1815], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.pickupMap);
-    this.pickupMarker = L.marker([36.8065, 10.1815], { icon: customIcon, draggable: true }).addTo(this.pickupMap);
-
-    this.pickupMap.on('click', (event: any) => {
-      const latlng = event.latlng;
-      if (this.pickupMarker) {
-        this.pickupMap.removeLayer(this.pickupMarker);
+  private initializeMap(): void {
+    this.cdRef.detectChanges();
+    
+    setTimeout(() => {
+      if (!this.pickupMapElement?.nativeElement) {
+        console.warn('Map container not found, retrying...');
+        this.retryMapInitialization();
+        return;
       }
-      this.pickupMarker = L.marker(latlng, { icon: customIcon, draggable: true }).addTo(this.pickupMap);
 
-      // Update form with latitude, longitude
-      this.reservationForm.patchValue({
-        pickupLatitude: latlng.lat,
-        pickupLongitude: latlng.lng
-      });
+      try {
+        this.initMaps();
+      } catch (error) {
+        console.error('Map initialization error:', error);
+        this.retryMapInitialization();
+      }
+    }, 100);
+  }
 
-      // Reverse geocoding to get the name of the location
-      this.getLocationName(latlng.lat, latlng.lng);
+  private retryMapInitialization(attempts = 0): void {
+    if (attempts >= 3) {
+      console.error('Failed to initialize map after multiple attempts');
+      return;
+    }
+
+    setTimeout(() => {
+      if (this.pickupMapElement?.nativeElement) {
+        this.initMaps();
+      } else {
+        this.retryMapInitialization(attempts + 1);
+      }
+    }, 300);
+  }
+
+  private initMaps(): void {
+    // Using only the marker-icon.png you have
+    const customIcon = L.icon({
+      iconUrl: 'assets/images/marker-icon.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      
     });
+
+    // Clear existing map if any
+    if (this.pickupMap) {
+      this.pickupMap.remove();
+    }
+
+    // Initialize the map
+    this.pickupMap = L.map(this.pickupMapElement.nativeElement, {
+      center: [36.8065, 10.1815],
+      zoom: 10
+    });
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.pickupMap);
+
+    // Add marker
+    this.pickupMarker = L.marker([36.8065, 10.1815], {
+      icon: customIcon,
+      draggable: true
+    }).addTo(this.pickupMap);
+
+    // Map click handler
+    this.pickupMap.on('click', (e: L.LeafletMouseEvent) => {
+      this.pickupMarker.setLatLng(e.latlng);
+      this.updateLocationValues(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Marker drag handler
+    this.pickupMarker.on('dragend', () => {
+      const latlng = this.pickupMarker.getLatLng();
+      this.updateLocationValues(latlng.lat, latlng.lng);
+    });
+
+    // Initialize form values
+    this.updateLocationValues(36.8065, 10.1815);
+  }
+
+  private updateLocationValues(lat: number, lng: number): void {
+    this.reservationForm.patchValue({
+      pickupLatitude: lat,
+      pickupLongitude: lng
+    });
+    this.getLocationName(lat, lng);
   }
 
   getLocationName(lat: number, lng: number): void {
@@ -104,54 +184,162 @@ export class LocationFormComponent implements OnInit {
         }
       })
       .catch((error) => {
-        console.error('Erreur lors de la géocodification inversée', error);
+        console.error('Reverse geocoding error:', error);
       });
   }
 
-  calculateDuration(start: string, end: string): number {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const durationInMs = endDate.getTime() - startDate.getTime(); 
-    return durationInMs;
+  initForm(): void {
+    this.reservationForm = this.fb.group({
+      fullName: ['', [Validators.required, Validators.minLength(3)]],
+      phone: ['', [Validators.required, Validators.pattern('^[0-9]{8,15}$')]],
+      vehicule: [null, Validators.required],
+      debutLocation: ['', [Validators.required, this.futureDateValidator.bind(this)]],
+      finLocation: ['', [Validators.required, this.futureDateValidator.bind(this)]],
+      pickupLocation: ['', Validators.required],
+      pickupLatitude: [null],
+      pickupLongitude: [null],
+      statut: ['EN_ATTENTE']
+    });
   }
 
-  onSubmit(): void {
-    if (this.reservationForm.valid && !this.vehicleUnavailable) {
-      const userId = 1; // Remplacez par l'ID de l'utilisateur connecté
-      const formData = this.reservationForm.value;
-      const selectedVehicule = this.vehicules.find(v => v.id === Number(formData.vehicule));
-
-      if (!selectedVehicule) {
-        console.error('Véhicule non trouvé !');
-        return;
+  loadInitialData(): void {
+    this.loading = true;
+    forkJoin([
+      this.vehiculeService.getVehicules(),
+      this.reservationService.getReservations()
+    ]).subscribe(
+      ([vehicules, reservations]) => {
+        this.vehicules = vehicules;
+        this.existingReservations = reservations;
+        this.loading = false;
+      },
+      (error) => {
+        console.error('Error loading data', error);
+        this.loading = false;
       }
+    );
+  }
 
-      const updatedFormData = {
-        ...formData,
-        vehicule: { id: Number(formData.vehicule) }, // Convertir en objet attendu par le backend
-        prixTotal: this.calculateTotalPrice(formData.debutLocation, formData.finLocation, selectedVehicule.prixParJour), 
-        userId: userId,
-      };
+  setupFormListeners(): void {
+    this.reservationForm.valueChanges.subscribe(() => this.validateForm());
 
-      console.log('Données envoyées:', JSON.stringify(updatedFormData, null, 2));
-
-      this.reservationService.createReservation(updatedFormData).subscribe(
-        () => {
-          alert('Réservation réussie !');
-          this.router.navigate(['/transportfront/user/reservations']);
-        },
-        (error) => {
-          console.error('Erreur lors de la réservation', error);
+    const availabilityFields = ['vehicule', 'debutLocation', 'finLocation'];
+    availabilityFields.forEach(field => {
+      this.reservationForm.get(field)?.valueChanges.subscribe(() => {
+        if (this.reservationForm.get(field)?.valid) {
+          this.checkVehicleAvailability();
         }
-      );
+      });
+    });
+  }
+
+  futureDateValidator(control: any): { [key: string]: boolean } | null {
+    if (!control.value) return null;
+    const selectedDate = new Date(control.value);
+    const now = new Date();
+    return selectedDate <= now ? { invalidDate: true } : null;
+  }
+
+  validateForm(): void {
+    for (const field in this.formErrors) {
+      if (this.formErrors.hasOwnProperty(field)) {
+        this.formErrors[field as keyof typeof this.formErrors] = '';
+        const control = this.reservationForm.get(field);
+        
+        if (control && control.invalid && (control.dirty || control.touched)) {
+          const messages = this.validationMessages[field as keyof typeof this.validationMessages];
+          for (const key in control.errors) {
+            if (control.errors.hasOwnProperty(key)) {
+              this.formErrors[field as keyof typeof this.formErrors] += messages[key as keyof typeof messages] + ' ';
+            }
+          }
+        }
+      }
+    }
+
+    const start = this.reservationForm.get('debutLocation')?.value;
+    const end = this.reservationForm.get('finLocation')?.value;
+    if (start && end && new Date(start) >= new Date(end)) {
+      this.formErrors.finLocation = 'End date must be after start date';
+      this.reservationForm.get('finLocation')?.setErrors({ invalidDate: true });
     }
   }
 
-  calculateTotalPrice(debut: string, fin: string, prixParJour: number): number {
-    const startDate = new Date(debut);
-    const endDate = new Date(fin);
-    const durationInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)); // Convertir en jours
-    return durationInDays * prixParJour;
+  checkVehicleAvailability(): void {
+    const selectedVehicleId = this.reservationForm.get('vehicule')?.value;
+    const startDate = this.reservationForm.get('debutLocation')?.value;
+    const endDate = this.reservationForm.get('finLocation')?.value;
+
+    if (!selectedVehicleId || !startDate || !endDate) return;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start >= end) {
+      this.vehicleUnavailable = true;
+      return;
+    }
+
+    this.reservationService.checkAvailability(selectedVehicleId, startDate, endDate).subscribe({
+      next: (isAvailable) => {
+        this.vehicleUnavailable = !isAvailable;
+        if (this.vehicleUnavailable) {
+          this.reservationForm.get('debutLocation')?.setErrors({ unavailable: true });
+          this.reservationForm.get('finLocation')?.setErrors({ unavailable: true });
+        } else {
+          this.reservationForm.get('debutLocation')?.setErrors(null);
+          this.reservationForm.get('finLocation')?.setErrors(null);
+        }
+      },
+      error: (err) => console.error('Availability check failed:', err)
+    });
   }
 
+  onSubmit(): void {
+    this.validateForm();
+    
+    if (this.reservationForm.invalid || this.vehicleUnavailable) {
+      alert('Please correct form errors before submitting');
+      return;
+    }
+
+    this.loading = true;
+    const formValue = this.prepareSubmissionData();
+
+    this.reservationService.createReservation(formValue).subscribe({
+      next: () => {
+        this.loading = false;
+        alert('Reservation created successfully!');
+        this.router.navigate(['/transportfront/user/reservations']);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Reservation error:', error);
+        alert(`Reservation failed: ${error.error?.message || error.message || 'Unknown error'}`);
+      }
+    });
+  }
+
+  prepareSubmissionData(): any {
+    const formData = this.reservationForm.value;
+    const vehicle = this.vehicules.find(v => v.id === formData.vehicule);
+
+    return {
+      ...formData,
+      vehicule: { id: formData.vehicule },
+      prixTotal: this.calculateTotalPrice(
+        formData.debutLocation,
+        formData.finLocation,
+        vehicle?.prixParJour || 0
+      ),
+      userId: this.currentUser.id
+    };
+  }
+
+  calculateTotalPrice(start: string, end: string, dailyPrice: number): number {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+    return days * dailyPrice;
+  }
 }

@@ -323,7 +323,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let vehicle of filteredVehicles | slice: (vehiclePage-1) * itemsPerPage : vehiclePage * itemsPerPage">
+                <tr *ngFor="let vehicle of pagedVehicles">
                   <td>{{ vehicle.id }}</td>
                   <td>
                     <div class="d-flex align-items-center gap-2">
@@ -345,12 +345,10 @@
                   </td>
                   <td>
                     <div class="d-flex gap-2">
-                      <!-- Updated to btn-outline-success -->
                       <button class="btn btn-sm btn-outline-success" 
                               [routerLink]="['/transportback/agence/update-vehicule', vehicle.id]">
                         <i class="bi bi-pencil"></i> Update
                       </button>
-                      <!-- Updated to btn-outline-danger -->
                       <button class="btn btn-sm btn-outline-danger" 
                               (click)="deleteVehicle(vehicle.id)">
                         <i class="bi bi-trash"></i> Delete
@@ -358,36 +356,43 @@
                     </div>
                   </td>
                 </tr>
-                <tr *ngIf="filteredVehicles.length === 0">
+                <tr *ngIf="pagedVehicles.length === 0">
                   <td colspan="7" class="text-center py-4">No vehicles found</td>
                 </tr>
               </tbody>
             </table>
-          </div>
           
-          <!-- Pagination -->
-          <div class="row mt-3 align-items-center" *ngIf="filteredVehicles.length > itemsPerPage">
-            <div class="col-sm">
-              <div class="text-muted text-center text-sm-start">
-                Showing <span class="fw-semibold">{{getMinDisplay()}}</span> to <span class="fw-semibold">{{getMaxDisplay('vehicle')}}</span> of <span class="fw-semibold">{{filteredVehicles.length}}</span> Results
+            <!-- Vehicles Pagination -->
+            <div class="row mt-3 align-items-center" *ngIf="filteredVehicles.length > itemsPerPage">
+              <div class="col-sm">
+                <div class="text-muted text-center text-sm-start">
+                  Showing <span class="fw-semibold">{{ (vehiclePage - 1) * itemsPerPage + 1 }}</span> 
+                  to <span class="fw-semibold">{{ Math.min(vehiclePage * itemsPerPage, filteredVehicles.length) }}</span> 
+                  of <span class="fw-semibold">{{ filteredVehicles.length }}</span> Vehicles
+                </div>
               </div>
-            </div>
-            <div class="col-sm-auto mt-3 mt-sm-0">
-              <ngb-pagination 
-                [(page)]="vehiclePage" 
-                [pageSize]="itemsPerPage" 
-                [collectionSize]="filteredVehicles.length"
-                size="sm"
-                [maxSize]="5"
-                [rotate]="true"
-                [boundaryLinks]="true">
-              </ngb-pagination>
+              <div class="col-sm-auto mt-3 mt-sm-0">
+                <ngb-pagination 
+                  [(page)]="vehiclePage" 
+                  [pageSize]="itemsPerPage" 
+                  [collectionSize]="filteredVehicles.length"
+                  (pageChange)="pageChanged($event, 'vehicle')"
+                  size="sm"
+                  [maxSize]="5"
+                  [rotate]="true"
+                  [boundaryLinks]="true"
+                  previousText="&lsaquo;" 
+                  nextText="&rsaquo;" 
+                  firstText="&laquo;" 
+                  lastText="&raquo;">
+                </ngb-pagination>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div><!--end col-->
-  </div><!--end row-->
+    </div>
+  </div>
 
   <!-- Agency Reservations Section -->
   <div class="row mt-4">
@@ -423,7 +428,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let reservation of filteredReservations | slice: (reservationPage-1) * itemsPerPage : reservationPage * itemsPerPage">
+                <tr *ngFor="let reservation of pagedReservations">
                   <td>
                     <div class="d-flex align-items-center gap-2">
                       <img [src]="reservation.vehicule.image || 'assets/images/vehicle-placeholder.png'" 
@@ -452,7 +457,6 @@
                                 (click)="updateReservationStatus(reservation.id, 'APPROUVÉE')">
                           <i class="bi bi-check-circle me-1"></i> Approve
                         </button>
-                        <span class="text-muted mx-1"> </span>
                         <button class="btn btn-sm btn-outline-danger" 
                                 (click)="updateReservationStatus(reservation.id, 'REJETÉE')">
                           <i class="bi bi-x-circle me-1"></i> Reject
@@ -467,34 +471,43 @@
                     </div>
                   </td>
                 </tr>
-                <tr *ngIf="filteredReservations.length === 0">
+                <tr *ngIf="pagedReservations.length === 0">
                   <td colspan="6" class="text-center py-4">No reservations found</td>
                 </tr>
               </tbody>
             </table>
           </div>
           
-          <!-- Pagination -->
-          <div class="row mt-3 align-items-center" *ngIf="filteredReservations.length > itemsPerPage">
-            <div class="col-sm">
-              <div class="text-muted text-center text-sm-start">
-                Showing <span class="fw-semibold">{{getMinDisplay('reservation')}}</span> to <span class="fw-semibold">{{getMaxDisplay('reservation')}}</span> of <span class="fw-semibold">{{filteredReservations.length}}</span> Results
-              </div>
-            </div>
-            <div class="col-sm-auto mt-3 mt-sm-0">
-              <ngb-pagination 
-                [(page)]="reservationPage" 
-                [pageSize]="itemsPerPage" 
-                [collectionSize]="filteredReservations.length"
-                size="sm"
-                [maxSize]="5"
-                [rotate]="true"
-                [boundaryLinks]="true">
-              </ngb-pagination>
+          
+        </div>
+        <!-- Reservations Pagination -->
+        <div class="row mt-3 align-items-center" *ngIf="filteredReservations.length > itemsPerPage">
+          <div class="col-sm">
+            <div class="text-muted text-center text-sm-start">
+              Showing <span class="fw-semibold">{{ (reservationPage - 1) * itemsPerPage + 1 }}</span> 
+              to <span class="fw-semibold">{{ Math.min(reservationPage * itemsPerPage, filteredReservations.length) }}</span> 
+              of <span class="fw-semibold">{{ filteredReservations.length }}</span> Reservations
             </div>
           </div>
+          <div class="col-sm-auto mt-3 mt-sm-0">
+            <ngb-pagination 
+              [(page)]="reservationPage" 
+              [pageSize]="itemsPerPage" 
+              [collectionSize]="filteredReservations.length"
+              (pageChange)="pageChanged($event, 'reservation')"
+              size="sm"
+              [maxSize]="5"
+              [rotate]="true"
+              [boundaryLinks]="true"
+              previousText="&lsaquo;" 
+              nextText="&rsaquo;" 
+              firstText="&laquo;" 
+              lastText="&raquo;">
+            </ngb-pagination>
+          </div>
         </div>
+      
       </div>
-    </div><!--end col-->
-  </div><!--end row-->
+    </div>
+  </div>
 </div>

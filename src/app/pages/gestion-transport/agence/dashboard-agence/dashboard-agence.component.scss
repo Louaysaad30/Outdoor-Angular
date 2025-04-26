@@ -98,4 +98,19 @@
   #rejected-reservations-chart {
     height: 45px;
   }
+
+  /* In your component's CSS file */
+::ng-deep .disabled-pagination .page-item.disabled .page-link {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+::ng-deep .disabled-pagination .page-item.active .page-link {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  color: #495057;
+}
+
+  
   

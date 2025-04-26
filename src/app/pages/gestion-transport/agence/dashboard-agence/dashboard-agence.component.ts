@@ -16,6 +16,14 @@ export class DashboardAgenceComponent implements OnInit {
     { label: 'Agency', active: true },
     { label: 'Dashboard', active: true }
   ];
+  public Math = Math; 
+
+  // Pagination properties
+  itemsPerPage: number = 5;
+  vehiclePage: number = 1;
+  reservationPage: number = 1;
+  pagedVehicles: Vehicule[] = [];
+  pagedReservations: Reservation[] = [];
 
   currentUser: any;
   stats = {
@@ -35,26 +43,16 @@ export class DashboardAgenceComponent implements OnInit {
   approvedReservationsChart: any;
   rejectedReservationsChart: any;
 
-  private initReservationCharts(): void {
-    this._initPendingReservationsChart('["--tb-warning"]');
-    this._initApprovedReservationsChart('["--tb-success"]');
-    this._initRejectedReservationsChart('["--tb-danger"]');
-  }
-  
   // Vehicles data
   agencyVehicles: Vehicule[] = [];
   filteredVehicles: Vehicule[] = [];
   vehicleFilter: string = '';
-  vehiclePage: number = 1;
   
   // Reservations data
   recentReservations: Reservation[] = [];
   filteredReservations: Reservation[] = [];
   reservationFilter: string = '';
-  reservationPage: number = 1;
   
-  // Common
-  itemsPerPage: number = 5;
   loading = true;
   errorMessage: string | null = null;
 
@@ -91,6 +89,7 @@ export class DashboardAgenceComponent implements OnInit {
       next: (vehicles) => {
         this.agencyVehicles = vehicles;
         this.filteredVehicles = [...vehicles];
+        this.updatePagedVehicles();
         this.stats.totalVehicles.value = vehicles.length;
         this.stats.availableVehicles.value = vehicles.filter(v => v.disponible).length;
         this.stats.inMaintenance.value = vehicles.filter(v => v.statut === 'MAINTENANCE').length;
@@ -106,6 +105,7 @@ export class DashboardAgenceComponent implements OnInit {
       next: (reservations) => {
         this.recentReservations = reservations;
         this.filteredReservations = [...reservations];
+        this.updatePagedReservations();
         
         // Calculate reservation stats
         this.stats.reservations.value = reservations.length;
@@ -113,7 +113,7 @@ export class DashboardAgenceComponent implements OnInit {
         this.stats.approvedReservations.value = reservations.filter(r => r.statut === 'APPROUVÉE').length;
         this.stats.rejectedReservations.value = reservations.filter(r => r.statut === 'REJETÉE').length;
         
-        // Calculate percentage changes (you might want to replace with real data)
+        // Calculate percentage changes
         this.stats.pendingReservations.change = this.calculateRandomChange();
         this.stats.approvedReservations.change = this.calculateRandomChange();
         this.stats.rejectedReservations.change = this.calculateRandomChange();
@@ -128,11 +128,27 @@ export class DashboardAgenceComponent implements OnInit {
     });
   }
 
-  // Helper method to calculate random change (replace with your actual data)
-  private calculateRandomChange(): number {
-    return Math.floor(Math.random() * 10) - 2; // Returns a number between -2 and 7
+  private updatePagedVehicles(): void {
+    const startItem = (this.vehiclePage - 1) * this.itemsPerPage;
+    const endItem = this.vehiclePage * this.itemsPerPage;
+    this.pagedVehicles = this.filteredVehicles.slice(startItem, endItem);
   }
 
+  private updatePagedReservations(): void {
+    const startItem = (this.reservationPage - 1) * this.itemsPerPage;
+    const endItem = this.reservationPage * this.itemsPerPage;
+    this.pagedReservations = this.filteredReservations.slice(startItem, endItem);
+  }
+
+  private calculateRandomChange(): number {
+    return Math.floor(Math.random() * 10) - 2;
+  }
+
+  private initReservationCharts(): void {
+    this._initPendingReservationsChart('["--tb-warning"]');
+    this._initApprovedReservationsChart('["--tb-success"]');
+    this._initRejectedReservationsChart('["--tb-danger"]');
+  }
 
   private initCharts(): void {
     this.initVehicleTypeChart();
@@ -195,49 +211,46 @@ export class DashboardAgenceComponent implements OnInit {
     });
   }
 
-  // Filter methods
   filterVehicles(): void {
     if (!this.vehicleFilter) {
       this.filteredVehicles = [...this.agencyVehicles];
-      this.vehiclePage = 1;
-      return;
+    } else {
+      const searchText = this.vehicleFilter.toLowerCase();
+      this.filteredVehicles = this.agencyVehicles.filter(vehicle => 
+        vehicle.modele.toLowerCase().includes(searchText) ||
+        vehicle.type.toLowerCase().includes(searchText) ||
+        vehicle.prixParJour.toString().includes(searchText) ||
+        vehicle.nbPlace.toString().includes(searchText)
+      );
     }
-    const searchText = this.vehicleFilter.toLowerCase();
-    this.filteredVehicles = this.agencyVehicles.filter(vehicle => 
-      vehicle.modele.toLowerCase().includes(searchText) ||
-      vehicle.type.toLowerCase().includes(searchText) ||
-      vehicle.prixParJour.toString().includes(searchText) ||
-      vehicle.nbPlace.toString().includes(searchText)
-    );
     this.vehiclePage = 1;
+    this.updatePagedVehicles();
   }
 
   filterReservations(): void {
     if (!this.reservationFilter) {
       this.filteredReservations = [...this.recentReservations];
-      this.reservationPage = 1;
-      return;
+    } else {
+      const searchText = this.reservationFilter.toLowerCase();
+      this.filteredReservations = this.recentReservations.filter(reservation => 
+        reservation.vehicule.modele.toLowerCase().includes(searchText) ||
+        reservation.vehicule.type.toLowerCase().includes(searchText) ||
+        reservation.fullName.toLowerCase().includes(searchText) ||
+        reservation.prixTotal.toString().includes(searchText)
+      );
     }
-    const searchText = this.reservationFilter.toLowerCase();
-    this.filteredReservations = this.recentReservations.filter(reservation => 
-      reservation.vehicule.modele.toLowerCase().includes(searchText) ||
-      reservation.vehicule.type.toLowerCase().includes(searchText) ||
-      reservation.fullName.toLowerCase().includes(searchText) ||
-      reservation.prixTotal.toString().includes(searchText)
-    );
     this.reservationPage = 1;
+    this.updatePagedReservations();
   }
 
-  // Pagination display helpers
-  getMinDisplay(type: string = 'vehicle'): number {
-    const page = type === 'vehicle' ? this.vehiclePage : this.reservationPage;
-    return (page - 1) * this.itemsPerPage + 1;
-  }
-
-  getMaxDisplay(type: string = 'vehicle'): number {
-    const page = type === 'vehicle' ? this.vehiclePage : this.reservationPage;
-    const collection = type === 'vehicle' ? this.filteredVehicles : this.filteredReservations;
-    return Math.min(page * this.itemsPerPage, collection.length);
+  pageChanged(page: number, type: 'vehicle' | 'reservation'): void {
+    if (type === 'vehicle') {
+      this.vehiclePage = page;
+      this.updatePagedVehicles();
+    } else {
+      this.reservationPage = page;
+      this.updatePagedReservations();
+    }
   }
 
   navigateToVehicles(): void {
@@ -280,7 +293,10 @@ export class DashboardAgenceComponent implements OnInit {
         next: () => {
           this.agencyVehicles = this.agencyVehicles.filter(v => v.id !== vehicleId);
           this.filteredVehicles = this.filteredVehicles.filter(v => v.id !== vehicleId);
-          this.loadDashboardData();
+          this.updatePagedVehicles();
+          this.stats.totalVehicles.value = this.agencyVehicles.length;
+          this.stats.availableVehicles.value = this.agencyVehicles.filter(v => v.disponible).length;
+          this.stats.inMaintenance.value = this.agencyVehicles.filter(v => v.statut === 'MAINTENANCE').length;
         },
         error: (err) => console.error('Error deleting vehicle:', err)
       });
@@ -296,14 +312,17 @@ export class DashboardAgenceComponent implements OnInit {
         if (reservation) {
           reservation.statut = status;
         }
-        this.filterReservations(); // Refresh filtered list
+        this.filterReservations();
+        
+        // Update stats
+        this.stats.pendingReservations.value = this.recentReservations.filter(r => r.statut === 'EN_ATTENTE').length;
+        this.stats.approvedReservations.value = this.recentReservations.filter(r => r.statut === 'APPROUVÉE').length;
+        this.stats.rejectedReservations.value = this.recentReservations.filter(r => r.statut === 'REJETÉE').length;
       },
       error: (err) => console.error('Error updating reservation:', err)
     });
   }
 
-
-  
   private _initPendingReservationsChart(colors: any) {
     colors = this.getChartColorsArray(colors);
     this.pendingReservationsChart = {
@@ -421,7 +440,6 @@ export class DashboardAgenceComponent implements OnInit {
     };
   }
 
-  // Add this helper method if you don't already have it
   private getChartColorsArray(colors: any) {
     colors = JSON.parse(colors);
     return colors.map(function (value: any) {
@@ -444,5 +462,4 @@ export class DashboardAgenceComponent implements OnInit {
       }
     });
   }
-
 }

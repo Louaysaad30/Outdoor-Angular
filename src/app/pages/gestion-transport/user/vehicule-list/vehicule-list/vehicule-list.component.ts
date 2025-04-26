@@ -20,7 +20,7 @@ export class VehiculeListComponent implements OnInit {
 
   // Pagination properties
   pagedItems: any[] = [];
-  itemsPerPage: number = 8; // You can adjust this number
+  itemsPerPage: number = 8; 
   currentPage: number = 1;
 
   // Search

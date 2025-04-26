@@ -19,7 +19,7 @@ export class ReservationService {
     return this.http.get<Reservation>(`${this.apiUrl}/${id}`);
   }
 
-  createReservation(reservation: Reservation): Observable<Reservation> {
+  createReservation(reservation: any): Observable<Reservation> {
     return this.http.post<Reservation>(this.apiUrl, reservation);
   }
 
@@ -48,4 +48,24 @@ export class ReservationService {
     const params = new HttpParams().set('cause', cause);
     return this.http.put(`${this.apiUrl}/${id}/rejeter`, null, { params });
   }
+
+  checkAvailability(vehicleId: number, start: string, end: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/availability`, {
+      params: {
+        vehicleId: vehicleId.toString(),
+        start: start,
+        end: end
+      }
+    });
+  }
+
+  getReservationsForVehicle(vehicleId: number): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(`${this.apiUrl}/by-vehicle/${vehicleId}`);
+  }
+
+  getActiveReservations(vehicleId: number): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(`${this.apiUrl}/active/${vehicleId}`);
+  }
+
+ 
 }

@@ -14,7 +14,6 @@ import { NgxSliderModule } from '@angular-slider/ngx-slider';
 import { PaginationModule } from 'ngx-bootstrap/pagination';
 
 
-
 @NgModule({
   declarations: [
     VehiculeListComponent,
@@ -30,11 +29,9 @@ import { PaginationModule } from 'ngx-bootstrap/pagination';
     SlickCarouselModule, 
     RouterModule,
     ReactiveFormsModule,
-    CommonModule,
     NgxSliderModule,
     AccordionModule.forRoot(),
     PaginationModule.forRoot(),
-    
   ]
 })
 export class UserModule { }
