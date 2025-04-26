@@ -1,0 +1,259 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">My Reservations</h4>
+        </div>
+        <div class="card-body">
+          <!-- Loading indicator -->
+          @if (isLoading) {
+            <div class="d-flex justify-content-center mb-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          }
+
+          <!-- Calendar view -->
+          <div class="calendar-wrapper mb-4">
+            <full-calendar [options]="calendarOptions"></full-calendar>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reservation Details Modal -->
+<div bsModal #reservationModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="reservationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header p-3 bg-info-subtle">
+        <h5 class="modal-title" id="reservationModalLabel">Reservation Details</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+        @if (selectedReservation) {
+          <div class="reservation-details">
+            <!-- Reservation Header -->
+            <div class="card mb-4 border-0 bg-light-subtle">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">{{ selectedReservation.centre.name }}</h5>
+                  <span class="badge" [ngClass]="selectedReservation.confirmed ? 'bg-success' : 'bg-danger'">
+                    {{ selectedReservation.confirmed ? 'Confirmed' : 'Not Confirmed' }}
+                  </span>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <i class="ri-map-pin-line me-1 text-muted"></i>
+                      <span>{{ selectedReservation.centre.address || 'No address provided' }}</span>
+                    </div>
+                    <div class="mb-2">
+                      <i class="ri-user-line me-1 text-muted"></i>
+                      <span>{{ selectedReservation.nbrPersonnes }} Guests</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-2">
+                      <i class="ri-calendar-event-line me-1 text-muted"></i>
+                      <span>Check-in: {{ formatDate(selectedReservation.dateDebut) }}</span>
+                    </div>
+                    <div class="mb-2">
+                      <i class="ri-calendar-event-line me-1 text-muted"></i>
+                      <span>Check-out: {{ formatDate(selectedReservation.dateFin) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reserved Items -->
+            <h6 class="fw-bold mb-3">Reserved Items</h6>
+            @if (selectedReservation.lignesReservation && selectedReservation.lignesReservation.length > 0) {
+              <div class="table-responsive mb-3">
+                <table class="table align-middle">
+                  <thead class="table-light">
+                  <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Price/Day</th>
+                    <th>Quantity</th>
+                    <th>Days</th>
+                    <th class="text-end">Subtotal</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let ligne of selectedReservation.lignesReservation">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img [src]="ligne.logement?.image || ligne.materiel?.image" alt="" class="rounded" width="40">
+                        <div class="ms-2">
+                          <span>{{ ligne.logement?.type || ligne.materiel?.name }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ ligne.logement ? 'Logement' : 'Materiel' }}</td>
+                    <td>{{ ligne.prix / ligne.quantite }} TND</td>
+                    <td>{{ ligne.quantite }}</td>
+                    <td>{{ calculateDaysDifference(ligne.dateDebut, ligne.dateFin) }}</td>
+                    <td class="text-end">{{ ligne.prix }} TND</td>
+                  </tr>
+                  <tr *ngIf="!selectedReservation.lignesReservation || selectedReservation.lignesReservation.length === 0">
+                    <td colspan="6" class="text-center py-3">
+                      <p class="mb-0">No items in this reservation.</p>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>            } @else {
+              <div class="alert alert-info">No items in this reservation.</div>
+            }
+
+            <!-- Pricing Summary -->
+            <div class="card border-0 bg-light-subtle mb-4">
+              <div class="card-body">
+                <h6 class="fw-bold mb-3">Price Summary</h6>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Camping Fee:</span>
+                  <span>{{ selectedReservation.prixCamping | currency:'TND' }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Items Total:</span>
+                  <span>{{ selectedReservation.prixLigne | currency:'TND' }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fw-bold">
+                  <span>Total Price:</span>
+                  <span>{{ selectedReservation.prixTotal | currency:'TND' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Form Section - Always include in DOM but conditionally show -->
+            <div class="payment-form-container mt-4 p-3 border rounded" [style.display]="!selectedReservation.confirmed && paymentFormVisible ? 'block' : 'none'">
+              <h6 class="fw-bold mb-3">Payment Information</h6>
+
+              @if (paymentSuccess) {
+                <div class="alert alert-success">
+                  <i class="ri-check-line me-2"></i> Payment processed successfully!
+                </div>
+              } @else {
+                <form [formGroup]="paymentForm" (ngSubmit)="processPayment()">
+                  <div class="mb-3">
+                    <label for="cardholder-name" class="form-label">Cardholder Name</label>
+                    <input type="text" id="cardholder-name" formControlName="cardholderName" class="form-control" placeholder="Name on card">
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Card Information</label>
+                    <div id="card-element" class="form-control" style="height: 40px; padding-top: 10px;"></div>
+                    <div id="card-errors" role="alert" class="text-danger mt-1 small"></div>
+                  </div>
+
+                  @if (paymentError) {
+                    <div class="alert alert-danger">
+                      <i class="ri-error-warning-line me-2"></i> {{ paymentError }}
+                    </div>
+                  }
+
+                  <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" [disabled]="paymentForm.invalid || isProcessingPayment">
+                      @if (isProcessingPayment) {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                      }
+                      Pay {{ selectedReservation.prixTotal | currency:'TND' }}
+                    </button>
+                  </div>
+                </form>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <div class="d-flex justify-content-between w-100 align-items-center">
+          <div>
+            @if (!selectedReservation?.confirmed && !paymentSuccess) {
+              <button type="button" class="btn btn-primary" (click)="showPaymentSection()">
+                <i class="ri-bank-card-line me-1"></i> Pay Now
+              </button>
+            }
+            @if (!selectedReservation?.confirmed) {
+              <button type="button" class="btn btn-danger" (click)="cancelReservation(selectedReservation.idReservation)">
+                <i class="ri-close-line me-1"></i> Cancel Reservation
+              </button>
+            }
+          </div>
+          <button type="button" class="btn btn-light" (click)="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Payment Success Modal -->
+<div bsModal #paymentSuccessModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">
+          <i class="ri-check-double-line me-2"></i> Payment Successful
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeSuccessModal()"></button>
+      </div>
+      <div class="modal-body p-4 text-center">
+        <!-- Success animation with larger checkmark -->
+        <div class="mb-4">
+          <div class="success-animation">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="80" height="80">
+              <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" stroke="#4BB543" stroke-width="2"/>
+              <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" stroke="#4BB543" stroke-width="3"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Confirmation message -->
+        <h3 class="mb-3 text-success fw-bold">Thank You for Your Booking!</h3>
+        <p class="mb-4 fs-5">Your reservation for <strong>{{ selectedReservation?.centre?.name }}</strong> is now confirmed.</p>
+
+        <!-- Reservation details in a styled card -->
+        <div class="card border-success mb-4 shadow-sm">
+          <div class="card-body py-3">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Reservation ID:</span>
+              <span class="fw-semibold">#{{ selectedReservation?.idReservation }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Check-in:</span>
+              <span class="fw-semibold">{{ selectedReservation?.dateDebut | date }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Check-out:</span>
+              <span class="fw-semibold">{{ selectedReservation?.dateFin | date }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Amount Paid:</span>
+              <span class="fw-bold text-success">{{ selectedReservation?.prixTotal | currency:'TND' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR code notification with icon -->
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+          <i class="ri-mail-send-line fs-4 me-2"></i>
+          <div>
+            <strong>Check your email!</strong> We've sent you a confirmation email containing a QR code that you'll need to present at check-in.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success px-4" (click)="closeSuccessModal()">
+          <i class="ri-check-line me-1"></i> Done
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

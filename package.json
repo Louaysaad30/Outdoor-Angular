@@ -42,6 +42,7 @@
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
     "@nicky-lenaers/ngx-scroll-to": "^14.0.0",
+    "@stripe/stripe-js": "^7.2.0",
     "angular-ng-autocomplete": "^2.0.12",
     "angular-ng-stepper": "^2.0.0",
     "angularx-flatpickr": "^7.3.0",

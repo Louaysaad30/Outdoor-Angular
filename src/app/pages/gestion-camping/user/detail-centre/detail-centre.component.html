@@ -1,0 +1,595 @@
+<app-breadcrumbs title="Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-xxl-9">
+    <div class="card">
+      <div class="card-body">
+        <div class="row align-items-center justify-content-center g-3">
+          <div class="col-xl-4 col-md-6">
+            <div class="text-center rounded-3 overflow-hidden position-relative">
+              <img [src]="centre?.image"
+                   alt="Centre de camping"
+                   class="w-100 object-fit-cover border"
+                   style="height: 250px;">
+            </div>
+          </div>
+          <div class="col-xl-8 col-md-7">
+            <div>
+              <div class="mb-3">
+                <h6 class="card-title">{{ centre?.name }}</h6>
+              </div>
+              <div>
+                <div class="table-responsive">
+                  <table class="table table-sm table-nowrap table-borderless mb-0">
+                    <tbody>
+                    <tr>
+                      <th>Address :</th>
+                      <td>{{ centre?.address }}</td>
+                    </tr>
+                    <tr>
+                      <th>Capacity :</th>
+                      <td>{{ centre?.capcite }}</td>
+                    </tr>
+                    <tr>
+                      <th>Price per Day :</th>
+                      <td>{{ centre?.prixJr }} TND</td>
+                    </tr>
+                    <tr>
+                      <th>Phone number:</th>
+                      <td>{{centre?.numTel}}</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                  <button class="btn btn-outline-primary mt-2" (click)="toggleReservationView()">
+                    <i class="bi" [ngClass]="showReservationCalendar ? 'bi-x-circle' : 'bi-calendar-check'"></i>
+                    {{ showReservationCalendar ? 'Hide Reservation' : 'Make Reservation' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="mb-3">
+          <h6 class="card-title mb-3">Property Overview</h6>
+          <div class="row g-3">
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-dark-subtle text-dark fs-lg rounded">
+                      <i class="bi bi-tag"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">From {{priceRange.min}} TND  To  {{priceRange.max}} TND</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-warning-subtle text-warning fs-lg rounded">
+                      <i class="bi bi-house"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">{{getTotalLogementQuantity() }} Bedrooms</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-danger-subtle text-danger fs-lg rounded">
+                      <i class="ph ph-bathtub"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">{{getTotalMaterielQuantity() }} Camping tools</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="p-3 border border-dashed rounded">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-xs flex-shrink-0">
+                    <div class="avatar-title bg-info-subtle text-info fs-lg rounded">
+                      <i class="bi bi-p-circle"></i>
+                    </div>
+                  </div>
+                  <p class="fs-md mb-0">Parking Available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div *ngIf="!showReservationCalendar" class="row justify-content-between align-items-center mb-4">
+      <div class="col-lg-12">
+        <div class="d-flex">
+          <div class="flex-grow-1">
+            <!-- Nav tabs -->
+            <ul class="nav nav-pills nav-secondary mb-3" role="tablist">
+              <li class="nav-item">
+                <a [class.active]="currentTab === 'Materiels'" class="nav-link" data-bs-toggle="tab" href="javascript:void(0);" (click)="changeTab('Materiels')" role="tab">Tools</a>
+              </li>
+              <li class="nav-item">
+                <a [class.active]="currentTab === 'Logement'" class="nav-link" data-bs-toggle="tab" href="javascript:void(0);" (click)="changeTab('Logement')" role="tab">Bedrooms</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Tab panes -->
+        <div class="tab-content text-muted">
+          <div [hidden]="currentTab !== 'Logement'" class="tab-pane show active mt-2" id="v-pills-profile" role="tabpanel">
+            <div class="row g-3">
+              @for (data of logments; track $index) {
+                <div class="col-lg-6 col-md-6">
+                  <div class="card h-100">
+                    <div class="card-body" style="height: 130px;">
+                      <div class="row">
+                        <div class="col-md-4">
+                          <div class="position-relative" style="height: 120px;">
+                            <img [src]="data.image" alt="" class="img-fluid rounded h-100 w-100 object-fit-cover">
+                          </div>
+                        </div>
+                        <div class="col-md-8">
+                          <div class="d-flex flex-column h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                              <div>
+                                <h6 class="fs-lg text-capitalize mb-1">{{data.type}}</h6>
+                                <p class="text-muted mb-1">
+                                  <i class="bi bi-house align-baseline text-primary me-1"></i>
+                                  {{data.quantity}} Bedroom
+                                </p>
+                                <p class="text-muted small mb-2">
+                                  {{data.description || 'No description available'}}
+                                </p>
+                              </div>
+                              <h5 class="text-nowrap">{{data.price}} TND</h5>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          <div [hidden]="currentTab !== 'Materiels'" class="tab-pane show active" id="border-nav-home" role="tabpanel">
+            <div class="row mt-3 g-3">
+              @for (data of materiels; track $index) {
+                <div class="col-xxl-3 col-sm-6 mb-4">
+                  <div class="card real-estate-grid-widgets card-animate shadow-sm h-100">
+                    <div class="card-body p-0 position-relative" style="height: 180px; min-height: 180px;">
+                      <img src="{{data.image}}" alt="" class="rounded-top w-100 h-100 object-fit-cover">
+                      <button type="button" class="btn btn-subtle-warning custom-toggle btn-icon btn-sm active position-absolute" style="top: 10px; left: 10px;" data-bs-toggle="button">
+                        <span class="icon-on"><i class="bi bi-star"></i></span>
+                        <span class="icon-off"><i class="bi bi-star-fill"></i></span>
+                      </button>
+                    </div>
+                    <div class="card-body p-3">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <a href="javascript:void(0);" class="text-decoration-none">
+                          <h6 class="fs-5 text-capitalize mb-0 text-truncate">{{data.name}}</h6>
+                        </a>
+                      </div>
+                      <div class="mb-2">
+                        <span class="badge bg-success-subtle text-success rounded px-2 py-1 d-inline-flex align-items-center">
+                          <i class="bi bi-tag-fill me-1"></i> <span class="fw-medium">{{data.type}}</span>
+                        </span>
+                      </div>
+                      <div class="description-container mb-3" style="height: 32px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                        <p class="text-muted mb-0 small">{{data.description || 'No description available'}}</p>
+                      </div>
+                      <div class="mb-3">
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">Quantity : {{data.quantity}} </span>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-dashed">
+                        <h5 class="fw-bold mb-0 text-dark">{{data.price}} TND</h5>
+                        <a href="javascript:void(0);" class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                          Read More <i class="bi bi-chevron-right ms-1"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="showReservationCalendar" class="row mt-4">
+      <div class="col-xxl-10 mx-auto">
+        <div class="card">
+          <div class="card-header d-flex align-items-center">
+            <h5 class="card-title mb-0">Make Reservation</h5>
+            <button type="button" class="btn-close ms-auto" (click)="toggleReservationView()"></button>
+          </div>
+
+          <div class="card-body">
+            <!-- Date selection -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-5">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" [(ngModel)]="startDate" (change)="calculateDaysDifference()">
+              </div>
+              <div class="col-md-5">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" [(ngModel)]="endDate" (change)="calculateDaysDifference()">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Number of Persons</label>
+                <input type="number" class="form-control" [(ngModel)]="numberOfPersons" min="1"
+                       [max]="centre?.capcite || 1" (change)="calculateTotalPrice()">
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <span class="badge bg-info p-2">{{daysDifference}} days</span>
+              </div>
+            </div>
+
+            <!-- Item selection tabs -->
+            <ul class="nav nav-tabs mb-3">
+              <li class="nav-item">
+                <a [class.active]="currentBookingTab === 'logements'" class="nav-link" (click)="currentBookingTab = 'logements'">
+                  Bedrooms
+                </a>
+              </li>
+              <li class="nav-item">
+                <a [class.active]="currentBookingTab === 'materiels'" class="nav-link" (click)="currentBookingTab = 'materiels'">
+                  Tools
+                </a>
+              </li>
+              <li class="nav-item ms-auto">
+                <a [class.active]="currentBookingTab === 'cart'" class="nav-link" (click)="currentBookingTab = 'cart'">
+                  <i class="bi bi-cart"></i> Cart ({{selectedItems.length}})
+                </a>
+              </li>
+            </ul>
+
+            <!-- Logements tab -->
+            <div *ngIf="currentBookingTab === 'logements'" class="tab-pane active">
+              <div class="row g-3">
+                <div *ngFor="let logement of logments" class="col-md-6 col-lg-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                          <img [src]="logement.image" alt="Logement" class="rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                        </div>
+                        <div class="ms-3">
+                          <h6 class="mb-1">{{logement.type}}</h6>
+                          <p class="text-muted small mb-0">{{logement.description | slice:0:60}}{{logement.description.length > 60 ? '...' : ''}}</p>
+                        </div>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <span class="fw-bold">{{logement.price}} TND</span>
+                          <button class="btn btn-sm btn-primary ms-2" (click)="addToCart(logement, 'logement')">
+                            <i class="bi bi-plus"></i> Add
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Materiels tab -->
+            <div *ngIf="currentBookingTab === 'materiels'" class="tab-pane active">
+              <div class="row g-3">
+                <div *ngFor="let materiel of materiels" class="col-md-6 col-lg-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                          <img [src]="materiel.image" alt="Materiel" class="rounded" style="width: 80px; height: 80px; object-fit: cover;">
+                        </div>
+                        <div class="ms-3">
+                          <h6 class="mb-1">{{materiel.name}}</h6>
+                          <p class="text-muted small mb-0">{{materiel.description | slice:0:60}}{{materiel.description.length > 60 ? '...' : ''}}</p>
+                          <span class="fw-bold">{{materiel.price}} TND</span>
+                          <button class="btn btn-sm btn-primary ms-2" (click)="addToCart(materiel, 'materiel')">
+                            <i class="bi bi-plus"></i> Add
+                          </button>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cart tab -->
+            <div *ngIf="currentBookingTab === 'cart'" class="tab-pane active">
+              <div class="table-responsive mb-3">
+                <table class="table align-middle">
+                  <thead class="table-light">
+                  <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Price/Day</th>
+                    <th>Quantity</th>
+                    <th>Days</th>
+                    <th class="text-end">Subtotal</th>
+                    <th></th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let item of selectedItems; let i = index">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img [src]="item.item.image" alt="" class="rounded" width="40">
+                        <div class="ms-2">
+                          <span>{{item.itemType === 'logement' ? item.item.type : item.item.name}}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{item.itemType === 'logement' ? 'Logement' : 'Materiel'}}</td>
+                    <td>{{item.item.price}} TND</td>
+                    <td>
+                      <div class="input-group input-group-sm" style="width: 100px;">
+                        <button class="btn btn-outline-secondary" type="button"
+                                [disabled]="item.selectedQuantity <= 1"
+                                (click)="updateCartQuantity(i, -1)">-</button>
+                        <input type="text" class="form-control text-center" [(ngModel)]="item.selectedQuantity" readonly>
+                        <button class="btn btn-outline-secondary" type="button"
+                                [disabled]="item.selectedQuantity >= item.item.quantity"
+                                (click)="updateCartQuantity(i, 1)">+</button>
+                      </div>
+                    </td>
+                    <td>{{daysDifference}}</td>
+                    <td class="text-end">{{item.item.price * item.selectedQuantity * daysDifference}} TND</td>
+                    <td>
+                      <button class="btn btn-sm btn-danger" (click)="removeFromCart(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="selectedItems.length === 0">
+                    <td colspan="7" class="text-center py-3">
+                      <p class="mb-0">Your cart is empty</p>
+                      <button class="btn btn-sm btn-primary mt-2" (click)="currentBookingTab = 'logements'">
+                        Add items
+                      </button>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Order Summary -->
+              <div class="row">
+                <div class="col-md-6 ms-auto">
+                  <div class="card">
+                    <div class="card-body">
+                      <h5 class="card-title">Reservation Summary</h5>
+                      <div class="table-responsive">
+                        <table class="table table-sm">
+                          <tbody>
+                          <tr>
+                            <td>Camping Fee ({{daysDifference}} days × {{numberOfPersons}} persons):</td>
+                            <td class="text-end">{{centreFee}} TND</td>
+                          </tr>
+                          <tr>
+                            <td>Items Total:</td>
+                            <td class="text-end">{{itemsTotal}} TND</td>
+                          </tr>
+                          <tr class="fw-bold">
+                            <td>Total:</td>
+                            <td class="text-end">{{totalPrice}} TND</td>
+                          </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <button class="btn btn-primary w-100 mt-3"
+                              [disabled]="selectedItems.length === 0 || daysDifference === 0 || isCheckingAvailability"
+                              (click)="confirmBooking()">
+                        <span *ngIf="isCheckingAvailability" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        {{isCheckingAvailability ? 'Checking Availability...' : 'Confirm Reservation'}}
+                      </button>
+                      <div *ngIf="availabilityErrors.length > 0" class="alert alert-warning mt-3">
+                        <strong>Availability Issues:</strong>
+                        <ul class="mb-0 mt-2">
+                          <li *ngFor="let error of availabilityErrors">{{error}}</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--end col-->
+
+  <div class="col-xxl-3">
+    <div class="row">
+      <div class="col-lg-12">
+        <!-- Replace the hardcoded sidebar card content with this -->
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-4">
+              <div class="flex-grow-1">
+                <button type="button" class="btn btn-subtle-warning custom-toggle btn-icon btn-sm" >
+                  <span class="icon-on"><i class="bi bi-star"></i></span>
+                  <span class="icon-off"><i class="bi bi-star-fill"></i></span>
+                </button>
+              </div>
+            </div>
+            <div *ngIf="ownerCentre; else noOwnerData" class="text-center">
+              <img [src]="ownerCentre.image || 'assets/images/default-profile.jpg'" alt="" class="avatar-md rounded mx-auto d-block">
+              <h5 class="mt-3">{{ownerCentre.prenom}} {{ownerCentre.nom}} <i class="bi bi-patch-check-fill align-baseline text-info ms-1"></i></h5>
+              <p class="text-muted">Owner</p>
+              <div class="table-responsive">
+                <table class="table table-sm table-nowrap table-borderless mb-0">
+                  <tbody>
+                  <tr>
+                    <th>First Name</th>
+                    <td>{{ownerCentre.prenom}}</td>
+                  </tr>
+                  <tr>
+                    <th>Last Name</th>
+                    <td>{{ownerCentre.nom}}</td>
+                  </tr>
+                  <tr>
+                    <th>Email Address</th>
+                    <td>{{ownerCentre.email}}</td>
+                  </tr>
+                  <tr>
+                    <th>Phone Number</th>
+                    <td>{{ownerCentre.tel}}</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <ng-template #noOwnerData>
+              <div class="alert alert-info text-center">
+                <p>Owner information is not available</p>
+              </div>
+            </ng-template>
+            <ul class="list-unstyled hstack justify-content-center gap-2 mb-0 mt-4">
+              <!-- Social links remain unchanged -->
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Center Location</h5>
+            <div *ngIf="centre?.latitude && centre?.longitude; else noLocation"
+                 style="height: 300px;"
+                 leaflet
+                 [leafletOptions]="centerMapOptions">
+            </div>
+            <ng-template #noLocation>
+              <div class="alert alert-info">Location data not available for this center</div>
+            </ng-template>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header d-flex align-items-center">
+            <h6 class="card-title mb-0 flex-grow-1">Customer Reviews</h6>
+            <div class="flex-shrink-0">
+              <button class="btn btn-sm btn-outline-success me-2" (click)="openReviewModal()">
+                <i class="bi bi-plus-circle me-1"></i>Add Review
+              </button>
+              <span *ngIf="isLoadingReviews" class="spinner-border spinner-border-sm text-primary me-2"></span>
+              <button class="btn btn-sm btn-outline-primary" (click)="refreshReviews()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+              </button>
+            </div>
+          </div>
+          <div class="card-body px-0">
+            <ngx-simplebar class="card-body py-0" style="max-height: 330px;">
+              <div *ngIf="reviewsWithDetails && reviewsWithDetails.length > 0; else noReviews">
+                <div class="d-flex p-3 border-bottom" *ngFor="let reviewData of reviewsWithDetails">
+                  <div class="flex-shrink-0 me-3">
+                    <img [src]="reviewData.user?.image" alt="User"
+                         class="avatar-md rounded-circle">
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <h6 class="mb-0">{{reviewData.user?.prenom }} {{reviewData.user?.nom }}</h6>
+                      </div>
+                      <div *ngIf="reviewData.sentiment" class="ml-2">
+                <span class="badge"
+                      [ngClass]="{
+                    'bg-success-subtle text-success': reviewData.sentiment.label === 'POSITIVE',
+                    'bg-danger-subtle text-danger': reviewData.sentiment.label === 'NEGATIVE',
+                    'bg-warning-subtle text-warning': reviewData.sentiment.label === 'NEUTRAL'
+                  }">
+                  <i class="bi"
+                     [ngClass]="{
+                      'bi-emoji-smile': reviewData.sentiment.label === 'POSITIVE',
+                      'bi-emoji-frown': reviewData.sentiment.label === 'NEGATIVE',
+                      'bi-emoji-neutral': reviewData.sentiment.label === 'NEUTRAL'
+                    }"></i>
+                  {{reviewData.sentiment.label | titlecase}} ({{(reviewData.sentiment.score * 100).toFixed(0)}}%)
+                </span>
+                      </div>
+                      <div *ngIf="!reviewData.sentiment && reviewData.isAnalyzing" class="ml-2">
+                <span class="badge bg-secondary-subtle text-secondary">
+                  <span class="spinner-border spinner-border-sm me-1"></span> Analyzing...
+                </span>
+                      </div>
+                      <div *ngIf="reviewData.review.userId === currentUser.id" class="ms-2">
+                        <button class="btn btn-sm btn-outline-danger" (click)="deleteReview(reviewData.review.id)">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <p class="mb-0">{{reviewData.review.text}}</p>
+                  </div>
+                </div>
+              </div>
+              <ng-template #noReviews>
+                <div class="text-center py-5">
+                  <div class="avatar-md mx-auto mb-3">
+                    <div class="avatar-title rounded-circle bg-light text-primary">
+                      <i class="bi bi-chat-square-text fs-24"></i>
+                    </div>
+                  </div>
+                  <h5>No Reviews Yet</h5>
+                  <p class="text-muted">This camping center hasn't received any reviews yet.</p>
+                </div>
+              </ng-template>
+            </ngx-simplebar>
+          </div>
+        </div>
+
+      </div>
+      <!--end col-->
+    </div><!--end row-->
+  </div><!--end col-->
+</div><!--end row-->
+
+<div bsModal #reviewModal="bs-modal" class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reviewModalLabel">Add Review</h5>
+        <button type="button" class="btn-close" (click)="reviewModal.hide()"></button>
+      </div>
+
+      <form [formGroup]="reviewForm" (ngSubmit)="saveReview()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="review-text" class="form-label">Your Review<span class="text-danger">*</span></label>
+            <textarea
+              id="review-text"
+              formControlName="text"
+              class="form-control"
+              rows="5"
+              placeholder="Share your experience..."></textarea>
+            <div *ngIf="reviewForm.controls['text'].invalid && reviewForm.controls['text'].touched" class="text-danger mt-1">
+              Please enter a review (minimum 3 characters).
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="reviewModal.hide()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="reviewForm.invalid">
+            Submit Review
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

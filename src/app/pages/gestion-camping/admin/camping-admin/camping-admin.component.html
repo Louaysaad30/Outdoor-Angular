@@ -1,86 +1,376 @@
+<!-- Statistics Dashboard -->
+<div class="row mb-4">
+  <!-- Overview Cards -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-animate shadow-sm border-0 overflow-hidden">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="avatar-sm flex-shrink-0">
+            <span class="avatar-title bg-primary rounded-circle fs-3 d-flex align-items-center justify-content-center">
+              <i class="bi bi-buildings text-white"></i>
+            </span>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <p class="text-uppercase fw-medium text-muted mb-1 fs-6">Total Centers</p>
+            <h4 class="fs-3 fw-semibold mb-0">{{totalCenters}}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer p-0">
+        <div class="bg-primary opacity-75" style="height: 4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-animate shadow-sm border-0 overflow-hidden">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="avatar-sm flex-shrink-0">
+            <span class="avatar-title bg-success rounded-circle fs-3 d-flex align-items-center justify-content-center">
+              <i class="bi bi-check-circle text-white"></i>
+            </span>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <p class="text-uppercase fw-medium text-muted mb-1 fs-6">Verified Centers</p>
+            <h4 class="fs-3 fw-semibold mb-0">{{verifiedCenters}}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer p-0">
+        <div class="bg-success opacity-75" style="height: 4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-animate shadow-sm border-0 overflow-hidden">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="avatar-sm flex-shrink-0">
+            <span class="avatar-title bg-warning rounded-circle fs-3 d-flex align-items-center justify-content-center">
+              <i class="bi bi-calendar-check text-white"></i>
+            </span>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <p class="text-uppercase fw-medium text-muted mb-1 fs-6">Total Reservations</p>
+            <h4 class="fs-3 fw-semibold mb-0">{{totalReservations}}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer p-0">
+        <div class="bg-warning opacity-75" style="height: 4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-animate shadow-sm border-0 overflow-hidden">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <div class="avatar-sm flex-shrink-0">
+            <span class="avatar-title bg-info rounded-circle fs-3 d-flex align-items-center justify-content-center">
+              <i class="bi bi-chat-square-text text-white"></i>
+            </span>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <p class="text-uppercase fw-medium text-muted mb-1 fs-6">Total Reviews</p>
+            <h4 class="fs-3 fw-semibold mb-0">{{totalReviews}}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer p-0">
+        <div class="bg-info opacity-75" style="height: 4px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Main Table Card -->
 <div class="row">
-          <div class="col-lg-12">
-            <div class="card" id="centreCampingList">
-              <div class="card-header">
-                <div class="row align-items-center gy-3">
-                  <div class="col-lg-3 col-md-6 order-last order-md-first me-auto">
-                    <div class="search-box">
-                      <input type="text" class="form-control search" placeholder="Search for centre, name, address or something..." [(ngModel)]="term" (keyup)="filterData()">
-                      <i class="ri-search-line search-icon"></i>
-                    </div>
-                  </div>
-                  <div class="col-md-auto col-6 text-end">
-                    <div class="d-flex flex-wrap align-items-start gap-2">
-                      <button class="btn btn-subtle-danger d-none" id="remove-actions" >
-                        <i class="ri-delete-bin-2-line"></i>
-                      </button>
-                    </div>
+  <div class="col-lg-12">
+    <div class="card shadow-sm border-0" id="centreCampingList">
+      <div class="card-header bg-light p-3">
+        <div class="row align-items-center gy-3">
+          <div class="col-lg-5 col-md-6 order-last order-md-first me-auto">
+            <div class="input-group search-box shadow-sm">
+              <span class="input-group-text bg-white border-0">
+                <i class="ri-search-line text-muted"></i>
+              </span>
+              <input type="text" class="form-control border-0 shadow-none" placeholder="Search for centre, name, address..." [(ngModel)]="term" (keyup)="filterData()">
+            </div>
+          </div>
+          <div class="col-md-auto col-6 text-end">
+            <div class="d-flex flex-wrap align-items-start gap-2">
+              <button class="btn btn-danger d-none" id="remove-actions">
+                <i class="ri-delete-bin-2-line me-1"></i> Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-centered align-middle mb-0">
+            <thead class="bg-light">
+            <tr>
+              <th scope="col" class="sort cursor-pointer fw-semibold" (click)="onSort('name')">
+                Name
+              </th>
+              <th scope="col" class="sort cursor-pointer fw-semibold" (click)="onSort('address')">
+                Address
+              </th>
+              <th scope="col" class="sort cursor-pointer fw-semibold" (click)="onSort('prixJr')">
+                Price
+              </th>
+              <th scope="col" class="sort cursor-pointer fw-semibold" (click)="onSort('capcite')">
+                Capacity
+              </th>
+              <th scope="col" class="sort cursor-pointer fw-semibold" (click)="onSort('verified')">
+                Status
+              </th>
+              <th scope="col" class="fw-semibold text-center">Action</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr *ngFor="let centre of centre; trackBy: trackById" class="hover-shadow">
+              <td (click)="viewCenterDetails(centre.idCentre)" class="fw-medium">{{centre.name}}</td>
+              <td (click)="viewCenterDetails(centre.idCentre)" class="text-muted">{{centre.address}}</td>
+              <td (click)="viewCenterDetails(centre.idCentre)" class="fw-medium">{{centre.prixJr}} TND</td>
+              <td (click)="viewCenterDetails(centre.idCentre)" class="fw-medium">{{centre.capcite}}</td>
+              <td (click)="viewCenterDetails(centre.idCentre)">
+                  <span class="badge rounded-pill" [ngClass]="{'bg-success-subtle text-success': centre.verified, 'bg-warning-subtle text-warning': !centre.verified}">
+                    <i class="bi" [ngClass]="{'bi-check-circle-fill': centre.verified, 'bi-exclamation-circle-fill': !centre.verified}"></i>
+                    {{centre.verified ? 'Verified' : 'Not Verified'}}
+                  </span>
+              </td>
+              <td>
+                <div class="d-flex justify-content-center gap-2">
+                  <button class="btn btn-sm btn-icon btn-success" *ngIf="!centre.verified" (click)="verifyCenter(centre.idCentre)" title="Verify">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-danger" (click)="deactivateCenter(centre.idCentre)" title="Deactivate">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                  <button class="btn btn-sm btn-icon btn-primary" (click)="viewCenterDetails(centre.idCentre)" title="View Details">
+                    <i class="bi bi-info-lg"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+
+          <div class="noresult" style="display: none;">
+            <div class="text-center py-4">
+              <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title bg-soft-primary text-primary rounded-circle fs-1">
+                  <i class="bi bi-search"></i>
+                </div>
+              </div>
+              <h5 class="mt-2">No Centers Found</h5>
+              <p class="text-muted mb-0">We couldn't find any centers matching your search.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="row mt-3 align-items-center p-3" id="pagination-element" *ngIf="centre.length > 0">
+          <div class="col-sm">
+            <div class="text-muted">
+              Showing <span class="fw-semibold">{{centre.length}}</span> of <span class="fw-semibold">{{filteredCentreList.length}}</span> Centers
+            </div>
+          </div>
+          <div class="col-sm-auto mt-3 mt-sm-0">
+            <pagination
+              class="pagination-wrap justify-content-center hstack gap-2"
+              [totalItems]="filteredCentreList.length"
+              [itemsPerPage]="4"
+              [maxSize]="5"
+              [boundaryLinks]="true"
+              (pageChanged)="pageChanged($event)">
+            </pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Redesigned Center Details Modal -->
+<div bsModal #centerDetailsModal="bs-modal" class="modal fade" tabindex="-1" aria-labelledby="centerDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="centerDetailsModalLabel">
+          <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+          Center Details
+        </h5>
+        <button type="button" class="btn-close" (click)="centerDetailsModal.hide()"></button>
+      </div>
+      <div class="modal-body p-4" *ngIf="selectedCenter">
+        <!-- Status and Action Buttons -->
+        <div class="row mb-4 align-items-center">
+          <div class="col-md-7">
+            <span class="badge rounded-pill px-3 py-2 fs-6"
+                  [ngClass]="{'bg-success-subtle text-success': selectedCenter.verified, 'bg-warning-subtle text-warning': !selectedCenter.verified}">
+              <i class="bi" [ngClass]="{'bi-check-circle-fill': selectedCenter.verified, 'bi-exclamation-circle-fill': !selectedCenter.verified}"></i>
+              {{selectedCenter.verified ? 'Verified Center' : 'Pending Verification'}}
+            </span>
+          </div>
+          <div class="col-md-5 text-md-end mt-3 mt-md-0">
+            <button *ngIf="!selectedCenter.verified" type="button" class="btn btn-success" (click)="verifySelectedCenter()">
+              <i class="bi bi-check-circle-fill me-1"></i> Verify
+            </button>
+            <button *ngIf="selectedCenter.verified" type="button" class="btn btn-danger" (click)="deactivateCenter(selectedCenter.idCentre)">
+              <i class="bi bi-x-circle-fill me-1"></i> Deactivate
+            </button>
+          </div>
+        </div>
+
+        <!-- Center Details -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-primary bg-opacity-10 py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-buildings-fill fs-4 text-primary me-2"></i>
+              <h5 class="mb-0 text-primary">Center Information</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center">
+                  <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                    <i class="bi bi-tag-fill text-primary"></i>
+                  </span>
+                  <div>
+                    <h6 class="text-muted fw-medium mb-0">Name</h6>
+                    <p class="mb-0 fw-semibold">{{selectedCenter.name}}</p>
                   </div>
                 </div>
               </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
-                    <thead class="text-muted table-light">
-                    <tr>
-                      <th scope="col" class="sort cursor-pointer" (click)="onSort('name')">Name</th>
-                      <th scope="col" class="sort cursor-pointer" (click)="onSort('address')">Address</th>
-                      <th scope="col" class="sort cursor-pointer" (click)="onSort('latitude')">Latitude</th>
-                      <th scope="col" class="sort cursor-pointer" (click)="onSort('longitude')">Longitude</th>
-                      <th scope="col" class="sort cursor-pointer" (click)="onSort('capcite')">Capacity</th>
-                      <th scope="col" class="sort cursor-pointer" (click)="onSort('verified')">Verified</th>
-                      <th scope="col">Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr *ngFor="let centre of centre; trackBy: trackById">
-                      <td>{{centre.name}}</td>
-                      <td>{{centre.address}}</td>
-                      <td>{{centre.latitude}}</td>
-                      <td>{{centre.longitude}}</td>
-                      <td>{{centre.capcite}}</td>
-                      <td>
-                          <span class="badge" [ngClass]="{'bg-success-subtle text-success': centre.verified, 'bg-warning-subtle text-warning': !centre.verified}">
-                            <i class="bi bi-house-door align-baseline me-1"></i>
-                            {{centre.verified ? 'Verified' : 'Not Verified'}}
-                          </span>
-                      </td>
-                      <td>
-                        <div class="d-flex gap-2">
-                          <button class="btn btn-outline-success btn-sm px-3" (click)="verifyCenter(centre.idCentre)">
-                            <i class="bi bi-check-circle me-1"></i> Verify
-                          </button>
-                          <button class="btn btn-outline-danger btn-sm px-3" (click)="deactivateCenter(centre.idCentre)">
-                            <i class="bi bi-x-circle me-1"></i> Deactivate
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-
-                  <div class="noresult" style="display: none;">
-                    <div class="text-center py-4">
-                      <i class="ph-magnifying-glass fs-1 text-primary"></i>
-                      <h5 class="mt-2">Sorry! No Result Found</h5>
-                    </div>
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center">
+                  <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                    <i class="bi bi-hash text-primary"></i>
+                  </span>
+                  <div>
+                    <h6 class="text-muted fw-medium mb-0">Price per Day</h6>
+                    <p class="mb-0 fw-semibold">{{selectedCenter.prixJr}}  TND</p>
                   </div>
                 </div>
-                <div class="row mt-3 align-items-center" id="pagination-element" *ngIf="centre.length > 0">
-                  <div class="col-sm">
-                    <div class="text-muted text-center text-sm-start">
-                      Showing <span class="fw-semibold">{{centre.length}}</span> of <span class="fw-semibold">{{filteredCentreList.length}}</span> Results
-                    </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center">
+                  <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                    <i class="bi bi-geo-alt-fill text-primary"></i>
+                  </span>
+                  <div>
+                    <h6 class="text-muted fw-medium mb-0">Address</h6>
+                    <p class="mb-0">{{selectedCenter.address}}</p>
                   </div>
-                  <div class="col-sm-auto mt-3 mt-sm-0">
-                    <pagination class="pagination-wrap justify-content-center hstack gap-2"
-                                [totalItems]="filteredCentreList.length"
-                                [itemsPerPage]="4"
-                                (pageChanged)="pageChanged($event)">
-                    </pagination>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center">
+                  <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                    <i class="bi bi-people-fill text-primary"></i>
+                  </span>
+                  <div>
+                    <h6 class="text-muted fw-medium mb-0">Capacity</h6>
+                    <p class="mb-0 fw-semibold">{{selectedCenter.capcite}} guests</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Owner Details -->
+        <div class="card shadow-sm border-0" *ngIf="ownerDetails">
+          <div class="card-header bg-info bg-opacity-10 py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-person-badge-fill fs-4 text-info me-2"></i>
+              <h5 class="mb-0 text-info">Owner Information</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-4">
+              <div class="me-3">
+                <div class="avatar-lg">
+                  <img [src]="ownerDetails.image || 'assets/images/users/avatar-1.jpg'" alt="Owner Photo" class="img-fluid rounded">
+                </div>
+              </div>
+              <div>
+                <h5 class="mb-1 fw-semibold">{{ownerDetails.prenom}} {{ownerDetails.nom}}</h5>
+                <p class="mb-0 text-muted">
+                  <i class="bi bi-envelope-fill me-1"></i> {{ownerDetails.email}}
+                </p>
+                <p class="mb-0 text-muted mt-1" *ngIf="ownerDetails.tel">
+                  <i class="bi bi-telephone-fill me-1"></i> {{ownerDetails.tel}}
+                </p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <div class="d-flex align-items-center">
+                  <span class="bg-info bg-opacity-10 p-2 rounded-circle me-3">
+                    <i class="bi bi-person-vcard-fill text-info"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading state for owner details -->
+        <div class="card shadow-sm border-0" *ngIf="!ownerDetails && isLoadingOwner">
+          <div class="card-header bg-info bg-opacity-10 py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-person-badge-fill fs-4 text-info me-2"></i>
+              <h5 class="mb-0 text-info">Owner Information</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="d-flex flex-column align-items-center justify-content-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="text-center mt-3 text-muted">Loading owner details...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error state for owner details -->
+        <div class="card shadow-sm border-0" *ngIf="!ownerDetails && !isLoadingOwner">
+          <div class="card-header bg-danger bg-opacity-10 py-3">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-person-x-fill fs-4 text-danger me-2"></i>
+              <h5 class="mb-0 text-danger">Owner Information</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="text-center py-4">
+              <div class="avatar-lg mx-auto mb-3">
+                <div class="avatar-title rounded-circle bg-soft-danger text-danger fs-1">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+              </div>
+              <h5 class="mt-2">Owner information not available</h5>
+              <p class="text-muted">Unable to load the owner details for this center.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="centerDetailsModal.hide()">Close</button>
+        <button *ngIf="selectedCenter && !selectedCenter.verified" type="button" class="btn btn-success" (click)="verifySelectedCenter()">
+          <i class="bi bi-check-circle-fill me-1"></i> Verify Center
+        </button>
+        <button *ngIf="selectedCenter && selectedCenter.verified" type="button" class="btn btn-danger" (click)="deactivateCenter(selectedCenter.idCentre)">
+          <i class="bi bi-x-circle-fill me-1"></i> Deactivate Center
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
