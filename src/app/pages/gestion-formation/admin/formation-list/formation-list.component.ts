@@ -3,6 +3,7 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { FormationListService } from '../../services/formation-list.service';
 import { FormationRequest } from '../../models/formation-request.model';
+import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
 
 @Component({
@@ -14,9 +15,8 @@ export class FormationListComponent implements OnInit {
   @ViewChild('addFormationModal', { static: false }) addFormationModal?: ModalDirective;
   @ViewChild('mapModal', { static: false }) mapModal?: ModalDirective;
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
-
+  generatedPreview: string | null = null;
   deleteID: number | null = null;
-  
   formationForm!: UntypedFormGroup;
   isPresentiel = true;
   isOnline = false;
@@ -34,7 +34,7 @@ export class FormationListComponent implements OnInit {
   private marker!: L.Marker;
   private editingFormationId: number | null = null;
 
-  constructor(private fb: UntypedFormBuilder, private formationService: FormationListService) {}
+  constructor(private fb: UntypedFormBuilder, private formationService: FormationListService, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.breadCrumbItems = [
@@ -66,6 +66,67 @@ export class FormationListComponent implements OnInit {
     this.onModeChange();
   }
 
+  isImproving = false;
+  previewedDescription = '';
+  onImproveDescription() {
+    const description = this.formationForm.get('description')?.value;
+  
+    if (!description || description.trim() === '') {
+      alert('Veuillez entrer une description.');
+      return;
+    }
+  
+    this.isImproving = true;
+    const body = {
+      text: `Rédige une description professionnelle en français pour une formation : ${description}`
+    };
+  
+    this.http.post('http://localhost:9094/Formation-Service/api/formations/improve-description', body, { responseType: 'text' })
+      .subscribe({
+        next: (res: string) => {
+          this.previewedDescription = res;
+          this.isImproving = false;
+        },
+        error: (err) => {
+          console.error('Erreur HuggingFace:', err);
+          alert('Erreur lors de l\'amélioration de la description.');
+          this.isImproving = false;
+        }
+      });
+  }
+          
+    onSuggestSponsor() {
+    const description = this.formationForm.get('description')?.value;
+    const prix = this.formationForm.get('price')?.value;
+
+    if (!description || !prix) {
+      alert("Merci de remplir la description et le prix avant de suggérer un sponsor.");
+      return;
+    }
+
+    const body = {
+      description: description,
+      prix: prix,
+      mode: this.formationForm.get('mode')?.value,
+      lieu: this.formationForm.get('lieu')?.value || ''
+    };
+
+    this.http.post<any>('http://localhost:9094/Formation-Service/api/formations/suggest-sponsor', body)
+      .subscribe({
+        next: (res) => {
+          if (res.sponsorId) {
+            this.formationForm.get('sponsorId')?.setValue(res.sponsorId);
+            alert("🎯 Suggestion appliquée : sponsor ID " + res.sponsorId);
+          } else {
+            alert("Aucun sponsor suggéré.");
+          }
+        },
+        error: (err) => {
+          console.error('Erreur suggestion:', err);
+          alert('Erreur lors de la suggestion.');
+        }
+      });
+  }
   onSearchEnter() {
     const input = document.getElementById('searchBox') as HTMLInputElement;
     if (input?.value.trim()) {

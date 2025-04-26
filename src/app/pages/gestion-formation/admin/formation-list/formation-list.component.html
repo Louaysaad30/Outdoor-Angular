@@ -169,18 +169,44 @@
                 placeholder="Ex: 99.99"
               />
             </div>
-
             <div class="col-12">
               <label class="form-label">Description</label>
-              <textarea
-                class="form-control"
-                formControlName="description"
-                rows="3"
-                placeholder="Brève description de la formation"
-              ></textarea>
+            
+              <div class="input-group mb-2">
+                <textarea
+                  class="form-control"
+                  formControlName="description"
+                  rows="3"
+                  placeholder="Brève description de la formation"
+                ></textarea>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  (click)="onImproveDescription()"
+                  title="Améliorer automatiquement la description"
+                  [disabled]="isImproving"
+                >
+                  <span *ngIf="!isImproving">✨</span>
+                  <span *ngIf="isImproving">...</span>
+                </button>
+              </div>
+            
+              <div *ngIf="previewedDescription" class="border rounded p-2 bg-light mb-2">
+                <strong>Aperçu de la description générée :</strong>
+                <p class="mt-1">{{ previewedDescription }}</p>
+                <button class="btn btn-sm btn-outline-success" (click)="formationForm.get('description')?.setValue(previewedDescription)">
+                  ✅ Utiliser cette description
+                </button>
+              </div>
+            
+              <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-outline-success btn-sm" (click)="onSuggestSponsor()">
+                  🤖 Suggérer un sponsor
+                </button>
+              </div>
             </div>
-
-            <div class="col-md-6">
+            
+                        <div class="col-md-6">
               <label class="form-label">Image</label>
               <input
                 type="file"

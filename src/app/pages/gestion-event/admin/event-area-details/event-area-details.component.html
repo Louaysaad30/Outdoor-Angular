@@ -20,7 +20,7 @@
                   <li><a class="dropdown-item" href="javascript:void(0);" (click)="removeItem()"><i class="bi bi-trash3 me-1 align-baseline"></i> Delete</a></li>
                 </ul>
               </div>
-              <img [src]="eventArea?.areaImg" alt="Event Area Image" class="img-fluid rounded mb-3" style="height: 450px ;width: 890px">
+              <img [src]="eventArea.areaImg" alt="Event Area Image" class="img-fluid rounded mb-3" style="height: 450px ;width: 890px">
             </div>
           </div>
         </ngx-slick-carousel><!--end slider-->
@@ -30,10 +30,10 @@
             <span class="icon-on"><i class="bi bi-star"></i></span>
             <span class="icon-off"><i class="bi bi-star-fill"></i></span>
           </button>
-          <h6 class="card-title">{{ eventArea?.name }}</h6>
+          <h6 class="card-title">{{ eventArea.name }}</h6>
           <div class="text-muted hstack gap-2 flex-wrap list-unstyled mb-3">
             <div>
-              <i class="bi bi-geo-alt align-baseline me-1"></i>  {{ eventArea?.address }}
+              <i class="bi bi-geo-alt align-baseline me-1"></i>  {{ eventArea.address }}
             </div>
             <div class="vr"></div>
             <div>

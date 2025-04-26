@@ -1,0 +1,27 @@
+.ribbon-top-left {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+.ribbon-top-left span {
+    position: absolute;
+    display: block;
+    width: 140px;
+    padding: 5px 0;
+    background: #ffc107; // Couleur par défaut si jamais pas ngClass
+    color: white;
+    text-align: center;
+    transform: rotate(-45deg);
+    transform-origin: 0 0;
+    top: 15px;
+    left: -40px;
+    font-weight: bold;
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  
