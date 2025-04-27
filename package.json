@@ -71,7 +71,7 @@
     "maplibre-gl": "^5.2.0",
     "masonry-layout": "^4.2.2",
     "moment": "^2.29.4",
-    "ng-apexcharts": "^1.15.0",
+      "ng-apexcharts": "1.8.0",
     "ng-otp-input": "^1.9.3",
     "ng2-dragula": "^5.1.0",
     "ng2-search-filter": "^0.5.1",

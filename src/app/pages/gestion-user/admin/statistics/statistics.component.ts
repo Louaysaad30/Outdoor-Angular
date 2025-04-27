@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { FormsModule } from '@angular/forms';
+import { FormsModule  } from '@angular/forms';
 
 @Component({
   selector: 'app-statistics',
@@ -52,7 +52,7 @@ export class StatisticsComponent implements OnInit {
   loadStatistics(): void {
     this.isLoading = true;
     this.error = '';
-  
+
     forkJoin({
       total: this.statisticsService.getTotalUsers(),
       verified: this.statisticsService.getVerifiedUsers(),
@@ -81,8 +81,8 @@ export class StatisticsComponent implements OnInit {
         // Prepare chart data for "Users by Role"
         this.usersByRoleChartLabels = Object.keys(this.usersByRole);
         this.usersByRoleChartData = Object.values(this.usersByRole);
-      
-  
+
+
         // Messages by User chart
         this.messagesByUserChartLabels = Object.keys(this.messagesByUser).map(userId => `User ${userId}`);
         this.messagesByUserChartData = [
@@ -91,7 +91,7 @@ export class StatisticsComponent implements OnInit {
             data: Object.values(this.messagesByUser)
           }
         ];
-  
+
         // Messages by Chat Room chart
         this.messagesByChatRoomChartLabels = Object.keys(this.messagesByChatRoom).map(roomId => `Room ${roomId}`);
         this.messagesByChatRoomChartData = [
@@ -100,7 +100,7 @@ export class StatisticsComponent implements OnInit {
             data: Object.values(this.messagesByChatRoom)
           }
         ];
-  
+
         this.isLoading = false;
       },
       error: (err) => {
