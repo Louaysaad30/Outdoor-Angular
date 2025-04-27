@@ -8,8 +8,6 @@ const routes: Routes = [
   {path:"forumpost",component:ForumPostComponent},
   {path:"addPost",component:AddPostComponent},
   {path:"mesPost",component:MesPostsComponent},
-
-
 ];
 
 @NgModule({

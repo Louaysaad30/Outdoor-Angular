@@ -33,7 +33,7 @@ import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
     ReactiveFormsModule,
     BsDropdownModule,
     TabsModule,
-    ModalModule
+    ModalModule,
   ],
   templateUrl: './mes-posts.component.html',
   styleUrl: './mes-posts.component.scss'
