@@ -14,10 +14,18 @@ import { RouterModule } from '@angular/router';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { PaginationModule } from 'ngx-bootstrap/pagination';
 import { ModalModule } from 'ngx-bootstrap/modal';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { CountUpModule } from 'ngx-countup';
+import { OrdersComponent } from './orders/orders.component';
+import { FlatpickrModule } from 'angularx-flatpickr';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
+
 
 
 @NgModule({
-  declarations: [AddProductComponent, ProductListComponent],
+  declarations: [AddProductComponent, ProductListComponent, AddProductCodeComponent, AddPCategoryComponent,OrdersComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -29,9 +37,15 @@ import { ModalModule } from 'ngx-bootstrap/modal';
     RouterModule,
     BsDropdownModule.forRoot(),
     PaginationModule.forRoot(),
+    CountUpModule,
     ModalModule.forRoot(),
-    AddProductCodeComponent,
-    AddPCategoryComponent,
+    NgApexchartsModule,
+    FlatpickrModule.forRoot(),
+    TooltipModule.forRoot(),
+    BsDropdownModule.forRoot(),
+    BsDatepickerModule.forRoot(),
+
+
 
   ]
 })

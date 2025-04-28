@@ -150,4 +150,64 @@ createPost(post: Post, mediaFiles?: File[]): Observable<Post> {
                 getTopRatedPosts(): Observable<any[]> {
                   return this.http.get<any[]>(`${this.apiUrl}/top-rated-posts`);
                 }
+
+
+
+                generateContent(description: string, contentType: string): Observable<any> {
+                  const params = {
+                    description: description,
+                    contentType: contentType
+                  };
+                  return this.http.post(`${this.apiUrl}`, null, { params });
+                }
+
+                checkContentStatus(postId: string): Observable<any> {
+                  return this.http.get(`${this.apiUrl}/content-status/${postId}`);
+                }
+
+                getPostsByUserId(userId: number) {
+                  return this.http.get<Post[]>(`${this.apiUrl}/user/${userId}`);
+                }
+
+                // Add these methods to your post.service.ts
+
+                // Method to translate text
+                translateText(text: string, targetLang: string): Observable<any> {
+                  const requestBody = {
+                    text: text,
+                    targetLang: targetLang
+                  };
+                  return this.http.post<any>(`${this.apiUrl}/translate`, requestBody).pipe(
+                    catchError(error => {
+                      console.error('Error translating text:', error);
+                      return throwError(() => new Error('Failed to translate text. Please try again later.'));
+                    })
+                  );
+                }
+
+                // Method to get available languages for translation
+                getAvailableLanguages(): Observable<Map<string, string>> {
+                  return this.http.get<Map<string, string>>(`${this.apiUrl}/languages`).pipe(
+                    catchError(error => {
+                      console.error('Error fetching available languages:', error);
+                      return throwError(() => new Error('Failed to load available languages.'));
+                    })
+                  );
+                }
+
+
+// Method to analyze text sentiment
+analyzeText(text: string): Observable<any> {
+  return this.http.post(`${this.apiUrl}/analyze`, text, {
+    responseType: 'text'
+  }).pipe(
+    catchError(error => {
+      console.error('Error analyzing text:', error);
+      return throwError(() => new Error('Failed to analyze text. Please try again later.'));
+    })
+  );
+}
+
+
+
               }

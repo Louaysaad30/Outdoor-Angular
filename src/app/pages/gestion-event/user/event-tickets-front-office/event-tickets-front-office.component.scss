@@ -35,3 +35,34 @@
     background-color: rgba(13, 202, 240, 0.1); // Light info/blue
   }
 }
+.qr-code-container {
+  padding: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+
+  .reservation-qr-code {
+    display: inline-block;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Optional animation on hover */
+.reservation-qr-code:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+.breadcrumb-link-hover {
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #0d6efd !important; /* Bootstrap primary blue color */
+    text-decoration: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+  }
+}

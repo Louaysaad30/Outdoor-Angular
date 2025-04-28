@@ -63,13 +63,9 @@ export class CampingComponent {
   centre: CentreCamping[] = [];
   centrelist: CentreCamping[] = [];
   filteredCentreList: CentreCamping[] = [];
-
   imageUrl: string = '';
   map: any;
-
-
-
-
+  marker: any;
 
   submitted = false;
   products: any;
@@ -118,7 +114,9 @@ export class CampingComponent {
       address: ['', Validators.required],
       capcite: ['', Validators.required],
       image: ['', Validators.required],
-      prixJr: [0, Validators.required] // Add this line
+      prixJr: ['', Validators.required] ,
+      numTel: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]] // Add numTel with validation
+
 
     });
 
@@ -129,13 +127,12 @@ export class CampingComponent {
       address: ['', Validators.required],
       capcite: ['', Validators.required],
       image: ['', Validators.required],
-      prixJr: [0, Validators.required] // Add this line
+      prixJr: [0, Validators.required], // Add this line,
+      numTel: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]] // Add numTel with validation
+
 
 
     });
-
-
-
 
     /**
      * BreadCrumb
@@ -187,15 +184,25 @@ export class CampingComponent {
     if (this.map) {
       this.map.remove();
       this.map = null; // Clear the reference
+      this.marker = null;
     }
 
     // Initialize the map with the given mapId
     try {
-      this.map = L.map(mapId).setView([34.0, 9.0], 7);
+      this.map = L.map(mapId).setView([36.8044,10.1693], 9);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(this.map);
+
+      const customIcon = L.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
 
       this.map.on('click', (e: any) => {
         const { lat, lng } = e.latlng;
@@ -205,7 +212,17 @@ export class CampingComponent {
           this.editCampingForm.patchValue({ latitude: lat, longitude: lng });
         }
         this.getAddress(lat, lng);
+        if (this.marker) {
+          this.map.removeLayer(this.marker);
+        }
+
+        // Add new marker at clicked position
+        this.marker = L.marker([lat, lng], { icon: customIcon })
+          .addTo(this.map)
+
       });
+
+
 
       // Force update the dimensions
       setTimeout(() => {
@@ -235,14 +252,22 @@ export class CampingComponent {
     });
   }
 
+
+
+
+
+
   onChangeImage(event: any) {
     const file = event.target.files[0]; // Get the selected file
     if (file) {
       this.centreCampingService.uploadImage(file).subscribe(response => {
         console.log('Image uploaded successfully', response);
         this.imageUrl = response.fileUrl; // Store the image URL
-        this.centreCampingForm.get('image')?.setValue(this.imageUrl);
-
+        if (this.addProperty?.isShown) {
+          this.centreCampingForm.get('image')?.setValue(this.imageUrl);
+        } else if (this.editProperty?.isShown) {
+          this.editCampingForm.get('image')?.setValue(this.imageUrl);
+        }
         console.log('Image URL:', this.imageUrl);
 
       });
@@ -253,7 +278,7 @@ export class CampingComponent {
     if (this.centreCampingForm.valid) {
 
       const formData = this.centreCampingForm.value;
-      formData.idOwner = this.currentUser.id; 
+      formData.idOwner = this.currentUser.id;
       this.centreCampingService.addCentreCamping(formData).subscribe({
         next: (response) => {
           console.log('Camping center added:', response);
@@ -333,6 +358,7 @@ export class CampingComponent {
       next: (response) => {
         this.editId = id; // Store the id
         this.editCampingForm.patchValue(response);
+        console.log('Edit form data:', this.editCampingForm.value);
         this.editProperty?.show();
       },
       error: (error) => {
@@ -344,8 +370,8 @@ export class CampingComponent {
   updateCentreCamping() {
     if (this.editCampingForm.valid) {
       this.editCampingForm.patchValue({ image: this.imageUrl });
-
       const formData = this.editCampingForm.value;
+
 
       this.centreCampingService.updateCentreCamping(this.editId ,formData).subscribe({
         next: (response) => {
@@ -378,6 +404,7 @@ export class CampingComponent {
         confirmButtonColor: '#ffcc00',
         showCancelButton: true,
       });
+      console.log(this.editCampingForm.value)
     }
   }
 
@@ -468,10 +495,6 @@ export class CampingComponent {
     })
   }
 
-
-
-
-
   onSearch(event: any): void {
     const searchTerm = event.target.value?.toLowerCase() || '';
     this.filteredCentreList = this.centrelist.filter(centre =>
@@ -498,6 +521,24 @@ export class CampingComponent {
       noResultElement.style.display = 'none';
       paginationElement.classList.remove('d-none')
     }
+  }
+
+  getTotalMaterielQuantity(centre: any): number {
+    if (!centre.materiels || !Array.isArray(centre.materiels)) {
+      return 0;
+    }
+    return centre.materiels.reduce((total: number, materiel: any) => {
+      return total + (materiel.quantity || 0);
+    }, 0);
+  }
+
+  getTotalLogementQuantity(centre: any): number {
+    if (!centre.logements || !Array.isArray(centre.logements)) {
+      return 0;
+    }
+    return centre.logements.reduce((total: number, logement: any) => {
+      return total + (logement.quantity || 0);
+    }, 0);
   }
 
 

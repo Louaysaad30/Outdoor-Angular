@@ -6,8 +6,7 @@ import { CodeProduit } from '../../models/CodeProduit';
 
 @Component({
   selector: 'app-add-product-code',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  standalone: false,
   templateUrl: './add-product-code.component.html'
 })
 export class AddProductCodeComponent implements OnInit {

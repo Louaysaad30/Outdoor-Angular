@@ -1,132 +1,175 @@
-<div class="row justify-content-center">
-    <div class="col-xxl-10">
-        <div class="card">
-            <div class="row g-0 product-list">
-                <div class="col-xxl-9">
-                    <div class="card-header d-flex align-items-center gap-2">
-                        <h5 class="card-title flex-grow-1 mb-0">Shopping Cart</h5>
-
-                        <div class="flex-shrink-0">
-                            <span class="badge bg-danger-subtle text-danger">{{cartData?.length}} Items</span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table align-middle table-nowrap table-borderless mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Price</th>
-                                        <th>Quantity</th>
-                                        <th>Total</th>
-                                        <th>Action</th>  <!-- New column -->
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @for (item of cartData; track item.idLigneCommande) {
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <img [src]="item.produit.imageProduit"
-                                                         [alt]="item.produit.nomProduit"
-                                                         class="avatar-sm">
-                                                    <div class="ms-3">
-                                                        <h5 class="mb-1">{{item.produit.nomProduit}}</h5>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>${{item.produit.prixProduit}}</td>
-                                            <td>
-                                                <div class="input-step">
-                                                    <button type="button" class="minus"
-                                                            [disabled]="item.quantite <= 1"
-                                                            (click)="calculateQty('0', item.quantite, $index)">–</button>
-                                                    <input type="number" [value]="item.quantite" readonly>
-                                                    <button type="button" class="plus"
-                                                            (click)="calculateQty('1', item.quantite, $index)">+</button>
-                                                </div>
-                                            </td>
-                                            <td>${{(item.produit?.prixProduit || 0) * item.quantite}}</td>
-                                            <td>
-                                                <div class="d-flex gap-2">
-                                                    <button class="btn btn-sm btn-danger"
-                                                            (click)="deleteLigneCommande(item.idLigneCommande)"
-                                                            [disabled]="!item.idLigneCommande">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xxl-3">
-                    <div class="border-start-xxl border-top-xxl-0 border-top h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Order Summary</h5>
-                        </div>
-                        <div class="card-body mt-2">
-                            <div class="table-responsive table-card">
-                                <table class="table table-borderless">
-                                    <tbody>
-                                        <tr>
-                                            <td class="fw-semibold" colspan="2">Sub Total :</td>
-                                            <td class="fw-semibold text-end cart-subtotal">${{subtotal}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">Service Fee :</td>
-                                            <td class="text-end cart-fee">${{flatFee}}</td>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="2">Total (USD) :</th>
-                                            <td class="text-end">
-                                                <span class="fw-semibold cart-total">
-                                                    ${{getDisplayTotal()}}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="text-end mt-4">
-                                <a routerLink="/marketplacefront/user/market-place" class="btn btn-secondary me-1">Continue Shopping</a>
-                                <a routerLink="/marketplacefront/user/checkout" class="btn btn-primary me-1">Checkout</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container py-5">
+  <!-- Page Header -->
+  <div class="row mb-5">
+    <div class="col-12">
+      <h2 class="fw-bold mb-0">Your Cart</h2>
+      <p class="text-muted mt-2">Review and manage your selected items</p>
     </div>
+  </div>
+
+  <!-- Empty Cart Message -->
+  <div *ngIf="cartData.length === 0" class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm text-center p-5">
+        <div class="py-5">
+          <div class="mb-4">
+            <i class="bi bi-cart-x text-primary" style="font-size: 64px;"></i>
+          </div>
+          <h3 class="mb-3">Your cart is empty</h3>
+          <p class="text-muted mb-4">Looks like you haven't added any products to your cart yet.</p>
+          <a routerLink="/marketplacefront/user/market-place" class="btn px-4 py-2"
+             style="background-color: #4e73df; color: white; border: none; transition: all 0.2s; box-shadow: 0 2px 5px rgba(78, 115, 223, 0.2);">
+            Start Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Content -->
+  <div *ngIf="cartData.length > 0" class="row g-4">
+    <!-- Cart Items -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-semibold mb-0">Shopping Cart <span class="badge rounded-pill bg-primary ms-2">{{cartData.length}}</span></h5>
+
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <!-- Cart Items List -->
+          <div class="list-group list-group-flush">
+            <div *ngFor="let item of cartData; let i = index" class="list-group-item p-4 border-bottom">
+              <div class="row align-items-center">
+                <!-- Product Image -->
+                <div class="col-md-2 col-4 mb-3 mb-md-0">
+                  <div class="position-relative rounded overflow-hidden" style="aspect-ratio: 1/1;">
+                    <img [src]="item.produit?.imageProduit || 'assets/images/placeholder.png'"
+                         alt="{{item.produit?.nomProduit}}"
+                         class="img-fluid position-absolute w-100 h-100"
+                         style="object-fit: cover;">
+                  </div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="col-md-5 col-8 mb-3 mb-md-0">
+                  <h6 class="mb-1 product-title">
+                    <a [routerLink]="['/marketplacefront/user/product-details', item.produit?.idProduit]" class="text-reset text-decoration-none">
+                      {{item.produit?.nomProduit}}
+                    </a>
+                  </h6>
+                  <p class="mb-2 text-muted small">{{item.produit?.categorie?.nomCategorie || 'Product'}}</p>
+                  <p class="mb-0 fw-semibold">{{item.prix || (item.produit?.prixProduit || 0)}} DT</p>
+                </div>
+
+                <!-- Quantity Controls -->
+                <div class="col-md-3 col-6">
+                  <div class="input-group input-group-sm border rounded" style="border-color: #e9ecef !important;">
+                    <button class="btn border-0" type="button" (click)="calculateQty('0', item.quantite, i)" [disabled]="item.quantite <= 1"
+                            style="background-color: #f8f9fa; color: #6c757d;">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <input type="text" class="form-control text-center border-0 bg-transparent" [value]="item.quantite" readonly>
+                    <button class="btn border-0" type="button" (click)="calculateQty('1', item.quantite, i)"
+                            style="background-color: #f8f9fa; color: #6c757d;">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Price and Delete -->
+                <div class="col-md-2 col-6 text-end">
+                  <p class="mb-2 fw-bold">{{((item.prix || (item.produit?.prixProduit || 0)) * item.quantite) | number:'1.2-2'}} DT</p>
+                  <button type="button" class="btn btn-sm p-0" (click)="deleteLigneCommande(item.idLigneCommande)"
+                          style="color: #dc3545; background: transparent; transition: all 0.2s;">
+                    <i class="bi bi-trash me-1"></i> Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 py-3">
+          <h5 class="fw-semibold mb-0">Order Summary</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Subtotal</span>
+              <span>{{subtotal | number:'1.2-2'}} DT</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Service Fee</span>
+              <span>{{flatFee | number:'1.2-2'}} DT</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between fw-bold">
+              <span>Total</span>
+              <span class="text-primary">{{getDisplayTotal() | number:'1.2-2'}} DT</span>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button routerLink="/marketplacefront/user/checkout" class="btn py-2"
+                    style="background: linear-gradient(to right, #4e73df, #6b8af7); color: white; border: none; transition: all 0.2s; box-shadow: 0 3px 6px rgba(78, 115, 223, 0.25);">
+              Proceed to Checkout
+            </button>
+            <a routerLink="/marketplacefront/user/market-place" class="btn py-2"
+               style="color: #4e73df; background-color: transparent; border: 1px solid #4e73df; transition: all 0.2s;">
+              Continue Shopping
+            </a>
+          </div>
+
+          <!-- Secure Checkout Notice -->
+          <div class="mt-4 text-center">
+            <p class="mb-2 small text-muted">
+              <i class="bi bi-shield-lock me-1"></i> Secure Checkout
+            </p>
+            <div class="payment-methods">
+              <i class="bi bi-credit-card mx-1"></i>
+              <i class="bi bi-paypal mx-1"></i>
+              <i class="bi bi-wallet2 mx-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Add this at the bottom of your cart template -->
-<div id="deleteRecordModal" class="modal fade zoomIn" bsModal #deleteRecordModal="bs-modal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" id="deleteRecord-close" (click)="deleteRecordModal.hide()"></button>
-            </div>
-            <div class="modal-body p-md-5">
-                <div class="text-center">
-                    <div class="text-danger">
-                        <i class="bi bi-trash display-4"></i>
-                    </div>
-                    <div class="mt-4">
-                        <h3 class="mb-2">Are you sure ?</h3>
-                        <p class="text-muted fs-lg mx-3 mb-0">Are you sure you want to remove this item from your cart?</p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Close</button>
-                    <button type="button" class="btn w-sm btn-danger btn-hover" id="delete-record"
-                            (click)="confirmDelete()">Yes, Remove It!</button>
-                </div>
-            </div>
+<!-- Delete Confirmation Modal -->
+<div bsModal #deleteRecordModal="bs-modal" class="modal fade" tabindex="-1" aria-labelledby="deleteRecordModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="deleteRecordModalLabel">Remove Item</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="deleteRecordModal.hide()"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="mb-4">
+          <i class="bi bi-exclamation-circle text-warning" style="font-size: 64px;"></i>
         </div>
+        <h4 class="mb-3">Are you sure?</h4>
+        <p class="text-muted mb-0">Do you really want to remove this item from your cart?</p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn" (click)="deleteRecordModal.hide()"
+                style="color: #495057; background-color: #f8f9fa; border: none; transition: all 0.2s;">
+          Cancel
+        </button>
+        <button type="button" class="btn" (click)="confirmDelete()"
+                style="background: linear-gradient(to right, #e74a3b, #fa6b5b); color: white; border: none; transition: all 0.2s;">
+          Yes, Remove It
+        </button>
+      </div>
     </div>
+  </div>
 </div>

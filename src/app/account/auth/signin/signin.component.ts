@@ -9,11 +9,16 @@ import { User } from '../models/User';
 import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
 import { UserServiceService } from '../services/user-service.service';
 
-@Component({
-  selector: 'app-signin',
-  templateUrl: './signin.component.html',
-  styleUrls: ['./signin.component.scss']
-})
+
+  @Component({
+    selector: 'app-signin',
+    templateUrl: './signin.component.html',
+    styleUrls: ['./signin.component.scss']
+  })
+  export class SigninComponent {
+    failedAttempts = 0;
+    maxAttempts = 3;
+
 
 // Signin Component
 export class SigninComponent {
@@ -21,90 +26,112 @@ export class SigninComponent {
   maxAttempts = 3;
   @ViewChild('captchaElem') captchaElem: any; // Add this line at the top
 
-  // set the currenr year
-  year: number = new Date().getFullYear();
-  fieldTextType!: boolean;
-  loginuser!:AuthenticationRequest;
-  loginForm: FormGroup;
-  errorLoginMessage = '';
-  siteKey: string = '6LewnB4rAAAAAFWY26OgfY1IAx8-v9f5Z_zSVG31';
-  currentUser: any | null = null;
+    year: number = new Date().getFullYear();
+    fieldTextType!: boolean;
+    loginuser!: AuthenticationRequest;
+    loginForm: FormGroup;
+    errorLoginMessage = '';
+    siteKey: string = '6LewnB4rAAAAAFWY26OgfY1IAx8-v9f5Z_zSVG31';
+    currentUser: any | null = null;
 
-  constructor(private authService: AuthServiceService,private router:Router,
-    private websocketService: WebsocketService,
-    private userService:UserServiceService) {
-    this.loginForm = new FormGroup({
-      email: new FormControl('', [Validators.required, Validators.email]), // Added email validator
-      motDePasse: new FormControl('', [Validators.required]), // Keep password required
-      rememberMe: new FormControl(false),
-      recaptcha: new FormControl('', Validators.required)
-    });
-  }
-  
-  onSubmit() {
-    this.errorLoginMessage = '';
-  
-    if (this.loginForm.valid) {
-      const loginUser = {
-        email: this.loginForm.get('email')?.value,
-        motDePasse: this.loginForm.get('motDePasse')?.value,
-        recaptchaToken: this.loginForm.get('recaptcha')?.value
-      };
-  
-      this.authService.authenticate(loginUser).subscribe(
-        (response: any) => {
-          // Reset failed attempts on success
-          this.failedAttempts = 0;
-  
-          // Wait for user data before continuing
-          this.authService.handleLoginSuccess(response).subscribe(
-            (user: User) => {
-              this.currentUser = user;
-              const authority = this.currentUser.authorities[0]?.authority;
-  
-              this.websocketService.connect(localStorage.getItem('authToken'), this.currentUser.id); // pass userId too
-  
-              Swal.fire({
-                icon: 'success',
-                title: 'Login Successful',
-                text: 'You are now logged in!',
-              }).then(() => {
-                if (authority === 'ADMIN') {
-                  this.router.navigate(['/userback']);
-                } else if (authority === 'USER') {
-                  //achanger landing pages
-                  this.router.navigate(['/forumfront/user/forumPost']);
-                } else if (authority === 'AGENCE') {
-                  this.router.navigate(['/transportback']);
-                } else if (authority === 'OWNER') {
-                  this.router.navigate(['/campingback']);
-                } else if (authority === 'FORMATEUR') {
-                  this.router.navigate(['/formationback']);
-                } else if (authority === 'EVENT_MANAGER') {
-                  this.router.navigate(['/eventback/event-manager']);
-                } else {
-                  this.router.navigate(['/auth/signin']);
-                }
+
+    constructor(
+      private authService: AuthServiceService,
+      private router: Router,
+      private websocketService: WebsocketService,
+      private userService: UserServiceService
+    ) {
+      this.loginForm = new FormGroup({
+        email: new FormControl('', [Validators.required, Validators.email]),
+        motDePasse: new FormControl('', [Validators.required]),
+        rememberMe: new FormControl(false),
+        recaptcha: new FormControl('', Validators.required)
+      });
+    }
+
+    onSubmit() {
+      this.errorLoginMessage = '';
+
+      if (this.loginForm.valid) {
+        const loginUser = {
+          email: this.loginForm.get('email')?.value,
+          motDePasse: this.loginForm.get('motDePasse')?.value,
+          recaptchaToken: this.loginForm.get('recaptcha')?.value
+        };
+
+        this.authService.authenticate(loginUser).subscribe(
+          (response: any) => {
+            this.failedAttempts = 0;
+
+            this.authService.handleLoginSuccess(response).subscribe(
+              (user: User) => {
+                this.currentUser = user;
+                const authority = this.currentUser.authorities[0]?.authority;
+
+                this.websocketService.connect(localStorage.getItem('authToken'), this.currentUser.id);
+
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Login Successful',
+                  text: 'You are now logged in!',
+                }).then(() => {
+                  if (authority === 'ADMIN') {
+                    this.router.navigate(['/userback']);
+                  } else if (authority === 'USER') {
+                    this.router.navigate(['/forumfront/user/forumpost']);
+                  } else if (authority === 'AGENCE') {
+                    this.router.navigate(['/transportback']);
+                  } else if (authority === 'OWNER') {
+                    this.router.navigate(['/campingback']);
+                  } else if (authority === 'FORMATEUR') {
+                    this.router.navigate(['/formationback']);
+                  } else if (authority === 'EVENT_MANAGER') {
+                    this.router.navigate(['/eventback/event-manager']);
+                  } else {
+                    this.router.navigate(['/auth/signin']);
+                  }
+                });
+              },
+              (error) => {
+                console.error('Error fetching user details', error);
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Login Failed',
+                  text: 'Could not load user data.',
+                });
+              }
+            );
+          },
+          (error) => {
+            console.error('Login error:', error);
+            const errorMessage = error?.error?.message || 'Unknown error. Please try again.';
+            this.errorLoginMessage = errorMessage;
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Login Failed',
+              text: errorMessage
+            });
+
+            this.failedAttempts++;
+            if (this.failedAttempts >= this.maxAttempts) {
+              this.userService.blockUserFailByEmail(this.loginForm.get('email')?.value).subscribe(() => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Account Blocked',
+                  text: 'Your account has been blocked due to 3 failed login attempts.',
+                });
+                this.loginForm.disable();
               });
-            },
-            (error) => {
-              console.error('Error fetching user details', error);
+            } else {
               Swal.fire({
                 icon: 'error',
                 title: 'Login Failed',
-                text: 'Could not load user data.',
+                text: `${errorMessage} (${this.maxAttempts - this.failedAttempts} attempts left)`,
               });
             }
-          );
-        },
-        (error) => {
-          console.error('Login error:', error);
-          let errorMessage = 'Unknown error. Please try again.';
-          if (error.status === 0) {
-            errorMessage = 'Unable to connect to server. Please check your backend.';
-          } else {
-            errorMessage = error?.error?.message || 'Login failed. Please check your credentials.';
           }
+
   
           this.failedAttempts++;
           // Reset recaptcha
@@ -136,16 +163,11 @@ export class SigninComponent {
           this.errorLoginMessage = errorMessage;
         }
       );
+        );
+      }
+    }
+
+    toggleFieldTextType(): void {
+      this.fieldTextType = !this.fieldTextType;
     }
   }
-  
-  
-
-  
-  // Toggle the visibility of the password
-  toggleFieldTextType(): void {
-    this.fieldTextType = !this.fieldTextType;
-  }
-
- 
-}

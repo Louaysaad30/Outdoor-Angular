@@ -1124,6 +1124,14 @@ export const MENU = {
           }
         ]
       },
+      {
+        id: 1,
+        label: 'Camping Center Management',
+        icon: 'bi bi-tree',
+        link: '/campingback/admin/camping',
+        parentId: 3
+      },
+
     {
       id: 5,
       label: 'User management',
@@ -1180,7 +1188,16 @@ export const MENU = {
     },
 
   ],
-  OwnerMenu: [] ,
+  OwnerMenu: [
+    {
+      id: 1,
+      label: 'Camping Center Management',
+      icon: 'bi bi-tree',
+      link: '/campingback/owner/camping',
+      parentId: 3
+    },
+
+  ] ,
   FormateurMenu: [] ,
   EventManagerMenu: [] ,
   AgenceMenu: [] ,

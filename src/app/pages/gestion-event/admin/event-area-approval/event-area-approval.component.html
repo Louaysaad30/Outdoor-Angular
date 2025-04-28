@@ -1,0 +1,542 @@
+<!-- Start Breadcrumbs -->
+                <app-breadcrumbs title="Event Area Approval" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+                <!-- End Breadcrumbs -->
+
+                <div class="container-fluid">
+                  <!-- Status Overview Cards -->
+                  <div class="row mb-4">
+                    <div class="col-xl-4 col-md-4">
+                      <div class="card bg-soft-warning shadow-sm h-100">
+                        <div class="card-body position-relative">
+                          <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                              <div class="avatar-sm">
+                                <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                  <i class="bi bi-hourglass-split"></i>
+                                </span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                              <h5 class="mb-1">Pending Areas</h5>
+                              <p class="text-muted mb-0">
+                                <span class="counter-value fw-semibold">{{ getAreaCount('pending') }}</span> areas waiting for review
+                              </p>
+                            </div>
+                          </div>
+                          <div class="position-absolute end-0 bottom-0 p-3">
+                            <button class="btn btn-sm btn-primary-subtle text-primary rounded-pill px-3"
+                                   (click)="setActiveTab('pending')">
+                              View All <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-xl-4 col-md-4">
+                      <div class="card bg-soft-success shadow-sm h-100">
+                        <div class="card-body position-relative">
+                          <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                              <div class="avatar-sm">
+                                <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                  <i class="bi bi-check-circle"></i>
+                                </span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                              <h5 class="mb-1">Approved Areas</h5>
+                              <p class="text-muted mb-0">
+                                <span class="counter-value fw-semibold">{{ getAreaCount('approved') }}</span> areas ready for use
+                              </p>
+                            </div>
+                          </div>
+                          <div class="position-absolute end-0 bottom-0 p-3">
+                            <button class="btn btn-sm btn-success-subtle text-success rounded-pill px-3"
+                                   (click)="setActiveTab('approved')">
+                              View All <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-xl-4 col-md-4">
+                      <div class="card bg-soft-danger shadow-sm h-100">
+                        <div class="card-body position-relative">
+                          <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                              <div class="avatar-sm">
+                                <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                  <i class="bi bi-x-circle"></i>
+                                </span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                              <h5 class="mb-1">Rejected Areas</h5>
+                              <p class="text-muted mb-0">
+                                <span class="counter-value fw-semibold">{{ getAreaCount('rejected') }}</span> areas needing revision
+                              </p>
+                            </div>
+                          </div>
+                          <div class="position-absolute end-0 bottom-0 p-3">
+                            <button class="btn btn-sm btn-danger-subtle text-danger rounded-pill px-3"
+                                   (click)="setActiveTab('rejected')">
+                              View All <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Main Content Area -->
+                  <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex align-items-center p-3">
+                      <h5 class="card-title mb-0 flex-grow-1">Event Area Management</h5>
+                      <div class="tab-pill d-flex">
+                        <button
+                          [ngClass]="{'active-tab': activeTab === 'pending'}"
+                          (click)="setActiveTab('pending')"
+                          class="tab-btn">
+                          <i class="bi bi-hourglass me-1"></i> Pending
+                          <span class="badge rounded-pill bg-warning-subtle text-warning ms-1">{{ pendingAreas.length }}</span>
+                        </button>
+                        <button
+                          [ngClass]="{'active-tab': activeTab === 'approved'}"
+                          (click)="setActiveTab('approved')"
+                          class="tab-btn">
+                          <i class="bi bi-check-circle me-1"></i> Approved
+                          <span class="badge rounded-pill bg-success-subtle text-success ms-1">{{ approvedAreas.length }}</span>
+                        </button>
+                        <button
+                          [ngClass]="{'active-tab': activeTab === 'rejected'}"
+                          (click)="setActiveTab('rejected')"
+                          class="tab-btn">
+                          <i class="bi bi-x-circle me-1"></i> Rejected
+                          <span class="badge rounded-pill bg-danger-subtle text-danger ms-1">{{ rejectedAreas.length }}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="card-body p-4">
+                      <!-- Loading indicator -->
+                      <div *ngIf="loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Loading event areas...</p>
+                      </div>
+
+                      <!-- Empty state -->
+                      <div *ngIf="!loading && getAreasForTab().length === 0" class="text-center py-5">
+                        <div class="empty-state">
+                          <i class="bi bi-calendar2-x display-1 text-muted"></i>
+                          <h4 class="mt-3">No {{ activeTab }} event areas found</h4>
+                          <p class="text-muted">There are currently no event areas with {{ activeTab }} status.</p>
+                        </div>
+                      </div>
+
+                      <!-- Areas Grid -->
+                      <div *ngIf="!loading && getAreasForTab().length > 0" class="row g-4">
+                        <div *ngFor="let area of getAreasForTab()" class="col-lg-4 col-md-6">
+                          <div class="card h-100 area-card shadow-sm border-0">
+                            <div class="position-relative overflow-hidden card-img-top-container">
+                              <img [src]="area.areaImg || 'assets/images/placeholder-image.jpg'" class="card-img-top" alt="{{ area.name }}">
+                              <div class="overlay-info">
+                                <span class="badge rounded-pill fs-sm"
+                                      [ngClass]="{
+                                        'bg-warning-subtle text-warning': activeTab === 'pending',
+                                        'bg-success-subtle text-success': activeTab === 'approved',
+                                        'bg-danger-subtle text-danger': activeTab === 'rejected'
+                                      }">
+                                  <i class="bi"
+                                     [ngClass]="{
+                                       'bi-hourglass-split': activeTab === 'pending',
+                                       'bi-check-circle': activeTab === 'approved',
+                                       'bi-x-circle': activeTab === 'rejected'
+                                     }"></i>
+                                  {{ activeTab | titlecase }}
+                                </span>
+                              </div>
+                            </div>
+                            <div class="card-body">
+                              <h5 class="card-title mb-1 text-truncate">{{ area.name }}</h5>
+                              <p class="text-muted mb-2 small">
+                                <i class="bi bi-geo-alt me-1"></i> {{area.address || 'Loading address...'}}
+                              </p>
+
+                              <div class="d-flex align-items-center mb-3">
+                                <div class="badge bg-info-subtle text-info me-2">
+                                  <i class="bi bi-people me-1"></i>{{ area.capacity }} capacity
+                                </div>
+                              </div>
+
+                              <p class="card-text text-muted small mb-3 description-ellipsis">
+                                {{ area.description || 'No description available' }}
+                              </p>
+                            </div>
+                            <div class="card-footer bg-white border-top-0 pt-0">
+                              <div class="d-grid">
+                                <button (click)="viewDetails(area, activeTab)" class="btn btn-outline-primary">
+                                  <i class="bi bi-eye me-1"></i>View Details
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+<!-- Details Modal -->
+<div bsModal #detailsModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow border-0">
+      <!-- Header with background gradient -->
+      <div class="modal-header bg-gradient-primary text-white border-0 py-3">
+        <h4 class="modal-title fw-semibold mb-0">
+          <i class="bi bi-geo-alt-fill me-2"></i>
+          Event Area Details
+        </h4>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="detailsModal.hide()"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <!-- Image section with overlay text -->
+        <div class="position-relative">
+          <img [src]="selectedArea?.areaImg" alt="Event Area" class="w-100" style="height: 250px; object-fit: cover;">
+          <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);">
+            <h3 class="text-white mb-1">{{ selectedArea?.name }}</h3>
+            <p class="text-white-50 mb-0">
+              <i class="bi bi-pin-map me-1"></i>{{ selectedArea?.address }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Content section with cards -->
+        <div class="p-4">
+          <!-- Key information cards -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <i class="bi bi-people fs-3 text-primary mb-2"></i>
+                  <h5 class="fw-semibold mb-1">{{ selectedArea?.capacity }}</h5>
+                  <p class="text-muted small mb-0">Capacity</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <i class="bi bi-geo-alt fs-3 text-success mb-2"></i>
+                  <h5 class="fw-semibold mb-1">{{ selectedArea?.latitude | number:'1.4-4' }}</h5>
+                  <p class="text-muted small mb-0">Latitude</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <i class="bi bi-geo fs-3 text-info mb-2"></i>
+                  <h5 class="fw-semibold mb-1">{{ selectedArea?.longitude | number:'1.4-4' }}</h5>
+                  <p class="text-muted small mb-0">Longitude</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description section -->
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light py-3">
+              <h5 class="card-title mb-0">
+                <i class="bi bi-info-circle me-2"></i>Description
+              </h5>
+            </div>
+            <div class="card-body">
+              <p class="mb-0">{{ selectedArea?.description }}</p>
+            </div>
+          </div>
+
+          <!-- Status section -->
+          <div class="d-flex align-items-center p-3 rounded-3 mb-3"
+               [ngClass]="{'bg-warning-subtle': selectedArea?.status === 'PENDING',
+                           'bg-success-subtle': selectedArea?.status === 'APPROVED',
+                           'bg-danger-subtle': selectedArea?.status === 'REJECTED'}">
+            <div class="flex-shrink-0">
+              <i class="fs-2 me-3"
+                 [ngClass]="{'bi bi-hourglass-split text-warning': selectedArea?.status === 'PENDING',
+                             'bi bi-check-circle-fill text-success': selectedArea?.status === 'APPROVED',
+                             'bi bi-x-circle-fill text-danger': selectedArea?.status === 'REJECTED'}"></i>
+            </div>
+            <div>
+              <h5 class="mb-0"
+                  [ngClass]="{'text-warning': selectedArea?.status === 'PENDING',
+                              'text-success': selectedArea?.status === 'APPROVED',
+                              'text-danger': selectedArea?.status === 'REJECTED'}">
+                {{ selectedArea?.status }}
+              </h5>
+              <p class="text-muted small mb-0">
+                <ng-container *ngIf="selectedArea?.status === 'PENDING'">Awaiting approval decision</ng-container>
+                <ng-container *ngIf="selectedArea?.status === 'APPROVED'">Approved and ready for use</ng-container>
+                <ng-container *ngIf="selectedArea?.status === 'REJECTED'">{{ selectedArea?.rejectionMessage }}</ng-container>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 bg-light">
+        <button type="button" class="btn btn-light" (click)="detailsModal.hide()">
+          <i class="bi bi-x-lg me-1"></i>Close
+        </button>
+
+        <ng-container *ngIf="selectedArea?.status === 'PENDING'">
+          <button type="button" class="btn btn-danger" (click)="openRejectModal()">
+            <i class="bi bi-x-circle me-1"></i>Reject
+          </button>
+          <button type="button" class="btn btn-success" (click)="openApproveModal()">
+            <i class="bi bi-check-circle me-1"></i>Approve
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="selectedArea?.status === 'APPROVED' || selectedArea?.status === 'REJECTED'">
+          <button *ngIf="selectedArea?.status === 'REJECTED'"
+                  class="btn btn-success"
+                  (click)="openApproveModal()">
+            <i class="bi bi-check-circle me-1"></i> Approve Area
+          </button>
+
+
+          <!-- Show Reject button for approved areas -->
+          <button *ngIf="selectedArea?.status === 'APPROVED'"
+                  class="btn btn-danger"
+                  (click)="openRejectModal()">
+            <i class="bi bi-x-circle me-1"></i> Reject Area
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+                <!-- Approve Modal -->
+<div bsModal #approveModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg approval-modal">
+                      <!-- Stylish header with gradient background -->
+                      <div class="modal-header border-0 approval-header">
+                        <h5 class="modal-title fw-bold text-white mb-0">
+                          <i class="bi bi-check-circle me-2"></i>Event Area Approval
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" (click)="approveModal.hide()"></button>
+                      </div>
+
+                      <form [formGroup]="approvalForm" (ngSubmit)="approveArea()">
+                        <div class="modal-body p-0">
+                          <!-- Top visual section with animation -->
+                          <div class="approval-visual-container">
+                            <div class="approval-icon-wrapper">
+                              <div class="approval-icon-pulse"></div>
+                              <i class="bi bi-check-circle-fill approval-icon animated-icon"></i>
+                            </div>
+                            <h4 class="mt-3 fw-bold text-success">Ready for Approval</h4>
+                            <p class="text-muted">This area will be available for event bookings</p>
+                          </div>
+
+                        </div>
+
+                        <div class="modal-footer border-0 bg-light py-3">
+                          <button type="button" class="btn btn-light hover-btn me-2" (click)="approveModal.hide()">
+                            <i class="bi bi-x me-1"></i>Cancel
+                          </button>
+                          <button type="submit" class="btn btn-success hover-btn">
+                            <i class="bi bi-check-lg me-1"></i>Confirm Approval
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                <style>
+                /* Modern styling for approval modal */
+                .approval-modal {
+                  border-radius: 16px;
+                  overflow: hidden;
+                  transform: scale(0.95);
+                  animation: modal-pop 0.3s ease forwards;
+                }
+
+                .approval-header {
+                  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                  padding: 1.25rem 1.5rem;
+                }
+
+                .approval-visual-container {
+                  background-color: #fff;
+                  padding: 2.5rem 1.5rem 1.5rem;
+                  text-align: center;
+                  position: relative;
+                }
+
+                .approval-icon-wrapper {
+                  position: relative;
+                  display: inline-block;
+                  margin-bottom: 1rem;
+                }
+
+                .approval-icon {
+                  font-size: 3.5rem;
+                  color: #28a745;
+                  position: relative;
+                  z-index: 2;
+                }
+
+                .approval-icon-pulse {
+                  position: absolute;
+                  width: 80px;
+                  height: 80px;
+                  background-color: rgba(40, 167, 69, 0.1);
+                  border-radius: 50%;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  animation: pulse 2s infinite;
+                }
+
+                .approval-details-container {
+                  background-color: #f9f9f9;
+                  border-top: 1px solid rgba(0, 0, 0, 0.05);
+                }
+
+                .approval-area-image {
+                  width: 60px;
+                  height: 60px;
+                  object-fit: cover;
+                  border-radius: 8px;
+                  border: 2px solid #fff;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .approval-note {
+                  border-left: 4px solid #28a745;
+                  transition: all 0.3s ease;
+                }
+
+                .approval-note:focus {
+                  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
+                  border-color: #ced4da;
+                  border-left-color: #28a745;
+                }
+
+                .hover-btn {
+                  transition: all 0.3s ease;
+                  border-radius: 8px;
+                  position: relative;
+                  overflow: hidden;
+                }
+
+                .hover-btn:hover {
+                  transform: translateY(-3px);
+                  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                }
+
+                .animated-icon {
+                  animation: bounce 1.5s ease infinite;
+                }
+
+                /* Animations */
+                @keyframes bounce {
+                  0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+                  40% {transform: translateY(-10px);}
+                  60% {transform: translateY(-5px);}
+                }
+
+                @keyframes pulse {
+                  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+                  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+                  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+                }
+
+                @keyframes modal-pop {
+                  0% { transform: scale(0.95); opacity: 0; }
+                  100% { transform: scale(1); opacity: 1; }
+                }
+                </style>
+                <!-- Reject Modal -->
+
+                <div bsModal #rejectModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rejection-modal">
+                      <!-- Stylish header with gradient background -->
+                      <div class="modal-header border-0 rejection-header">
+                        <h5 class="modal-title fw-bold text-white mb-0">
+                          <i class="bi bi-exclamation-circle me-2"></i>Reject Event Area
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" (click)="rejectModal.hide()"></button>
+                      </div>
+
+                      <form [formGroup]="rejectionForm" (ngSubmit)="rejectArea()">
+                        <div class="modal-body p-0">
+                          <!-- Top visual section with animation -->
+                          <div class="rejection-visual-container">
+                            <div class="rejection-icon-wrapper">
+                              <div class="rejection-icon-pulse"></div>
+                              <i class="bi bi-x-circle rejection-icon animated-icon"></i>
+                            </div>
+                            <h4 class="mt-3 fw-bold text-danger">Confirm Rejection</h4>
+                            <p class="text-muted">
+                              Please provide a reason for rejecting <strong>{{ selectedArea?.name }}</strong>.
+                              This message will be sent to the event area creator.
+                            </p>
+                          </div>
+
+                          <!-- Rejection message form in a card-style container -->
+                          <div class="rejection-message-container p-4">
+                            <div class="rejection-message-label mb-2">
+                              <i class="bi bi-chat-quote-fill me-2 text-danger"></i>
+                              <span class="fw-semibold">Rejection Reason:</span>
+                            </div>
+                            <div class="form-floating mb-2">
+                              <textarea class="form-control" formControlName="rejectionMessage" id="rejectionMessage"
+                                       [ngClass]="{'is-invalid': rejectionForm.get('rejectionMessage')?.invalid && rejectionForm.get('rejectionMessage')?.touched}"
+                                       style="height: 120px" required></textarea>
+                              <label for="rejectionMessage">Provide detailed feedback *</label>
+                              <div class="invalid-feedback" *ngIf="rejectionForm.get('rejectionMessage')?.invalid && rejectionForm.get('rejectionMessage')?.touched">
+                                Please provide a detailed rejection reason (minimum 10 characters).
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="modal-footer border-0 bg-light py-3">
+                          <button type="button" class="btn btn-light hover-btn me-2" (click)="rejectModal.hide()">
+                            <i class="bi bi-x me-1"></i>Cancel
+                          </button>
+                          <button type="submit" class="btn btn-danger hover-btn" [disabled]="rejectionForm.invalid">
+                            <i class="bi bi-x-circle me-1"></i>Confirm Rejection
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+
+                <script>
+                // Add any necessary JavaScript functions
+                function getAreasForTab() {
+                  switch(this.activeTab) {
+                    case 'pending':
+                      return this.pendingAreas;
+                    case 'approved':
+                      return this.approvedAreas;
+                    case 'rejected':
+                      return this.rejectedAreas;
+                    default:
+                      return [];
+                  }
+                }
+                </script>
