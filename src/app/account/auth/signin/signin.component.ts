@@ -1,12 +1,14 @@
-import { Component } from '@angular/core';
-  import { FormControl, FormGroup, Validators } from '@angular/forms';
-  import { AuthServiceService } from '../services/auth-service.service';
-  import Swal from 'sweetalert2';
-  import { Router } from '@angular/router';
-  import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
-  import { UserServiceService } from '../services/user-service.service';
-  import { AuthenticationRequest } from '../models/AuthenticationRequest';
-  import { User } from '../models/User';
+import { Component, ViewChild } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { AuthServiceService } from '../services/auth-service.service';
+import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
+import { NgxCaptchaModule } from 'ngx-captcha';
+import {AuthenticationRequest} from '../models/AuthenticationRequest';
+import { User } from '../models/User';
+import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
+import { UserServiceService } from '../services/user-service.service';
+
 
   @Component({
     selector: 'app-signin',
@@ -17,6 +19,13 @@ import { Component } from '@angular/core';
     failedAttempts = 0;
     maxAttempts = 3;
 
+
+// Signin Component
+export class SigninComponent {
+  failedAttempts = 0;
+  maxAttempts = 3;
+  @ViewChild('captchaElem') captchaElem: any; // Add this line at the top
+
     year: number = new Date().getFullYear();
     fieldTextType!: boolean;
     loginuser!: AuthenticationRequest;
@@ -24,6 +33,7 @@ import { Component } from '@angular/core';
     errorLoginMessage = '';
     siteKey: string = '6LewnB4rAAAAAFWY26OgfY1IAx8-v9f5Z_zSVG31';
     currentUser: any | null = null;
+
 
     constructor(
       private authService: AuthServiceService,
@@ -121,6 +131,38 @@ import { Component } from '@angular/core';
               });
             }
           }
+
+  
+          this.failedAttempts++;
+          // Reset recaptcha
+          if (this.captchaElem) {
+            this.captchaElem.resetCaptcha();
+          }
+          this.loginForm.get('recaptcha')?.reset();
+
+          if (this.failedAttempts >= this.maxAttempts) {
+            // Block user after 3 failed attempts
+            this.userService.blockUserFailByEmail(this.loginForm.get('email')?.value).subscribe(() => {
+              Swal.fire({
+                icon: 'error',
+                title: 'Account Blocked',
+                text: 'Your account has been blocked due to 3 failed login attempts.',
+              });
+  
+              // Disable form after blocking
+              this.loginForm.disable();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Login Failed',
+              text: errorMessage + ` (${this.maxAttempts - this.failedAttempts} attempts left)`,
+            });
+          }
+  
+          this.errorLoginMessage = errorMessage;
+        }
+      );
         );
       }
     }

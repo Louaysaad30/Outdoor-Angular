@@ -66,7 +66,7 @@ export const MENU = {
         {
           id: 5,
           label: 'Chat',
-          icon: 'ph-calendar',
+          icon: ' ph-chat-circle',
           link: '/userfront/user/chat',
           parentId: 3
         },

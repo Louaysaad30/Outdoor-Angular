@@ -36,7 +36,7 @@ import { tap } from 'rxjs/operators';
     ReactiveFormsModule,
     BsDropdownModule,
     TabsModule,
-    ModalModule
+    ModalModule,
   ],
   templateUrl: './mes-posts.component.html',
   styleUrl: './mes-posts.component.scss'

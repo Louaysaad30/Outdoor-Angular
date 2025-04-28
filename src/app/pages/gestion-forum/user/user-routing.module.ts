@@ -6,8 +6,6 @@ import {MesPostsComponent} from "./mes-posts/mes-posts.component";
 const routes: Routes = [
   {path:"forumpost",component:ForumPostComponent},
   {path:"mesPost",component:MesPostsComponent},
-
-
 ];
 
 @NgModule({

@@ -26,7 +26,7 @@ export class UserServiceService {
     const params = new HttpParams().set('userId', userId.toString());
     return this.http.post<string>(`${this.apiUrl}/predict-churn`, params);
   }
-  
+
   
   // Get user by ID
   getUserById(id: number): Observable<User> {

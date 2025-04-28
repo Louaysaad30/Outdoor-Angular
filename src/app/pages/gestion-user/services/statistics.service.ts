@@ -7,17 +7,23 @@ import { Observable } from 'rxjs';
 })
 export class StatisticsService {
   private baseUrl = 'http://localhost:9096/statistics'; // Replace with your backend URL
-
+  private apiUrl='http://localhost:9096/user'; // Replace with your backend URL
   constructor(private http: HttpClient) {}
 
   // Get total users
   getTotalUsers(): Observable<{ totalUsers: number }> {
     return this.http.get<{ totalUsers: number }>(`${this.baseUrl}/total-users`);
   }
-
+  getChurnStatistics(): Observable<{ churn: number, notChurn: number }> {
+    return this.http.get<{ churn: number, notChurn: number }>(`${this.apiUrl}/churn-statistics`);
+  }
+  
   // Get verified users
   getVerifiedUsers(): Observable<{ verifiedUsers: number }> {
     return this.http.get<{ verifiedUsers: number }>(`${this.baseUrl}/verified-users`);
+  }
+  sendChurnEmails(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/send-churn-emails`, {});
   }
 
   // Get non-verified users
