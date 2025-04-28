@@ -1,63 +1,10 @@
 <div class="row">
-  <div class="col-lg-12">
-    <div class="card">
-      <div class="card-body pb-0 mb-lg-n4">
-        <div class="d-flex z-1 position-relative">
-          <div class="flex-shrink-0">
-            <div
-              data-provider="flatpickr"
-              data-range-date="true"
-              data-date-format="d M, Y"
-              data-default-date="01 Apr 2025 to 28 Apr 2025"
-            >
-            01 Apr 2025 to 28 Apr 2025
-              <i class="ph-caret-down align-middle ms-1"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body pt-0">
-        <div id="line_chart_basic" class="apex-charts" dir="ltr">
-          <apx-chart
-            [series]="linebasicChart.series"
-            [chart]="linebasicChart.chart"
-            [legend]="linebasicChart.legend"
-            [grid]="linebasicChart.grid"
-            [markers]="linebasicChart.markers"
-            [stroke]="linebasicChart.stroke"
-            [colors]="linebasicChart.colors"
-            [xaxis]="linebasicChart.xaxis"
-            [yaxis]="linebasicChart.yaxis"
-            dir="ltr"
-          ></apx-chart>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!--end col-->
-</div>
-<!--end row-->
-
-<div class="row">
   <!-- Total Orders -->
   <div class="col">
     <div class="card border-bottom border-3 card-animate border-info">
       <div class="card-body">
         <h4 class="mb-4"><span class="counter-value" [countUp]="totalOrders">0</span></h4>
         <p class="text-muted fw-medium text-uppercase mb-0">Total Orders</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Pending Orders -->
-  <div class="col">
-    <div class="card border-bottom border-3 card-animate border-warning">
-      <div class="card-body">
-        <span class="badge bg-warning-subtle text-warning float-end">
-          <i class="ph-clock align-middle me-1"></i> {{(pendingOrders / totalOrders * 100).toFixed(1)}}%
-        </span>
-        <h4 class="mb-4"><span class="counter-value" [countUp]="pendingOrders">0</span></h4>
-        <p class="text-muted fw-medium text-uppercase mb-0">Pending Orders</p>
       </div>
     </div>
   </div>
@@ -70,7 +17,20 @@
           <i class="ph-truck align-middle me-1"></i> {{(shippedOrders / totalOrders * 100).toFixed(1)}}%
         </span>
         <h4 class="mb-4"><span class="counter-value" [countUp]="shippedOrders">0</span></h4>
-        <p class="text-muted fw-medium text-uppercase mb-0">Shipped Orders</p>
+        <p class="text-muted fw-medium text-uppercase mb-0">ON_HOLD Orders</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Orders -->
+  <div class="col">
+    <div class="card border-bottom border-3 card-animate border-warning">
+      <div class="card-body">
+        <span class="badge bg-warning-subtle text-warning float-end">
+          <i class="ph-clock align-middle me-1"></i> {{(pendingOrders / totalOrders * 100).toFixed(1)}}%
+        </span>
+        <h4 class="mb-4"><span class="counter-value" [countUp]="pendingOrders">0</span></h4>
+        <p class="text-muted fw-medium text-uppercase mb-0">IN_PROGRESS Orders</p>
       </div>
     </div>
   </div>
@@ -102,6 +62,178 @@
   </div>
 </div>
 
+<!-- New Orders Status Chart Section -->
+<div class="row mt-4 mb-4">
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header d-flex align-items-center">
+                <h5 class="card-title mb-0 flex-grow-1">Orders Status</h5>
+                <div dropdown class="dropdown card-header-dropdown">
+                    <a dropdownToggle class="text-reset dropdown-btn" href="javascript:void(0);">
+                        <i class="ph-dots-three-outline-vertical"></i>
+                    </a>
+                    <div *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="javascript:void(0);">Current Year</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 pb-1 text-center">
+                    <h6 class="mb-0">{{currentStartDate | date: 'dd MMM, yyyy'}} - {{currentEndDate | date: 'dd MMM, yyyy'}}</h6>
+                </div>
+
+                <!-- ON_HOLD Orders -->
+                <div class="row align-items-center mb-3">
+                    <div class="col-lg-4">
+                        <div class="hstack gap-2">
+                            <p class="mb-0 flex-grow-1">On Hold</p>
+                            <h6 class="mb-0">{{shippedOrders}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="animated-progress">
+                            <progressbar [value]="getPercentage(shippedOrders)" [type]="'info'" [striped]="true" [animate]="true"></progressbar>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IN_PROGRESS Orders -->
+                <div class="row align-items-center mb-3">
+                    <div class="col-lg-4">
+                        <div class="hstack gap-2">
+                            <p class="mb-0 flex-grow-1">In Progress</p>
+                            <h6 class="mb-0">{{pendingOrders}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="animated-progress">
+                            <progressbar [value]="getPercentage(pendingOrders)" type="warning" [striped]="true" [animate]="true"></progressbar>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DELIVERED Orders -->
+                <div class="row align-items-center mb-3">
+                    <div class="col-lg-4">
+                        <div class="hstack gap-2">
+                            <p class="mb-0 flex-grow-1">Delivered</p>
+                            <h6 class="mb-0">{{completedOrders}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="animated-progress">
+                            <progressbar [value]="getPercentage(completedOrders)" type="success" [striped]="true" [animate]="true"></progressbar>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CANCELED Orders -->
+                <div class="row align-items-center">
+                    <div class="col-lg-4">
+                        <div class="hstack gap-2">
+                            <p class="mb-0 flex-grow-1">Cancelled</p>
+                            <h6 class="mb-0">{{canceledOrders}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="animated-progress">
+                            <progressbar [value]="getPercentage(canceledOrders)" type="danger" [striped]="true" [animate]="true"></progressbar>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Insight Sections -->
+    <div class="col-xl-4 col-lg-6">
+        <div class="card card-height-100">
+            <div class="card-header d-flex">
+                <h5 class="card-title flex-grow-1 mb-0">Recent Orders</h5>
+
+            </div>
+            <div class="card-body px-0">
+                <ngx-simplebar class="px-3" style="max-height: 258px;">
+                    <div class="acitivity-timeline acitivity-main">
+                        <div *ngFor="let item of recentOrders" class="acitivity-item d-flex" [ngClass]="{'py-3': true}">
+                            <div class="flex-shrink-0 avatar-xs acitivity-avatar">
+                                <div class="avatar-title rounded-circle"
+                                    [ngClass]="{
+                                        'bg-success-subtle text-success': item.etat === Status.DELIVERED,
+                                        'bg-warning-subtle text-warning': item.etat === Status.IN_PROGRESS,
+                                        'bg-danger-subtle text-danger': item.etat === Status.CANCELED,
+                                        'bg-info-subtle text-info': item.etat === Status.ON_HOLD
+                                    }">
+                                    <i class="ph-shopping-cart"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1 lh-base">Order #{{item.OrderNumber || 'ORD-' + item.idCommande}}</h6>
+                                <p class="text-muted mb-2">
+                                  <ng-container *ngIf="getProductName(item) === '⌛'; else loadedRecentProduct">
+                                    <span class="placeholder-glow">
+                                      <span class="placeholder col-8"></span>
+                                    </span>
+                                  </ng-container>
+                                  <ng-template #loadedRecentProduct>
+                                    {{getProductName(item)}}
+                                  </ng-template>
+                                </p>
+                                <small class="mb-0 text-muted">{{formatDate(item.dateCommande)}}</small>
+                            </div>
+                        </div>
+                    </div>
+                </ngx-simplebar>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-6">
+        <div class="card card-height-100">
+            <div class="card-header d-flex align-items-center">
+                <h5 class="card-title flex-grow-1 mb-0">Revenue Insights</h5>
+                <div class="flex-shrink-0">
+                    <div dropdown class="dropdown card-header-dropdown">
+                        <a dropdownToggle class="text-reset dropdown-btn" href="javascript:void(0);">
+                            <span class="text-muted">This Month<i class="mdi mdi-chevron-down ms-1"></i></span>
+                        </a>
+                        <div *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" href="javascript:void(0);">This Month</a>
+                            <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="vstack gap-2">
+                    <div class="border py-2 px-3 w-100 rounded d-flex align-items-center gap-2">
+                        <i class="bi bi-circle-fill text-success fs-xs"></i>
+                        <h6 class="mb-0">Delivered Orders: ${{revenueDelivered | number:'1.2-2'}}</h6>
+                    </div>
+                    <div class="border py-2 px-3 w-100 rounded d-flex align-items-center gap-2">
+                        <i class="bi bi-circle-fill text-warning fs-xs"></i>
+                        <h6 class="mb-0">In Progress Orders: ${{revenuePending | number:'1.2-2'}}</h6>
+                    </div>
+                    <div class="border py-2 px-3 w-100 rounded d-flex align-items-center gap-2">
+                        <i class="bi bi-circle-fill text-primary fs-xs"></i>
+                        <h6 class="mb-0">On Hold Orders: ${{revenueShipped | number:'1.2-2'}}</h6>
+                    </div>
+                    <div class="border py-2 px-3 w-100 rounded d-flex align-items-center gap-2">
+                        <i class="bi bi-circle-fill text-danger fs-xs"></i>
+                        <h6 class="mb-0">Cancelled Orders: ${{revenueCancelled | number:'1.2-2'}}</h6>
+                    </div>
+                    <div class="border py-2 px-3 w-100 rounded d-flex align-items-center gap-2">
+                        <i class="bi bi-circle-fill text-info fs-xs"></i>
+                        <h6 class="mb-0">Total Revenue: ${{totalAmount | number:'1.2-2'}}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing table section -->
 <div class="row">
   <div class="col-lg-12">
     <div class="card" id="orderList">
@@ -252,9 +384,16 @@
                 </td>
                 <td class="product">
                   <div>
-                    {{ getProductName(item) }}
-                    <span *ngIf="hasMultipleProducts(item)" class="badge bg-info ms-1"
-                          [tooltip]="getProductNamesList(item)">+</span>
+                    <ng-container *ngIf="getProductName(item) === '⌛'; else loadedProduct">
+                      <div class="placeholder-glow">
+                        <span class="placeholder col-8"></span>
+                      </div>
+                    </ng-container>
+                    <ng-template #loadedProduct>
+                      {{ getProductName(item) }}
+                      <span *ngIf="hasMultipleProducts(item)" class="badge bg-info ms-1"
+                            [tooltip]="getProductNamesList(item)">+</span>
+                    </ng-template>
                   </div>
                 </td>
                 <td class="deliveryPerson">

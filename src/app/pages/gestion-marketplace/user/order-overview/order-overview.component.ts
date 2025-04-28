@@ -32,6 +32,7 @@ export class OrderOverviewComponent implements OnInit {
   userId: number = 1; // Static user ID for now
   orders: OrderWithItems[] = [];
   cancelledOrders: OrderWithItems[] = [];
+  deliveredOrders: OrderWithItems[] = []; // Add this line
   isLoading: boolean = false;
   errorMessage: string | null = null;
   isCancellingOrder = false;
@@ -40,6 +41,11 @@ export class OrderOverviewComponent implements OnInit {
   selectedOrderDate?: Date;
   // Add a property to track if the order has a delivery person assigned
   selectedOrderHasDelivery = false;
+  selectedOrder: any; // Replace with your Order type
+  isDownloadingInvoice = false;
+
+  // Variable pour suivre si un téléchargement est déjà en cours
+  public downloadInProgress = false;
 
   constructor(
     private checkoutService: CheckoutService,
@@ -50,6 +56,8 @@ export class OrderOverviewComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserOrders();
+    // Add this line to load delivered orders when component initializes
+    this.loadDeliveredOrders();
   }
 
   loadUserOrders(): void {
@@ -60,9 +68,10 @@ export class OrderOverviewComponent implements OnInit {
     this.checkoutService.getCommandesByUserId(this.userId)
       .subscribe({
         next: (orders: Commande[]) => {
-          // Separate active and cancelled orders
-          const activeOrders = orders.filter(order => order.etat !== 'CANCELED');
+          // Separate orders by status
+          const activeOrders = orders.filter(order => order.etat !== 'CANCELED' && order.etat !== 'DELIVERED');
           const cancelledOrders = orders.filter(order => order.etat === 'CANCELED');
+          const deliveredOrders = orders.filter(order => order.etat === 'DELIVERED');
 
           // Process active orders
           this.orders = activeOrders.map(order => ({
@@ -80,18 +89,31 @@ export class OrderOverviewComponent implements OnInit {
             showItems: false
           }));
 
+          // Process delivered orders
+          this.deliveredOrders = deliveredOrders.map(order => ({
+            ...order,
+            orderItems: [],
+            isLoadingItems: false,
+            showItems: false
+          }));
+
           // Load items for active orders only
           if (this.orders.length > 0) {
             this.loadAllOrderItems();
           }
 
-          // Optionally load minimal data for cancelled orders if needed
+          // Optionally load minimal data for cancelled and delivered orders if needed
           if (this.cancelledOrders.length > 0) {
             this.loadCancelledOrdersBasicInfo();
           }
 
+          if (this.deliveredOrders.length > 0) {
+            this.loadDeliveredOrdersBasicInfo();
+          }
+
           console.log('User orders loaded:', this.orders);
           console.log('Cancelled orders:', this.cancelledOrders);
+          console.log('Delivered orders:', this.deliveredOrders);
           this.isLoading = false;
         },
         error: (error) => {
@@ -220,7 +242,6 @@ export class OrderOverviewComponent implements OnInit {
     return price * quantity;
   }
 
-  // Keep only this method and remove downloadOrderInvoice method
   downloadInvoice(orderId: number | undefined, event?: Event): void {
     // Prevent default action only if event is provided
     if (event) {
@@ -366,84 +387,46 @@ export class OrderOverviewComponent implements OnInit {
     }
   }
 
-  // Modify the openCancelModal method to check if the order has a delivery person
-  openCancelModal(order: Commande): void {
-    if (!order.idCommande) return;
+  // Modify the openCancelModal method to validate order status first
+  openCancelModal(order: any) {
+    // Only allow cancellation for ON_HOLD orders
+    if (order.etat !== 'ON_HOLD') {
+      this.toastr.error('Only orders that are on hold can be cancelled');
+      return;
+    }
 
-    this.selectedOrderId = order.idCommande;
+    this.selectedOrder = order;
+    this.selectedOrderId = order.idCommande;  // Make sure this is set
     this.selectedOrderNumber = order.OrderNumber;
     this.selectedOrderDate = order.dateCommande;
 
-    // Check if the order has a delivery person assigned
-    // You'll need to modify this based on your actual data structure
-    if (order.livraison !== null && order.livraison !== undefined) {
-      this.selectedOrderHasDelivery = true;
-
-      // Show the "cannot cancel" modal instead
-      if (this.cannotCancelModal) {
-        this.cannotCancelModal.show();
-      } else {
-        console.error('Cannot cancel modal directive not available');
-        this.toastr.error('Cannot display modal. The order cannot be cancelled as it has been assigned to delivery.');
-      }
-    } else {
-      this.selectedOrderHasDelivery = false;
-
-      // Show the normal cancel modal
-      if (this.cancelOrderModal) {
-        this.cancelOrderModal.show();
-      } else {
-        console.error('Modal directive not available');
-        this.toastr.error('Cannot open cancel dialog. Please try again.');
-      }
+    // Open your modal
+    if (this.cancelOrderModal) {
+      this.cancelOrderModal.show();
     }
   }
 
+  // Update confirmCancel to double-check the order status
   confirmCancel() {
     if (!this.selectedOrderId) return;
 
-    // Safety check: Verify again that the order can be cancelled
-    // This prevents cancellation if selectedOrderHasDelivery was somehow bypassed
-    if (this.selectedOrderHasDelivery) {
-      console.error('Attempted to cancel an order with delivery assigned');
-      this.toastr.error('This order cannot be cancelled as it has already been assigned for delivery');
+    // Find the order to check its status
+    const orderToCancel = this.orders.find(o => o.idCommande === this.selectedOrderId);
 
-      // Hide cancel modal and show the cannot cancel modal
+    // Only allow ON_HOLD orders to be cancelled
+    if (!orderToCancel || orderToCancel.etat !== 'ON_HOLD') {
+      console.error('Attempted to cancel an order that is not on hold');
+      this.toastr.error('Only orders that are on hold can be cancelled');
+
       if (this.cancelOrderModal) {
         this.cancelOrderModal.hide();
       }
 
-      if (this.cannotCancelModal) {
-        this.cannotCancelModal.show();
-      }
-
-      // Reset cancellation state
       this.isCancellingOrder = false;
       return;
     }
 
     this.isCancellingOrder = true;
-
-    // Find the order to double check livraison status
-    const orderToCancel = this.orders.find(o => o.idCommande === this.selectedOrderId);
-
-    // Extra safety: Check one more time if the order has livraison
-    if (orderToCancel && orderToCancel.livraison) {
-      console.error('Cannot cancel order with active delivery');
-      this.toastr.error('Unable to cancel: This order is already in delivery process');
-
-      // Hide cancel modal and show the cannot cancel modal
-      if (this.cancelOrderModal) {
-        this.cancelOrderModal.hide();
-      }
-
-      if (this.cannotCancelModal) {
-        this.cannotCancelModal.show();
-      }
-
-      this.isCancellingOrder = false;
-      return;
-    }
 
     const updateCommand: UpdateStateCommand = {
       idCommande: this.selectedOrderId,
@@ -465,9 +448,6 @@ export class OrderOverviewComponent implements OnInit {
 
           // Update UI to reflect changes
           this.toastr.success('Your order has been successfully cancelled');
-        } else {
-          this.toastr.info('Order status updated but UI refresh required');
-          // Optionally reload all orders here if needed
         }
 
         // Hide the modal
@@ -484,7 +464,6 @@ export class OrderOverviewComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error cancelling order:', error);
-        this.errorMessage = 'Failed to cancel the order. Please try again later.';
         this.toastr.error('Failed to cancel your order');
         this.isCancellingOrder = false;
       }
@@ -514,6 +493,53 @@ export class OrderOverviewComponent implements OnInit {
             },
             error: (error) => {
               console.error(`Error loading basic info for cancelled order ${order.idCommande}:`, error);
+            }
+          });
+      }
+    });
+  }
+
+  // Method to load the delivered orders
+  private loadDeliveredOrders() {
+    this.checkoutService.getAllCommandes()
+      .subscribe({
+        next: (allOrders: Commande[]) => {
+          // Filter orders that belong to the current user and have DELIVERED status
+          this.deliveredOrders = allOrders
+            .filter(order => order.userId === this.userId && order.etat === Status.DELIVERED)
+            .map(order => ({
+              ...order,
+              orderItems: [],
+              isLoadingItems: false,
+              showItems: false // Don't need to show detailed items for delivered orders
+            }));
+
+          // Optionally load basic info for delivered orders if needed
+          if (this.deliveredOrders.length > 0) {
+            this.loadDeliveredOrdersBasicInfo();
+          }
+
+          console.log('Delivered orders loaded:', this.deliveredOrders);
+        },
+        error: (error) => {
+          console.error('Error loading delivered orders:', error);
+          this.deliveredOrders = [];
+        }
+      });
+  }
+
+  // Add this helper method to load basic info for delivered orders
+  loadDeliveredOrdersBasicInfo(): void {
+    // For each delivered order, just get the count of items
+    this.deliveredOrders.forEach(order => {
+      if (order.idCommande) {
+        this.ligneCommandeService.getByCommandeId(order.idCommande)
+          .subscribe({
+            next: (lignes) => {
+              order.orderItems = lignes;
+            },
+            error: (error) => {
+              console.error(`Error loading basic info for delivered order ${order.idCommande}:`, error);
             }
           });
       }
