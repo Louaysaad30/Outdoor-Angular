@@ -187,7 +187,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let vehicle of vehicles">
+                <tr *ngFor="let vehicle of pagedVehicles">
                   <td>{{vehicle.id}}</td>
                   <td>
                     <div class="d-flex align-items-center gap-2">
@@ -226,6 +226,35 @@
               </tbody>
             </table>
           </div>
+          <!-- Vehicles Pagination -->
+          <div
+          class="row mt-3 align-items-center"
+          *ngIf="filteredVehicles.length > itemsPerPage"
+        >
+          <div class="col-sm">
+            <div class="text-muted text-center text-sm-start">
+              Page {{ vehiclePage }} - Showing
+              <span class="fw-semibold">{{ pagedVehicles.length }}</span> of
+              <span class="fw-semibold">{{ filteredVehicles.length }}</span>
+              Vehicles
+            </div>
+          </div>
+          <div class="col-sm-auto mt-3 mt-sm-0">
+            <pagination
+              [boundaryLinks]="true"
+              [totalItems]="filteredVehicles.length"
+              [itemsPerPage]="itemsPerPage"
+              [(ngModel)]="vehiclePage"
+              (pageChanged)="onPageChange($event)"
+              previousText="&lsaquo;"
+              nextText="&rsaquo;"
+              firstText="&laquo;"
+              lastText="&raquo;"
+              class="pagination-sm"
+            >
+            </pagination>
+          </div>
+        </div>
         </div>
       </div>
     </div>

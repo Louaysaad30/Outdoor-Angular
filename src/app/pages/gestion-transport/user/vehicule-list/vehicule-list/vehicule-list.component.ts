@@ -6,6 +6,7 @@ import { Vehicule } from '../../../models/vehicule.model';
 import { Router } from '@angular/router';
 import { Options } from '@angular-slider/ngx-slider';
 import { PageChangedEvent } from 'ngx-bootstrap/pagination';
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-vehicule-list',
@@ -17,6 +18,11 @@ export class VehiculeListComponent implements OnInit {
   vehicules: Vehicule[] = [];
   filteredVehicules: Vehicule[] = [];
   isLoading: boolean = true;
+
+  
+  recommendationInput: string = '';
+  isLoadingRecommendations: boolean = false;
+  recommendationError: string | null = null;
 
   // Pagination properties
   pagedItems: any[] = [];
@@ -75,6 +81,10 @@ export class VehiculeListComponent implements OnInit {
     this.pagedItems = this.filteredVehicules.slice(startItem, endItem);
     this.currentPage = event.page;
 }
+
+
+
+
 
   // Fetch vehicles from service
   getVehicules(): void {
@@ -189,4 +199,82 @@ export class VehiculeListComponent implements OnInit {
       
     });
   }
+
+  openRecommendationModal(): void {
+    this.recommendationInput = '';
+    this.recommendationError = null;
+    
+    // Get the modal element
+    const modalElement = document.getElementById('recommendationModal');
+    
+    if (modalElement) {
+      // Initialize the Bootstrap modal
+      const modal = new bootstrap.Modal(modalElement);
+      
+      // Show the modal
+      modal.show();
+    } else {
+      console.error('Modal element not found');
+    }
+  }
+
+  getRecommendations(): void {
+    if (!this.recommendationInput) return;
+    
+    this.isLoadingRecommendations = true;
+    this.recommendationError = null;
+    
+    // Prepare the request payload
+    const request = {
+      mood_input: this.recommendationInput,
+      vehicules: this.vehicules.map(v => ({
+        type: v.type,
+        modele: v.modele,
+        localisation: v.localisation,
+        description: v.description,
+        prixParJour: v.prixParJour,
+        rating: v.rating || 0
+      }))
+    };
+    
+    this.vehiculeService.getRecommendations(request).subscribe({
+      next: (recommendedVehicles: any[]) => {
+        // Map the recommended vehicles
+        this.filteredVehicules = recommendedVehicles.map(rec => {
+          const fullVehicle = this.vehicules.find(v => 
+            v.type === rec.type && 
+            v.modele === rec.modele && 
+            v.localisation === rec.localisation
+          );
+          
+          return fullVehicle || {
+            ...rec,
+            image: 'assets/images/default-vehicle.jpg',
+            nbPlace: 0,
+            disponible: true
+          };
+        });
+        
+        this.currentPage = 1;
+        this.pageChanged({ itemsPerPage: this.itemsPerPage, page: 1 });
+        
+        // Close the modal
+        const modalElement = document.getElementById('recommendationModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          modal?.hide();
+        }
+      },
+      error: (err) => {
+        console.error('Error getting recommendations:', err);
+        this.recommendationError = 'Failed to get recommendations. Please try again.';
+        this.isLoadingRecommendations = false;
+      },
+      complete: () => {
+        this.isLoadingRecommendations = false;
+      }
+    });
+  }
+        
 }
+    

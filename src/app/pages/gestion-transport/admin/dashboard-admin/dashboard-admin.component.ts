@@ -13,19 +13,16 @@ type ReviewSortField = 'createdDate' | 'rating' | 'vehiculeId';
 @Component({
   selector: 'app-dashboard-admin',
   templateUrl: './dashboard-admin.component.html',
-  styleUrls: ['./dashboard-admin.component.scss']
+  styleUrls: ['./dashboard-admin.component.scss'],
 })
 export class DashboardAdminComponent implements OnInit {
-  breadCrumbItems = [
-    { label: 'Admin' },
-    { label: 'Dashboard', active: true }
-  ];
+  breadCrumbItems = [{ label: 'Admin' }, { label: 'Dashboard', active: true }];
 
   stats = {
     totalVehicles: 0,
     totalAgence: 0,
     totalReservations: 0,
-    totalReviews: 0
+    totalReviews: 0,
   };
 
   agence: Agence[] = [];
@@ -46,12 +43,18 @@ export class DashboardAdminComponent implements OnInit {
   reviewSortOptions: Record<ReviewSortField, string> = {
     createdDate: 'Date',
     rating: 'Rating',
-    vehiculeId: 'Vehicle'
+    vehiculeId: 'Vehicle',
   };
   reviewSortField: ReviewSortField = 'createdDate';
   reviewSortDirection = 'desc';
 
   Math = Math;
+  //pagination
+  // Add these to your component class
+  filteredVehicles: Vehicule[] = [];
+  pagedVehicles: Vehicule[] = [];
+  itemsPerPage: number = 5; // or whatever number you prefer
+  vehiclePage: number = 1;
 
   constructor(
     private vehiculeService: VehiculeService,
@@ -64,47 +67,57 @@ export class DashboardAdminComponent implements OnInit {
     this.loadStats();
     this.loadAgence();
     this.loadVehicles();
-    
   }
 
-  get sortedReviewOptions(): {key: ReviewSortField, value: string}[] {
+  get sortedReviewOptions(): { key: ReviewSortField; value: string }[] {
     return Object.entries(this.reviewSortOptions).map(([key, value]) => ({
       key: key as ReviewSortField,
-      value
+      value,
     }));
   }
 
   loadStats(): void {
-    this.vehiculeService.getVehicules().subscribe(vehicles => {
+    this.vehiculeService.getVehicules().subscribe((vehicles) => {
       this.stats.totalVehicles = vehicles.length;
     });
 
-    this.agenceService.getAllAgences().subscribe(agence => {
+    this.agenceService.getAllAgences().subscribe((agence) => {
       this.stats.totalAgence = agence.length;
     });
 
-    this.reservationService.getReservations().subscribe(reservations => {
+    this.reservationService.getReservations().subscribe((reservations) => {
       this.stats.totalReservations = reservations.length;
     });
 
-    this.reviewService.getAllReviews().subscribe(reviews => {
+    this.reviewService.getAllReviews().subscribe((reviews) => {
       this.stats.totalReviews = reviews.length;
     });
   }
 
   loadAgence(): void {
-    this.agenceService.getAllAgences().subscribe(agence => {
+    this.agenceService.getAllAgences().subscribe((agence) => {
       this.agence = agence;
-      agence.forEach(agency => this.AgenceMap.set(agency.id, agency));
+      agence.forEach((agency) => this.AgenceMap.set(agency.id, agency));
     });
   }
 
   loadVehicles(): void {
-    this.vehiculeService.getVehicules().subscribe(vehicles => {
+    this.vehiculeService.getVehicules().subscribe((vehicles) => {
       this.vehicles = vehicles;
-      // Update vehicle map for reviews
-      vehicles.forEach(vehicle => this.vehicleMap.set(vehicle.id, vehicle));
+      this.filteredVehicles = [...vehicles];
+      this.updatePagedVehicles();
+      vehicles.forEach((vehicle) => this.vehicleMap.set(vehicle.id, vehicle));
     });
+  }
+  updatePagedVehicles(): void {
+    const startItem = (this.vehiclePage - 1) * this.itemsPerPage;
+    const endItem = this.vehiclePage * this.itemsPerPage;
+    this.pagedVehicles = this.filteredVehicles.slice(startItem, endItem);
+  }
+
+  onPageChange(event: any): void {
+    this.vehiclePage = event.page;
+    this.updatePagedVehicles();
   }
 
   blockAgence(agenceId: number): void {
@@ -117,7 +130,7 @@ export class DashboardAdminComponent implements OnInit {
         error: (err) => {
           console.error('Error blocking agency:', err);
           alert('Failed to block agency');
-        }
+        },
       });
     }
   }
@@ -127,24 +140,25 @@ export class DashboardAdminComponent implements OnInit {
       this.vehiculeService.deleteVehicule(vehicleId).subscribe({
         next: () => {
           // Remove the vehicle from the local list after deletion
-          this.vehicles = this.vehicles.filter(v => v.id !== vehicleId);
+          this.vehicles = this.vehicles.filter((v) => v.id !== vehicleId);
           this.stats.totalVehicles--; // Update vehicle stats
         },
         error: (err) => {
           console.error('Error deleting vehicle:', err);
           alert('Failed to delete vehicle');
-        }
+        },
       });
     }
   }
-  
+
   getAgenceName(agenceId: number): string {
     return this.AgenceMap.get(agenceId)?.nom || 'Unknown';
   }
 
   getVehicleStatusClass(vehicle: Vehicule): string {
     if (!vehicle.disponible) return 'bg-danger-subtle text-danger';
-    if (vehicle.statut === 'MAINTENANCE') return 'bg-warning-subtle text-warning';
+    if (vehicle.statut === 'MAINTENANCE')
+      return 'bg-warning-subtle text-warning';
     return 'bg-success-subtle text-success';
   }
 
@@ -153,6 +167,4 @@ export class DashboardAdminComponent implements OnInit {
     if (vehicle.statut === 'MAINTENANCE') return 'In Maintenance';
     return 'Available';
   }
-
-  
 }

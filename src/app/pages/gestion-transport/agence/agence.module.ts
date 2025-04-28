@@ -45,7 +45,8 @@ import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
     }),
     NgApexchartsModule,
     FlatpickrModule.forRoot(),
-    NgbPaginationModule
+    NgbPaginationModule,
+    PaginationModule.forRoot(),
   ]
 })
 export class AgenceModule {

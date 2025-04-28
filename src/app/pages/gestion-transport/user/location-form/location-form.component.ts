@@ -1,15 +1,23 @@
-import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { VehiculeService } from '../../services/vehicule.service';
 import { ReservationService } from '../../services/reservation.service';
 import * as L from 'leaflet';
 import { forkJoin } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-location-form',
   templateUrl: './location-form.component.html',
-  styleUrls: ['./location-form.component.scss']
+  styleUrls: ['./location-form.component.scss'],
 })
 export class LocationFormComponent implements OnInit, AfterViewInit {
   reservationForm!: FormGroup;
@@ -23,41 +31,41 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
   currentUser: any;
   loading: boolean = false;
   minDate: string = new Date().toISOString().slice(0, 16);
-
+  preselectedVehicleId: string | null = null;
   formErrors = {
     fullName: '',
     phone: '',
     vehicule: '',
     debutLocation: '',
     finLocation: '',
-    pickupLocation: ''
+    pickupLocation: '',
   };
 
   validationMessages = {
     fullName: {
       required: 'Full name is required',
-      minlength: 'Full name must be at least 3 characters'
+      minlength: 'Full name must be at least 3 characters',
     },
     phone: {
       required: 'Phone number is required',
-      pattern: 'Please enter a valid phone number (8-15 digits)'
+      pattern: 'Please enter a valid phone number (8-15 digits)',
     },
     vehicule: {
-      required: 'Please select a vehicle'
+      required: 'Please select a vehicle',
     },
     debutLocation: {
       required: 'Start date is required',
       invalidDate: 'Start date must be in the future',
-      unavailable: 'Vehicle is not available for selected dates'
+      unavailable: 'Vehicle is not available for selected dates',
     },
     finLocation: {
       required: 'End date is required',
       invalidDate: 'End date must be after start date',
-      unavailable: 'Vehicle is not available for selected dates'
+      unavailable: 'Vehicle is not available for selected dates',
     },
     pickupLocation: {
-      required: 'Please select a pickup location'
-    }
+      required: 'Please select a pickup location',
+    },
   };
 
   constructor(
@@ -65,7 +73,8 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
     private vehiculeService: VehiculeService,
     private reservationService: ReservationService,
     private router: Router,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -73,15 +82,39 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
     this.initForm();
     this.loadInitialData();
     this.setupFormListeners();
+    // Get vehicle ID from route
+    this.route.params.subscribe((params) => {
+      const vehicleId = params['id'];
+      if (vehicleId) {
+        this.preselectedVehicleId = vehicleId;
+        if (this.vehicules.length > 0) {
+          this.selectPreselectedVehicle();
+        }
+      }
+    });
   }
-
+  // Add new method
+  private selectPreselectedVehicle(): void {
+    if (this.preselectedVehicleId) {
+      const vehicleExists = this.vehicules.some(
+        (v) => v.id == this.preselectedVehicleId
+      );
+      if (vehicleExists) {
+        this.reservationForm.patchValue({
+          vehicule: this.preselectedVehicleId,
+        });
+        // Disable the select if vehicle is preselected
+        this.reservationForm.get('vehicule')?.disable();
+      }
+    }
+  }
   ngAfterViewInit(): void {
     this.initializeMap();
   }
 
   private initializeMap(): void {
     this.cdRef.detectChanges();
-    
+
     setTimeout(() => {
       if (!this.pickupMapElement?.nativeElement) {
         console.warn('Map container not found, retrying...');
@@ -121,7 +154,6 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
       tooltipAnchor: [16, -28],
-      
     });
 
     // Clear existing map if any
@@ -132,18 +164,18 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
     // Initialize the map
     this.pickupMap = L.map(this.pickupMapElement.nativeElement, {
       center: [36.8065, 10.1815],
-      zoom: 10
+      zoom: 10,
     });
 
     // Add tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
     }).addTo(this.pickupMap);
 
     // Add marker
     this.pickupMarker = L.marker([36.8065, 10.1815], {
       icon: customIcon,
-      draggable: true
+      draggable: true,
     }).addTo(this.pickupMap);
 
     // Map click handler
@@ -165,7 +197,7 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
   private updateLocationValues(lat: number, lng: number): void {
     this.reservationForm.patchValue({
       pickupLatitude: lat,
-      pickupLongitude: lng
+      pickupLongitude: lng,
     });
     this.getLocationName(lat, lng);
   }
@@ -177,9 +209,11 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
       .then((response) => response.json())
       .then((data) => {
         if (data && data.address) {
-          this.locationName = `${data.address.road || ''} ${data.address.city || ''}, ${data.address.country || ''}`;
+          this.locationName = `${data.address.road || ''} ${
+            data.address.city || ''
+          }, ${data.address.country || ''}`;
           this.reservationForm.patchValue({
-            pickupLocation: this.locationName
+            pickupLocation: this.locationName,
           });
         }
       })
@@ -193,38 +227,58 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
       fullName: ['', [Validators.required, Validators.minLength(3)]],
       phone: ['', [Validators.required, Validators.pattern('^[0-9]{8,15}$')]],
       vehicule: [null, Validators.required],
-      debutLocation: ['', [Validators.required, this.futureDateValidator.bind(this)]],
-      finLocation: ['', [Validators.required, this.futureDateValidator.bind(this)]],
+      debutLocation: [
+        '',
+        [Validators.required, this.futureDateValidator.bind(this)],
+      ],
+      finLocation: [
+        '',
+        [Validators.required, this.futureDateValidator.bind(this)],
+      ],
       pickupLocation: ['', Validators.required],
       pickupLatitude: [null],
       pickupLongitude: [null],
-      statut: ['EN_ATTENTE']
+      statut: ['EN_ATTENTE'],
     });
   }
 
   loadInitialData(): void {
     this.loading = true;
     forkJoin([
-      this.vehiculeService.getVehicules(),
-      this.reservationService.getReservations()
+        this.vehiculeService.getVehicules(),
+        this.reservationService.getReservations()
     ]).subscribe(
-      ([vehicules, reservations]) => {
-        this.vehicules = vehicules;
-        this.existingReservations = reservations;
-        this.loading = false;
-      },
-      (error) => {
-        console.error('Error loading data', error);
-        this.loading = false;
-      }
+        ([vehicules, reservations]) => {
+            console.log('Loaded vehicles:', vehicules);
+            
+            this.vehicules = vehicules;
+            this.existingReservations = reservations;
+            this.loading = false;
+            
+            if (this.preselectedVehicleId) {
+                const vehicle = this.vehicules.find(v => v.id == this.preselectedVehicleId);
+                console.log('Preselected vehicle:', vehicle);
+            }
+        },
+        (error) => {
+            console.error('Error loading data', error);
+            this.loading = false;
+        }
     );
+}
+  getSelectedVehicleDisplay(): string {
+    if (!this.preselectedVehicleId) return '';
+    const vehicle = this.vehicules.find(v => v.id == this.preselectedVehicleId);
+    return vehicle ? 
+      `${vehicle.marque} - ${vehicle.modele} (${vehicle.prixParJour } /day)` : 
+      'Loading vehicle...';
   }
 
   setupFormListeners(): void {
     this.reservationForm.valueChanges.subscribe(() => this.validateForm());
 
     const availabilityFields = ['vehicule', 'debutLocation', 'finLocation'];
-    availabilityFields.forEach(field => {
+    availabilityFields.forEach((field) => {
       this.reservationForm.get(field)?.valueChanges.subscribe(() => {
         if (this.reservationForm.get(field)?.valid) {
           this.checkVehicleAvailability();
@@ -245,12 +299,16 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
       if (this.formErrors.hasOwnProperty(field)) {
         this.formErrors[field as keyof typeof this.formErrors] = '';
         const control = this.reservationForm.get(field);
-        
+
         if (control && control.invalid && (control.dirty || control.touched)) {
-          const messages = this.validationMessages[field as keyof typeof this.validationMessages];
+          const messages =
+            this.validationMessages[
+              field as keyof typeof this.validationMessages
+            ];
           for (const key in control.errors) {
             if (control.errors.hasOwnProperty(key)) {
-              this.formErrors[field as keyof typeof this.formErrors] += messages[key as keyof typeof messages] + ' ';
+              this.formErrors[field as keyof typeof this.formErrors] +=
+                messages[key as keyof typeof messages] + ' ';
             }
           }
         }
@@ -274,30 +332,36 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (start >= end) {
       this.vehicleUnavailable = true;
       return;
     }
 
-    this.reservationService.checkAvailability(selectedVehicleId, startDate, endDate).subscribe({
-      next: (isAvailable) => {
-        this.vehicleUnavailable = !isAvailable;
-        if (this.vehicleUnavailable) {
-          this.reservationForm.get('debutLocation')?.setErrors({ unavailable: true });
-          this.reservationForm.get('finLocation')?.setErrors({ unavailable: true });
-        } else {
-          this.reservationForm.get('debutLocation')?.setErrors(null);
-          this.reservationForm.get('finLocation')?.setErrors(null);
-        }
-      },
-      error: (err) => console.error('Availability check failed:', err)
-    });
+    this.reservationService
+      .checkAvailability(selectedVehicleId, startDate, endDate)
+      .subscribe({
+        next: (isAvailable) => {
+          this.vehicleUnavailable = !isAvailable;
+          if (this.vehicleUnavailable) {
+            this.reservationForm
+              .get('debutLocation')
+              ?.setErrors({ unavailable: true });
+            this.reservationForm
+              .get('finLocation')
+              ?.setErrors({ unavailable: true });
+          } else {
+            this.reservationForm.get('debutLocation')?.setErrors(null);
+            this.reservationForm.get('finLocation')?.setErrors(null);
+          }
+        },
+        error: (err) => console.error('Availability check failed:', err),
+      });
   }
 
   onSubmit(): void {
     this.validateForm();
-    
+
     if (this.reservationForm.invalid || this.vehicleUnavailable) {
       alert('Please correct form errors before submitting');
       return;
@@ -315,31 +379,42 @@ export class LocationFormComponent implements OnInit, AfterViewInit {
       error: (error) => {
         this.loading = false;
         console.error('Reservation error:', error);
-        alert(`Reservation failed: ${error.error?.message || error.message || 'Unknown error'}`);
-      }
+        alert(
+          `Reservation failed: ${
+            error.error?.message || error.message || 'Unknown error'
+          }`
+        );
+      },
     });
   }
 
   prepareSubmissionData(): any {
-    const formData = this.reservationForm.value;
-    const vehicle = this.vehicules.find(v => v.id === formData.vehicule);
+    const formData = this.reservationForm.getRawValue();
+    
+    const vehicle = this.vehicules.find(v => v.id == formData.vehicule);
+    if (!vehicle) {
+        throw new Error('Selected vehicle not found');
+    }
 
+   
     return {
-      ...formData,
-      vehicule: { id: formData.vehicule },
-      prixTotal: this.calculateTotalPrice(
-        formData.debutLocation,
-        formData.finLocation,
-        vehicle?.prixParJour || 0
-      ),
-      userId: this.currentUser.id
+        ...formData,
+        vehicule: { id: formData.vehicule }, 
+        prixTotal: this.calculateTotalPrice(
+            formData.debutLocation,
+            formData.finLocation,
+            vehicle.prixParJour
+        ),
+        userId: this.currentUser.id,
     };
-  }
+}
 
-  calculateTotalPrice(start: string, end: string, dailyPrice: number): number {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-    return days * dailyPrice;
-  }
+calculateTotalPrice(start: string, end: string, dailyPrice: number): number {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const timeDiff = endDate.getTime() - startDate.getTime();
+  const daysDiff = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+  const total = daysDiff * dailyPrice;
+  return Math.round(total * 100) / 100;
+}
 }

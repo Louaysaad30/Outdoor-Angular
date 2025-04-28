@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, throwError } from 'rxjs';
 import { Vehicule } from '../models/vehicule.model';
 
 @Injectable({
@@ -43,5 +43,14 @@ export class VehiculeService {
 
   updateVehiculeRating(vehiculeId: number, rating: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${vehiculeId}/rating`, { rating });
+  }
+
+  getRecommendations(request: any): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/recommend`, request).pipe(
+      catchError(error => {
+        console.error('Error in recommendation request:', error);
+        return throwError(() => new Error('Recommendation service failed'));
+      })
+    );
   }
 }
