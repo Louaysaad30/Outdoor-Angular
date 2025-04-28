@@ -7,6 +7,7 @@ import { ErrorsModule } from './errors/errors.module';
 
 // otp module
 import { NgOtpInputModule } from 'ng-otp-input';
+import { NgxCaptchaModule } from 'ngx-captcha';
 
 // Component
 import { SigninComponent } from './signin/signin.component';
@@ -38,7 +39,9 @@ import { HttpClientModule } from '@angular/common/http';
     NgOtpInputModule, 
     FormsModule,
     ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    NgxCaptchaModule,
+
   ]
 })
 export class AuthModule { }

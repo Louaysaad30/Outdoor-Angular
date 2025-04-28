@@ -1,9 +1,19 @@
 import { Component } from '@angular/core';
 import { latLng, tileLayer, circle, polygon, marker, icon, Layer } from 'leaflet';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { LeafletModule } from '@asymmetrik/ngx-leaflet';
+import { SharedModule } from '../../../shared/shared.module';
 
 @Component({
   selector: 'app-leaflet',
   templateUrl: './leaflet.component.html',
+  standalone: true,
+    imports: [
+    CommonModule,
+    LeafletModule,
+    SharedModule
+  ],
   styleUrls: ['./leaflet.component.scss']
 })
 export class LeafletComponent {

@@ -1,0 +1,77 @@
+<div class="d-flex flex-column justify-content-center chat-container ">
+  <!-- Chat Messages Section -->
+  <div  class="chat-messages-container">
+    <ngx-simplebar class="chat-conversation" style="max-height: 100%;" >
+      <!-- Show messages if they exist -->
+      <ul *ngIf="messages.length > 0; else noMessages" class="chat-conversation-list">
+        <!-- Message List -->
+        <li *ngFor="let msg of messages" [ngClass]="msg.sender === currentUser.id ? 'chat-list right' : 'chat-list left'">
+          <div class="conversation-list">
+            <!-- Avatar for the other user -->
+            <div *ngIf="msg.sender !== currentUser.id" class="chat-avatar">
+              <img src="assets/images/users/48/avatar-2.jpg" alt="User Avatar" class="rounded-circle">
+            </div>
+            <div class="user-chat-content">
+              <div class="ctext-wrap">
+                <div class="ctext-wrap-content">
+                  <!-- Message Content -->
+                  <p class="mb-0 ctext-content rounded-circle-5" *ngIf="!msg.imageUrl">{{ msg.content }}</p>
+                  <!-- Image Message -->
+                  <img *ngIf="msg.imageUrl" [src]="msg.imageUrl" alt="Image message" class="message-image rounded">
+                </div>
+                <!-- Dropdown for message actions -->
+                <div dropdown [container]="'body'" class="dropdown align-self-start message-box-drop" [dropup]="msg.sender === currentUser.id">
+                  <a dropdownToggle class="dropdown-toggle" href="javascript:void(0);">
+                    <i class="ri-more-2-fill"></i>
+                  </a>
+                  <div *bsDropdownMenu class="dropdown-menu">
+                    <a class="dropdown-item" href="javascript:void(0);"><i class="ri-reply-line me-2 text-muted align-bottom"></i>Reply</a>
+                    <a class="dropdown-item" href="javascript:void(0);"><i class="ri-file-copy-line me-2 text-muted align-bottom"></i>Copy</a>
+                    <a class="dropdown-item delete-item" href="javascript:void(0);"><i class="ri-delete-bin-5-line me-2 text-muted align-bottom"></i>Delete</a>
+                  </div>
+                </div>
+              </div>
+              <!-- Message Metadata -->
+              <div class="conversation-name">
+                <small class="text-muted time">{{ msg.timestamp | date:'shortTime' }}</small>
+                <span class="check-message-icon text-success" *ngIf="msg.isRead === true">
+                  <i class="ri-check-double-line align-bottom"></i>
+                </span>
+                <span class="check-message-icon text-primary" *ngIf="msg.isRead === false">
+                  <i class="ri-check-double-line align-bottom"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <!-- No Messages Placeholder -->
+      <ng-template #noMessages>
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+          <div class="avatar-lg mb-3">
+            <div class="avatar-title bg-soft-primary rounded-circle">
+              <i class="bi bi-chat-square-text fs-2 text-primary"></i>
+            </div>
+          </div>
+          <h5 class="text-muted">No messages yet</h5>
+          <p class="text-muted mb-0">Send a message to start the conversation</p>
+        </div>
+      </ng-template>
+      
+    </ngx-simplebar>
+  </div>
+  <!-- Message Input Section -->
+  <div class="chat-input-container">
+    <div class="row g-2 mx-3 align-items-center p-3">
+      <div class="col">
+        <input type="text" class="form-control border-light bg-light rounded-pill" placeholder="Type a message..." [(ngModel)]="messageText">
+      </div>
+      <div class="col-auto">
+        <button type="button" class="btn btn-primary rounded-circle" (click)="sendMessage()">
+          <i class="mdi mdi-send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

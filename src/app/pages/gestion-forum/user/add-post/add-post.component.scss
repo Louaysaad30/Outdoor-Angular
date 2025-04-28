@@ -1,0 +1,119 @@
+.post-container {
+  margin: 20px;
+  .profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .profile-pic {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  }
+}
+
+/* Personnalisation du modal */
+.modal.fade {
+  transition: opacity 0.15s linear;
+  &.show {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.add-options .option-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+.add-options {
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.options-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.option-icon {
+  font-size: 20px;
+  margin-right: 5px;
+}
+
+/* Optionnel : si ml-3 n'est pas reconnu, ajoute cette règle */
+.ml-3 {
+  margin-left: 1rem;
+}
+.custom-btn {
+  display: inline-flex !important;  /* Forcer l'affichage en flex */
+  flex-direction: row;              /* Disposition en ligne */
+  align-items: center;              /* Alignement vertical */
+  justify-content: center;          /* Centrage horizontal si nécessaire */
+  white-space: nowrap;              /* Empêcher le retour à la ligne */
+}
+
+.custom-icon {
+  font-size: 20px;
+  margin-right: 5px;                /* Espacement entre l'icône et le texte */
+  display: inline-block;            /* S'assurer que l'icône reste en ligne */
+}
+
+.custom-text {
+  display: inline-block;            /* S'assurer que le texte reste en ligne */
+  white-space: nowrap;              /* Empêcher le retour à la ligne */
+}
+.custom-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.custom-icon {
+  font-size: 18px;
+}
+
+ngx-dropzone {
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  color: #007bff;
+  cursor: pointer;
+}
+
+ngx-dropzone:hover {
+  background: rgba(0, 123, 255, 0.1);
+}
+.modal-dialog {
+  max-width: 60%; /* Ajuste à 80% de la largeur de l'écran */
+  width: 60%;
+}
+
+@media (max-width: 768px) {
+  .modal-dialog {
+    max-width: 95%; /* Pour les écrans mobiles */
+    width: 95%;
+  }
+}
+.emoji-picker-container {
+  position: absolute;
+  left: 0; /* Align under the icon */
+  top: 100%; /* Position it below the icon */
+  transform: translateY(5px); /* Optional: adjust space below the icon */
+  z-index: 1000;
+}
+
+
