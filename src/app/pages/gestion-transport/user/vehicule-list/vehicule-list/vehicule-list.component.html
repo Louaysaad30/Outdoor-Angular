@@ -1,97 +1,107 @@
 <div class="container-fluid">
   <div class="row">
     <!-- Filter Sidebar -->
-    <div class="col-lg-3 col-md-4">
-      <div class="card shadow-sm sticky-top" style="top: 20px;">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">Filters</h5>
-          <button class="btn btn-sm btn-outline-light" (click)="clearAllFilters()">
-            Clear All
-          </button>
+  <!-- Filter Sidebar -->
+<div class="col-lg-3 col-md-4">
+  <div class="card shadow-lg rounded-3 sticky-sidebar">
+    <div class="card-header bg-gradient-primary text-white py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
+        <button class="btn btn-sm btn-light-primary" (click)="clearAllFilters()">
+          <i class="bi bi-x-circle me-1"></i>Clear
+        </button>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- AI Recommendations Section -->
+      <div class="card border-0 bg-light mb-4 rounded-3">
+        <div class="card-header bg-gradient-info text-white">
+          <h6 class="mb-0"><i class="bi bi-magic me-2"></i>AI Recommendations</h6>
         </div>
         <div class="card-body">
-          <div class="card mb-4 border-primary">
-            <div class="card-header bg-primary text-white">
-              <h6 class="mb-0"><i class="bi bi-magic me-1"></i> AI Recommendations</h6>
-            </div>
-            <div class="card-body">
-              <div class="mb-3">
-                <label class="form-label">Describe your needs:</label>
-                <textarea class="form-control" rows="3" 
-                          placeholder="e.g. 'I need a fast bike for city travel'" 
-                          [(ngModel)]="recommendationInput"></textarea>
-              </div>
-              
-              <button class="btn btn-primary w-100" 
-                      (click)="getRecommendations()" 
-                      [disabled]="!recommendationInput || isLoadingRecommendations">
-                <span *ngIf="!isLoadingRecommendations">
-                  <i class="bi bi-stars me-1"></i> Get Recommendations
-                </span>
-                <span *ngIf="isLoadingRecommendations">
-                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                  Processing...
-                </span>
-              </button>
-              
-              <div *ngIf="recommendationError" class="alert alert-danger mt-2 mb-0">
-                {{ recommendationError }}
-              </div>
-            </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">What are you looking for?</label>
+            <textarea class="form-control form-control-sm shadow-none" 
+                      rows="3" 
+                      placeholder="e.g. 'I need a fast bike for city travel'" 
+                      [(ngModel)]="recommendationInput"></textarea>
           </div>
-          <!-- Search Box -->
-          <div class="mb-4">
-            <label for="searchResultList" class="form-label">Search Vehicles</label>
-            <div class="input-group">
-              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-              <input type="text" class="form-control" id="searchResultList" 
-                     placeholder="Model, brand..." [(ngModel)]="searchTerm" 
-                     (ngModelChange)="performSearch()">
-            </div>
-          </div>
+          
+          <button class="btn btn-info w-100 text-white" 
+                  (click)="getRecommendations()" 
+                  [disabled]="!recommendationInput || isLoadingRecommendations">
+            <span *ngIf="!isLoadingRecommendations">
+              <i class="bi bi-stars me-2"></i>Get Suggestions
+            </span>
+            <span *ngIf="isLoadingRecommendations">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Processing...
+            </span>
+          </button>
+        </div>
+      </div>
 
-          <!-- Vehicle Type Filter -->
-          <div class="mb-4">
-            <h6 class="fw-bold mb-3">Vehicle Type</h6>
-            <div class="d-flex flex-wrap gap-2">
-              <button *ngFor="let type of vehiculeTypes" 
-                      class="btn btn-sm btn-outline-primary rounded-pill"
-                      [class.active]="activeTypeFilter === type"
-                      (click)="vehiculeTypeFilter(type)">
-                {{type}}
-              </button>
-            </div>
-          </div>
+      <!-- Search Box -->
+      <div class="mb-4">
+        <label class="form-label text-muted fw-medium">Search Vehicles</label>
+        <div class="input-group input-group-merge">
+          <span class="input-group-text bg-light border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input type="text" 
+                 class="form-control border-start-0 ps-0" 
+                 placeholder="Search by model, brand..." 
+                 [(ngModel)]="searchTerm" 
+                 (ngModelChange)="performSearch()">
+        </div>
+      </div>
 
-          <!-- Price Filter -->
-          <div class="card mb-3">
-            <div class="card-header">
-              <h5 class="mb-0">Price Range (TND)</h5>
+      <!-- Vehicle Type Filter -->
+      <div class="mb-4">
+        <h6 class="fw-medium mb-3">Vehicle Type</h6>
+        <div class="d-flex flex-wrap gap-2">
+          <button *ngFor="let type of vehiculeTypes" 
+                  class="btn btn-sm" 
+                  [class.btn-primary]="activeTypeFilter === type"
+                  [class.btn-outline-primary]="activeTypeFilter !== type"
+                  (click)="vehiculeTypeFilter(type)">
+            <i class="bi bi-car-front me-1" *ngIf="type === 'Car'"></i>
+            <i class="bi bi-bicycle me-1" *ngIf="type === 'Bike'"></i>
+            {{type}}
+          </button>
+        </div>
+      </div>
+
+      <!-- Price Range -->
+      <div class="card border-0 bg-light rounded-3">
+        <div class="card-header bg-gradient-success text-white">
+          <h6 class="mb-0"><i class="bi bi-cash me-2"></i>Price Range (TND)</h6>
+        </div>
+        <div class="card-body">
+          <ngx-slider 
+            [(value)]="minVal" 
+            [(highValue)]="maxVal" 
+            [options]="priceOptions"
+            (valueChange)="valueChange($event, true)"
+            (highValueChange)="valueChange($event, false)">
+          </ngx-slider>
+          <div class="d-flex align-items-center gap-2 mt-3">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light">Min</span>
+              <input type="number" class="form-control" [(ngModel)]="minVal" (ngModelChange)="applyFilters()">
             </div>
-            <div class="card-body">
-              <ngx-slider 
-                [(value)]="minVal" 
-                [(highValue)]="maxVal" 
-                [options]="priceOptions" 
-                (valueChange)="valueChange($event, true)"
-                (highValueChange)="valueChange($event, false)">
-              </ngx-slider>
-              <div class="d-flex align-items-center gap-3 mt-3">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-light">Min</span>
-                  <input type="number" class="form-control" [(ngModel)]="minVal" (ngModelChange)="applyFilters()">
-                </div>
-                <div class="text-muted">to</div>
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text bg-light">Max</span>
-                  <input type="number" class="form-control" [(ngModel)]="maxVal" (ngModelChange)="applyFilters()">
-                </div>
-              </div>
+            <span class="text-muted">-</span>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light">Max</span>
+              <input type="number" class="form-control" [(ngModel)]="maxVal" (ngModelChange)="applyFilters()">
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
 
     <!-- Main Content -->
     <div class="col-lg-9 col-md-8">

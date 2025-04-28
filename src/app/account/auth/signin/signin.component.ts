@@ -82,7 +82,7 @@ import { UserServiceService } from '../services/user-service.service';
                   } else if (authority === 'FORMATEUR') {
                     this.router.navigate(['/formationback']);
                   } else if (authority === 'EVENT_MANAGER') {
-                    this.router.navigate(['/eventback/event-manager']);
+                    this.router.navigate(['/eventback/event-manager/event-list ']);
                   } else {
                     this.router.navigate(['/auth/signin']);
                   }

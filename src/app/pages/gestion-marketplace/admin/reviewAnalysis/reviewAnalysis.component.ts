@@ -384,7 +384,7 @@ export class ReviewAnalysisComponent implements OnInit {
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
+                label: function(context:any) {
                   const label = context.label || '';
                   const value = context.raw as number;
                   const total = context.dataset.data.reduce((acc: number, data: number) => acc + data, 0);
