@@ -8,6 +8,9 @@ import { selectData, selectfeedData, selectrentData, selectsaleData } from 'src/
 import { StatisticsService } from '../../services/statistics.service';
 import {PostService} from "../../services/post.service";
 import {Post} from "../../models/post.model";
+import {UserServiceService} from "../../../../account/auth/services/user-service.service";
+import { forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard-forum',
@@ -43,6 +46,8 @@ export class DashboardForumComponent implements OnInit {
     public store: Store,
     private statsService: StatisticsService,
     private postService: PostService,
+    private userService: UserServiceService, // Add this line
+
 
   ) {
     const today = new Date();
@@ -95,36 +100,110 @@ export class DashboardForumComponent implements OnInit {
   topRatedPosts: any[] = [];
 
   // Add method to load top rated posts
-  loadTopRatedPosts(): void {
+loadTopRatedPosts(): void {
     this.postService.getTopRatedPosts().subscribe(
       (posts) => {
-        this.topRatedPosts = posts;
-        console.log('Top rated posts:', posts);
+        // Create an array of observables for fetching user info for each post
+        const postsWithUserInfo$ = posts.map(postItem => {
+          if (postItem.post && postItem.post.userId) {
+            // Fetch user info and add it to the post
+            return this.userService.getUserById(postItem.post.userId).pipe(
+              map((user: any) => {
+                return {
+                  ...postItem,
+                  post: {
+                    ...postItem.post,
+                    username: user.nom + ' ' + user.prenom,
+                    userProfilePic: user.profileImageUrl || null // Add profile pic if available
+                  }
+                };
+              }),
+              catchError(() => {
+                // If user fetch fails, return post with default username
+                return of({
+                  ...postItem,
+                  post: {
+                    ...postItem.post,
+                    username: 'Utilisateur inconnu'
+                  }
+                });
+              })
+            );
+          } else {
+            // If no userId, return post as is
+            return of(postItem);
+          }
+        });
+
+        // Wait for all user requests to complete
+        forkJoin(postsWithUserInfo$).subscribe(
+          (enhancedPosts) => {
+            this.topRatedPosts = enhancedPosts;
+            console.log('Top rated posts with user info:', enhancedPosts);
+          },
+          (error) => {
+            console.error('Error loading users for top posts:', error);
+          }
+        );
       },
       (error) => {
         console.error('Error loading top rated posts:', error);
       }
     );
   }
-
 // Nouvelle propriété pour stocker les posts récents
 recentPosts: Post[] = [];
 
+// Méthode pour charger les posts récents
 // Méthode pour charger les posts récents
 loadRecentPosts(): void {
   this.postService.getPosts().subscribe(
     (posts) => {
       // Sort by date (most recent first) and handle undefined `createdAt`
-      this.recentPosts = posts.sort((a, b) =>
-        new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
-      ).slice(0, 6); // Take only the first 6 posts
+      const sortedPosts = posts
+        .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+        .slice(0, 6); // Take only the first 6 posts
+
+      // Create an array of observables for each post to fetch user information
+      const postsWithUsers$ = sortedPosts.map(post => {
+        if (post.userId) {
+          return this.userService.getUserById(post.userId).pipe(
+            map((user: any) => {
+              // Create a new post object with the username added
+              return {
+                ...post,
+                username: user.nom + ' ' + user.prenom
+              };
+            }),
+            catchError(() => {
+              // If user fetch fails, return post with original username or placeholder
+              return of({
+                ...post,
+                username: post.username || 'Unknown User'
+              });
+            })
+          );
+        } else {
+          // If no userId, return post as is
+          return of(post);
+        }
+      });
+
+      // Wait for all user requests to complete
+      forkJoin(postsWithUsers$).subscribe(
+        (postsWithUsernames) => {
+          this.recentPosts = postsWithUsernames;
+        },
+        (error) => {
+          console.error('Error loading users for posts:', error);
+        }
+      );
     },
     (error) => {
       console.error('Error loading recent posts:', error);
     }
   );
 }
-
   ngOnInit(): void {
     this.loadRecentPosts();
 

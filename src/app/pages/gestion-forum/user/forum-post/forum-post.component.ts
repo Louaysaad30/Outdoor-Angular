@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {FormBuilder, FormsModule, ReactiveFormsModule, UntypedFormGroup, Validators} from "@angular/forms";
-import {Router, RouterLink} from "@angular/router";
+import {ActivatedRoute, Router, RouterLink} from "@angular/router";
 import {SharedModule} from "../../../../shared/shared.module";
 import {SimplebarAngularModule} from "simplebar-angular";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -19,30 +19,38 @@ import {ReactionType} from "../../models/reaction-type.enum";
 import {Reaction} from "../../models/reaction.model";
 import { ViewChild } from '@angular/core';
 import { ModalDirective } from 'ngx-bootstrap/modal';
+import { switchMap, takeWhile, catchError } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { of, forkJoin } from 'rxjs';
 
 
-import { catchError } from 'rxjs/operators';
+
 import {ModalModule} from "ngx-bootstrap/modal";
+import {interval, Subscription} from "rxjs";
+import {AuthServiceService} from "../../../../account/auth/services/auth-service.service";
+import {UserServiceService} from "../../../../account/auth/services/user-service.service";
 
 @Component({
   selector: 'app-forum-post',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, SharedModule, SimplebarAngularModule, TooltipModule, NgxDropzoneModule, PickerComponent, ReactiveFormsModule, ModalModule],
   templateUrl: './forum-post.component.html',
-  styleUrl: './forum-post.component.scss'
+  styleUrl: './forum-post.component.scss',
+
 })
-export class ForumPostComponent {
+export class ForumPostComponent implements OnInit {
   userReactions: Map<string, Reaction> = new Map<string, Reaction>();
 
 
   toxicContentDetected: boolean = false; // Added property
-  toxicImageDetected:boolean = false; // Added property
+  toxicImageDetected: boolean = false; // Added property
 
   profileImage: string = 'assets/profile-pic.png';
   isModalOpen: boolean = false;
   postContent: string = '';
   isSubmitting: boolean = false;
-  USER_ID=20;
+  USER_ID: number;
+  isLoadingComments: boolean = false;
 
   // Emoji Picker
   showEmojiPicker = false;
@@ -65,17 +73,28 @@ export class ForumPostComponent {
   isDetailModalOpen: boolean = false;
   newDetailComment: string = '';
   ReactionType = ReactionType;
+  private user: any;
+   nameUser: any;
+   firstnameUser: any;
 
   constructor(
     private postService: PostService,
     private router: Router,
     private formBuilder: FormBuilder,
-  private commentService: CommentService,
+    private commentService: CommentService,
     private modalService: NgbModal,
-  private reactionService: ReactionService // Add this line
+    private reactionService: ReactionService, // Add this line
+    private authService: AuthServiceService,
+    private  userService: UserServiceService,
+  private route: ActivatedRoute // Add this line
 
 
-) {}
+
+
+) {
+    this.USER_ID = 0;
+
+  }
 
 
   // Missing ViewChild reference and modal show call
@@ -83,26 +102,107 @@ export class ForumPostComponent {
 // Added ViewChild reference and modal show call
 
 
-@ViewChild('deleteRecordModal', { static: false }) deleteRecordModal!: ModalDirective;
+  @ViewChild('deleteRecordModal', {static: false}) deleteRecordModal!: ModalDirective;
 
-handleToxicContentError() {
-  this.toxicContentDetected = true;
-  setTimeout(() => {
-    this.deleteRecordModal.show();
+  handleToxicContentError() {
+    this.toxicContentDetected = true;
+    setTimeout(() => {
+      this.deleteRecordModal.show();
+    });
+  }
+
+// After
+openPostDetail(post: Post): void {
+  this.selectedPost = post;
+  this.isDetailModalOpen = true;
+  this.newDetailComment = '';
+  this.currentMediaIndex = 0;
+  this.isLoadingComments = true; // Add this flag
+
+
+
+  // Pre-load top level comments when opening post detail
+  this.commentService.getTolevel(post.id!).subscribe({
+    next: (comments) => {
+      let remainingComments = comments ? comments.length : 0;
+
+      if (remainingComments === 0) {
+        this.topLevelComments[post.id!] = [];
+        this.isLoadingComments = false;
+        return;
+      }
+
+      this.topLevelComments[post.id!] = comments || [];
+
+      // Process top-level comments and their replies recursively
+      this.topLevelComments[post.id!].forEach((comment, index) => {
+        this.enrichCommentWithUserDetails(comment, (updatedComment) => {
+          this.topLevelComments[post.id!][index] = updatedComment;
+          remainingComments--;
+          if (remainingComments === 0) {
+            this.isLoadingComments = false;
+          }
+        });
+      });
+    },
+    error: () => {
+      this.isLoadingComments = false;
+    }
   });
 }
-  openPostDetail(post: Post): void {
-    this.selectedPost = post;
-    this.isDetailModalOpen = true;
-    this.newDetailComment = '';
-    this.currentMediaIndex = 0; // Reset to first media when opening detail
-    // Pre-load top level comments when opening post detail
-    this.commentService.getTolevel(post.id!).subscribe({
-      next: (comments) => {
-        this.topLevelComments[post.id!] = comments || [];
-      }
-    });
+// Recursive helper method to enrich comments and their replies with user details
+private enrichCommentWithUserDetails(comment: any, callback: (updatedComment: any) => void): void {
+  this.commentService.getCommentWithUserDetails(comment.id!).subscribe({
+    next: (response) => {
+      // Enrich the current comment with user details
+      const enrichedComment = {
+        ...response.comment,
+        userProfilePic: response.user.image,
+        username: `${response.user.prenom} ${response.user.nom}`
+      };
 
+      // If this comment has replies, process them recursively
+      if (enrichedComment.replies && enrichedComment.replies.length > 0) {
+        let pendingReplies = enrichedComment.replies.length;
+
+        enrichedComment.replies.forEach((reply: any, replyIndex: number) => {
+          this.enrichCommentWithUserDetails(reply, (updatedReply) => {
+            enrichedComment.replies[replyIndex] = updatedReply;
+
+            // When all replies are processed, call the callback
+            pendingReplies--;
+            if (pendingReplies === 0) {
+              callback(enrichedComment);
+            }
+          });
+        });
+      } else {
+        // If no replies, just call the callback
+        callback(enrichedComment);
+      }
+    },
+    error: (error) => {
+      console.error('Error fetching user details:', error);
+      callback(comment); // Return original comment on error
+    }
+  });
+}  // Helper method to fetch user details for replies recursively
+  fetchUserDetailsForReplies(replies: ForumComment[]): void {
+    replies.forEach(reply => {
+      this.commentService.getCommentWithUserDetails(reply.id!).subscribe({
+        next: (response) => {
+          reply.userProfilePic = response.user.image;
+
+          // Process nested replies if any
+          if (reply.replies && reply.replies.length > 0) {
+            this.fetchUserDetailsForReplies(reply.replies);
+          }
+        },
+        error: (error) => {
+          console.error(`Error fetching user details for reply ${reply.id}:`, error);
+        }
+      });
+    });
   }
 
   closeDetailModal() {
@@ -111,48 +211,18 @@ handleToxicContentError() {
     this.newDetailComment = '';
   }
 
-addDetailComment(): void {
-    if (!this.newDetailComment.trim() || !this.selectedPost) return;
-
-    this.commentService.addComment(this.selectedPost.id!, this.newDetailComment, this.USER_ID).subscribe({
-      next: (comment: ForumComment) => {
-        // Update the post's comments array
-        if (this.selectedPost && this.selectedPost.comments) {
-          this.selectedPost.comments.push(comment);
-        }
-
-        // Update the topLevelComments collection which is displayed in the modal
-        if (this.selectedPost && this.selectedPost.id) {
-          if (!this.topLevelComments[this.selectedPost.id]) {
-            this.topLevelComments[this.selectedPost.id] = [];
-          }
-          this.topLevelComments[this.selectedPost.id].push(comment);
-
-          // Create a new array reference to trigger change detection
-          this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
-        }
-
-        // Clear the input field
-        this.newDetailComment = '';
-      },
-
-      error: (errorObj) => {
-        this.isSubmitting = false; // Reset submission state
-        if (errorObj == "OK") {
-          this.toxicContentDetected = true;
-          this.handleToxicContentError()
-        }
-        else {
-          // Handle other errors if needed
-          this.error = errorObj.message || 'An error occurred';
-        }
-      }
-    });
-}
 
 
 
   ngOnInit(): void {
+    this.loadAvailableLanguages();
+
+    this.USER_ID = JSON.parse(localStorage.getItem('user')!).id;
+    console.log('User ID:', this.USER_ID);
+    this.profileImage  = JSON.parse(localStorage.getItem('user')!).image;
+    this.nameUser = JSON.parse(localStorage.getItem('user')!).prenom + ' ' +JSON.parse(localStorage.getItem('user')!).nom  ;
+    this.firstnameUser = JSON.parse(localStorage.getItem('user')!).prenom;
+    this.loadPosts();
     this.breadCrumbItems = [
       { label: 'Forum', active: false },
       { label: 'Feed', active: true }
@@ -163,8 +233,10 @@ addDetailComment(): void {
     });
 
     // Fetch posts when component initializes
-    this.loadPosts();
   }
+
+  // Keep the existing openPostDetail, but remove the user data loading part
+
   // Method to load reactions for a specific post
   loadReactions(postId: string) {
     this.reactionService.getReactionsByPostId(postId).subscribe({
@@ -188,118 +260,87 @@ addDetailComment(): void {
   // Method to get icon class based on reaction type
   getReactionIcon(reactionType: ReactionType): string {
     switch (reactionType) {
-      case ReactionType.LIKE: return 'bi bi-hand-thumbs-up-fill text-primary';
-      case ReactionType.LOVE: return 'bi bi-heart-fill text-danger';
-      case ReactionType.HAHA: return 'bi bi-emoji-laughing-fill text-warning';
-      case ReactionType.WOW: return 'bi bi-emoji-dizzy-fill text-warning' ;
-      case ReactionType.SAD: return 'bi bi-emoji-frown-fill text-info';
-      case ReactionType.ANGRY: return 'bi bi-emoji-angry-fill text-danger';
-      default: return 'bi bi-hand-thumbs-up text-muted';
+      case ReactionType.LIKE:
+        return 'bi bi-hand-thumbs-up-fill text-primary';
+      case ReactionType.LOVE:
+        return 'bi bi-heart-fill text-danger';
+      case ReactionType.HAHA:
+        return 'bi bi-emoji-laughing-fill text-warning';
+      case ReactionType.WOW:
+        return 'bi bi-emoji-dizzy-fill text-warning';
+      case ReactionType.SAD:
+        return 'bi bi-emoji-frown-fill text-info';
+      case ReactionType.ANGRY:
+        return 'bi bi-emoji-angry-fill text-danger';
+      default:
+        return 'bi bi-hand-thumbs-up text-muted';
     }
   }
 
 // Add this property to your class
-reactionBarVisible: Map<string, boolean> = new Map<string, boolean>();
-hideReactionBarTimeouts: Map<string, any> = new Map<string, any>();
+  reactionBarVisible: Map<string, boolean> = new Map<string, boolean>();
+  hideReactionBarTimeouts: Map<string, any> = new Map<string, any>();
 
 // Add these methods
-showReactionBar(postId: string): void {
-  if (!this.reactionBarVisible.get(postId)) {
-    this.reactionBarVisible.set(postId, true);
-    // Clear any pending timeout for hiding
+  showReactionBar(postId: string): void {
+    if (!this.reactionBarVisible.get(postId)) {
+      this.reactionBarVisible.set(postId, true);
+      // Clear any pending timeout for hiding
+      if (this.hideReactionBarTimeouts.has(postId)) {
+        clearTimeout(this.hideReactionBarTimeouts.get(postId));
+        this.hideReactionBarTimeouts.delete(postId);
+      }
+    }
+  }
+
+  hideReactionBarWithDelay(postId: string): void {
+    // Set a timeout to hide the reaction bar
+    const timeout = setTimeout(() => {
+      this.reactionBarVisible.set(postId, false);
+      this.hideReactionBarTimeouts.delete(postId);
+    }, 300); // Small delay to allow moving the mouse to the reaction bar
+
+    this.hideReactionBarTimeouts.set(postId, timeout);
+  }
+
+  hideReactionBar(postId: string): void {
+    this.reactionBarVisible.set(postId, false);
+    // Clear any pending timeout
     if (this.hideReactionBarTimeouts.has(postId)) {
       clearTimeout(this.hideReactionBarTimeouts.get(postId));
       this.hideReactionBarTimeouts.delete(postId);
     }
   }
-}
 
-hideReactionBarWithDelay(postId: string): void {
-  // Set a timeout to hide the reaction bar
-  const timeout = setTimeout(() => {
-    this.reactionBarVisible.set(postId, false);
-    this.hideReactionBarTimeouts.delete(postId);
-  }, 300); // Small delay to allow moving the mouse to the reaction bar
-
-  this.hideReactionBarTimeouts.set(postId, timeout);
-}
-
-hideReactionBar(postId: string): void {
-  this.reactionBarVisible.set(postId, false);
-  // Clear any pending timeout
-  if (this.hideReactionBarTimeouts.has(postId)) {
-    clearTimeout(this.hideReactionBarTimeouts.get(postId));
-    this.hideReactionBarTimeouts.delete(postId);
+  keepReactionBarVisible(postId: string): void {
+    // Clear any pending timeout for hiding
+    if (this.hideReactionBarTimeouts.has(postId)) {
+      clearTimeout(this.hideReactionBarTimeouts.get(postId));
+      this.hideReactionBarTimeouts.delete(postId);
+    }
+    this.reactionBarVisible.set(postId, true);
   }
-}
 
-keepReactionBarVisible(postId: string): void {
-  // Clear any pending timeout for hiding
-  if (this.hideReactionBarTimeouts.has(postId)) {
-    clearTimeout(this.hideReactionBarTimeouts.get(postId));
-    this.hideReactionBarTimeouts.delete(postId);
-  }
-  this.reactionBarVisible.set(postId, true);
-}
+  toggleReactionBar(postId: string): void {
+    const currentState = this.reactionBarVisible.get(postId);
+    this.reactionBarVisible.set(postId, !currentState);
 
-toggleReactionBar(postId: string): void {
-  const currentState = this.reactionBarVisible.get(postId);
-  this.reactionBarVisible.set(postId, !currentState);
-
-  // If the user already reacted and is clicking the main button again, toggle the reaction off
-  if (currentState && this.userReactions.has(postId)) {
-    const existingReaction = this.userReactions.get(postId);
-    if (existingReaction && existingReaction.id) {
-      this.reactionService.deleteReaction(existingReaction.id).subscribe({
-        next: () => {
-          this.userReactions.delete(postId);
-          this.loadReactions(postId);
-        },
-        error: (error) => console.error('Error removing reaction:', error)
-      });
+    // If the user already reacted and is clicking the main button again, toggle the reaction off
+    if (currentState && this.userReactions.has(postId)) {
+      const existingReaction = this.userReactions.get(postId);
+      if (existingReaction && existingReaction.id) {
+        this.reactionService.deleteReaction(existingReaction.id).subscribe({
+          next: () => {
+            this.userReactions.delete(postId);
+            this.loadReactions(postId);
+          },
+          error: (error) => console.error('Error removing reaction:', error)
+        });
+      }
     }
   }
-}
 
 // Modify your reactToPost method to hide the reaction bar after selection
-reactToPost(postId: string, reactionType: ReactionType) {
-  const existingReaction = this.userReactions.get(postId);
-
-  if (existingReaction) {
-    // If user is clicking the same reaction, remove it (toggle off)
-    if (existingReaction.reactionType === reactionType) {
-      this.reactionService.deleteReaction(existingReaction.id!).subscribe({
-        next: () => {
-          this.userReactions.delete(postId);
-          this.loadReactions(postId);
-          this.hideReactionBar(postId); // Hide the reaction bar
-        },
-        error: (error) => console.error('Error removing reaction:', error)
-      });
-    } else {
-      // If user is changing reaction type, update it
-      this.reactionService.updateReaction(existingReaction.id!, reactionType).subscribe({
-        next: (updatedReaction) => {
-          this.userReactions.set(postId, updatedReaction);
-          this.loadReactions(postId);
-          this.hideReactionBar(postId); // Hide the reaction bar
-        },
-        error: (error) => console.error('Error updating reaction:', error)
-      });
-    }
-  } else {
-    // If no existing reaction, add a new one
-    this.reactionService.addReaction(postId, this.USER_ID, reactionType).subscribe({
-      next: (newReaction) => {
-        this.userReactions.set(postId, newReaction);
-        this.loadReactions(postId);
-        this.hideReactionBar(postId); // Hide the reaction bar
-      },
-      error: (error) => console.error('Error adding reaction:', error)
-    });
-  }
-}
- /* // Method to handle user reactions
   reactToPost(postId: string, reactionType: ReactionType) {
     const existingReaction = this.userReactions.get(postId);
 
@@ -309,7 +350,8 @@ reactToPost(postId: string, reactionType: ReactionType) {
         this.reactionService.deleteReaction(existingReaction.id!).subscribe({
           next: () => {
             this.userReactions.delete(postId);
-            this.loadReactions(postId); // Refresh reactions
+            this.loadReactions(postId);
+            this.hideReactionBar(postId); // Hide the reaction bar
           },
           error: (error) => console.error('Error removing reaction:', error)
         });
@@ -318,22 +360,25 @@ reactToPost(postId: string, reactionType: ReactionType) {
         this.reactionService.updateReaction(existingReaction.id!, reactionType).subscribe({
           next: (updatedReaction) => {
             this.userReactions.set(postId, updatedReaction);
-            this.loadReactions(postId); // Refresh reactions
+            this.loadReactions(postId);
+            this.hideReactionBar(postId); // Hide the reaction bar
           },
           error: (error) => console.error('Error updating reaction:', error)
         });
       }
     } else {
       // If no existing reaction, add a new one
-      this.reactionService.addReaction(postId, 10, reactionType).subscribe({
+      this.reactionService.addReaction(postId, this.USER_ID, reactionType).subscribe({
         next: (newReaction) => {
           this.userReactions.set(postId, newReaction);
-          this.loadReactions(postId); // Refresh reactions
+          this.loadReactions(postId);
+          this.hideReactionBar(postId); // Hide the reaction bar
         },
         error: (error) => console.error('Error adding reaction:', error)
       });
     }
-  }*/
+  }
+
 
   // Method to check if user has reacted with a specific reaction type
   hasReacted(postId: string, reactionType: ReactionType): boolean {
@@ -354,26 +399,52 @@ reactToPost(postId: string, reactionType: ReactionType) {
     const post = this.posts.find(p => p.id === postId);
     return post?.reactions?.length || 0;
   }
+
+
+
   loadPosts() {
     this.loading = true;
+
     this.postService.getPosts().subscribe({
-      next: (data) => {
-        this.posts = data;
-        // Load reactions for each post
-        this.posts.forEach(post => {
-          if (post.id) {
-            this.loadReactions(post.id);
+      next: (data: Post[]) => {
+        const postsWithUsers$ = data.map((post: Post) => {
+          return this.userService.getUserById(post.userId!).pipe(
+            map((user: any) => {
+              post.username = user.nom + ' ' + user.prenom;
+              post.userProfilePic = user.image;
+              return post;
+            }),
+            catchError((error: any) => {
+              console.error(`Error fetching user data for post ID ${post.id}:`, error);
+              return of(post); // continue even if user data fails
+            })
+          );
+        });
+
+        forkJoin(postsWithUsers$).subscribe({
+          next: (posts: Post[]) => {
+            this.posts = posts;
+            this.posts.forEach(post => {
+              if (post.id) {
+                this.loadReactions(post.id);
+              }
+            });
+            this.loading = false;
+          },
+          error: (error: any) => {
+            console.error('Error loading posts with user data', error);
+            this.loading = false;
           }
         });
-        this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error fetching posts', error);
         this.error = `Failed to load posts (${error.status}). Please check if the backend server is running.`;
         this.loading = false;
       }
     });
   }
+
   isImage(url: string): boolean {
     return url.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null;
   }
@@ -416,7 +487,8 @@ reactToPost(postId: string, reactionType: ReactionType) {
     this.showEmojiPicker = false;
   }
 
-  onBlur() {}
+  onBlur() {
+  }
 
   /*** File Upload Handling ***/
   addPhoto() {
@@ -446,7 +518,7 @@ reactToPost(postId: string, reactionType: ReactionType) {
     this.submitted1 = false;
   }
 
-publishPost() {
+  publishPost() {
     this.submitted1 = true;
     this.error = ''; // Clear previous errors
     this.toxicContentDetected = false; // Reset toxicity flag
@@ -466,8 +538,6 @@ publishPost() {
     const post: Post = {
       content: this.postContent.trim(),
       userId: this.USER_ID,
-      username: 'Iyed Mejri',
-      email: 'user@example.com'
     };
 
     // Extract actual File objects for upload
@@ -483,7 +553,7 @@ publishPost() {
         // Refresh posts
         this.loadPosts();
         this.toxicContentDetected = false;
-        this.toxicImageDetected=false;// Reset toxicity flag
+        this.toxicImageDetected = false;// Reset toxicity flag
       },
 
       error: (errorObj) => {
@@ -498,10 +568,10 @@ publishPost() {
         }
       }
     });
-}
+  }
 
 
-private handlePostSuccess() {
+  private handlePostSuccess() {
     this.closePostModal();
     this.isSubmitting = false;
     this.loadPosts();
@@ -525,6 +595,7 @@ private handlePostSuccess() {
   addGif() {
     console.log('Ajout de GIF');
   }
+
 //////////////
   // bread crumb items
   breadCrumbItems!: Array<{}>;
@@ -535,33 +606,7 @@ private handlePostSuccess() {
   showAllMedia(media: Media[]) {
 
   }
-addComment(postId: string, commentText: string): void {
-    if (!commentText || !commentText.trim()) return;
 
-    this.commentService.addComment(postId, commentText, this.USER_ID).subscribe({
-      next: (comment: ForumComment) => {
-        const post = this.posts.find(p => p.id === postId);
-        if (post) {
-          if (!post.comments) {
-            post.comments = [];
-          }
-          post.comments.push(comment);
-        }
-      },
-
-      error: (errorObj) => {
-        this.isSubmitting = false; // Reset submission state
-        if (errorObj == "OK") {
-          this.toxicContentDetected = true;
-          this.handleToxicContentError()
-        }
-        else {
-          // Handle other errors if needed
-          this.error = errorObj.message || 'An error occurred';
-        }
-      }
-    });
-}
 
   currentMediaIndex: number = 0;
 
@@ -584,7 +629,6 @@ addComment(postId: string, commentText: string): void {
   }
 
 
-
   // Track which dropdown is currently open
   activeCommentDropdown: string | null = null;
 
@@ -602,6 +646,143 @@ addComment(postId: string, commentText: string): void {
   editingCommentId: string | null = null;
   editCommentText: string = '';
 
+  addComment(postId: string, commentText: string): void {
+    if (!commentText || !commentText.trim()) return;
+
+    this.commentService.addComment(postId, commentText, this.USER_ID).subscribe({
+      next: (comment: ForumComment) => {
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+          if (!post.comments) {
+            post.comments = [];
+          }
+          post.comments.push(comment);
+        }
+      },
+
+      error: (errorObj) => {
+        this.isSubmitting = false; // Reset submission state
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError()
+        } else {
+          // Handle other errors if needed
+          this.error = errorObj.message || 'An error occurred';
+        }
+      }
+    });
+  }
+
+
+  // Method to handle adding a comment in the detail modal
+  addDetailComment(): void {
+    if (!this.newDetailComment || !this.newDetailComment.trim() || !this.selectedPost) return;
+
+    this.isSubmitting = true;
+
+    this.commentService.addComment(this.selectedPost.id!, this.newDetailComment, this.USER_ID).subscribe({
+      next: (comment: ForumComment) => {
+        // Load user details for the new comment
+        this.userService.getUserById(comment.userId!).subscribe({
+          next: (user) => {
+            comment.username = user.nom + ' ' + user.prenom;
+            comment.userProfilePic = user.image;
+
+            // Add comment to both data structures
+            if (!this.selectedPost!.comments) {
+              this.selectedPost!.comments = [];
+            }
+            this.selectedPost!.comments.push(comment);
+
+            if (!this.topLevelComments[this.selectedPost!.id!]) {
+              this.topLevelComments[this.selectedPost!.id!] = [];
+            }
+            this.topLevelComments[this.selectedPost!.id!].push(comment);
+
+            // Create new reference to trigger change detection
+            this.topLevelComments[this.selectedPost!.id!] = [...this.topLevelComments[this.selectedPost!.id!]];
+
+            this.newDetailComment = '';
+            this.isSubmitting = false;
+          },
+          error: (error) => {
+            console.error('Error fetching user details:', error);
+            this.isSubmitting = false;
+          }
+        });
+      },
+      error: (errorObj) => {
+        this.isSubmitting = false; // Reset submission state
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError()
+        } else {
+          // Handle other errors if needed
+          this.error = errorObj.message || 'An error occurred';
+        }
+      }
+    });
+  }
+
+// Update the submitReply method to fetch user details for replies
+  submitReply(commentId: string): void {
+    if (!this.replyContent[commentId] || !this.replyContent[commentId].trim()) {
+      return;
+    }
+
+    this.replySubmitting[commentId] = true;
+
+    this.commentService.replyToComment(commentId, this.replyContent[commentId], this.USER_ID).subscribe({
+      next: (reply) => {
+        // Fetch user details for the reply
+        this.userService.getUserById(reply.userId!).subscribe({
+          next: (user) => {
+            reply.username = user.nom + ' ' + user.prenom;
+            reply.userProfilePic = user.image;
+
+            // Now add the reply with user details
+            this.addReplyToComment(commentId, reply);
+
+            if (this.selectedPost?.id && this.posts) {
+              const mainPost = this.posts.find(p => p.id === this.selectedPost?.id);
+              if (mainPost) {
+                this.addReplyToComment(commentId, reply, mainPost.comments);
+              }
+            }
+
+            if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
+              this.addReplyToComment(commentId, reply, this.topLevelComments[this.selectedPost.id]);
+
+              // Trigger change detection
+              this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
+            }
+
+            this.replyContent[commentId] = '';
+            this.showReplyInput[commentId] = false;
+            this.replySubmitting[commentId] = false;
+          },
+          error: (error) => {
+            console.error('Error fetching user details for reply:', error);
+            this.replySubmitting[commentId] = false;
+          }
+        });
+      },
+      error: (errorObj) => {
+        this.replySubmitting[commentId] = false;
+
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError();
+        } else {
+          console.error('Error adding reply:', errorObj);
+          this.error = errorObj.message || 'An error occurred';
+        }
+      }
+    });
+  }
+
+
+
   // Update the editComment method
   editComment(comment: ForumComment): void {
     this.editingCommentId = comment.id!;
@@ -610,63 +791,87 @@ addComment(postId: string, commentText: string): void {
   }
 
   // Add a saveEditedComment method
-  saveEditedComment(): void {
-    if (!this.editingCommentId || !this.editCommentText.trim()) return;
+saveEditedComment(): void {
+  if (!this.editingCommentId || !this.editCommentText.trim()) return;
 
-    this.commentService.editComment(this.editingCommentId, this.editCommentText).subscribe({
-      next: (updatedComment) => {
-        // Update comment in selectedPost if it exists
-        if (this.selectedPost && this.selectedPost.comments) {
-          const commentIndex = this.selectedPost.comments.findIndex(c => c.id === this.editingCommentId);
-          if (commentIndex !== -1) {
-            this.selectedPost.comments[commentIndex] = updatedComment;
+  // Find the original comment to preserve all its details
+  let originalComment: any = null;
+
+  // Search in all possible locations
+  if (this.selectedPost && this.selectedPost.id) {
+    const comments = this.topLevelComments[this.selectedPost.id] || [];
+
+    // Search in top level comments
+    originalComment = comments.find(c => c.id === this.editingCommentId);
+
+    // If not found, search in replies
+    if (!originalComment) {
+      for (const comment of comments) {
+        if (comment.replies) {
+          const reply = comment.replies.find(r => r.id === this.editingCommentId);
+          if (reply) {
+            originalComment = reply;
+            break;
           }
         }
+      }
+    }
+  }
 
-        // Update comment in the main posts array
-        this.posts.forEach(post => {
-          if (post.comments) {
-            const commentIndex = post.comments.findIndex(c => c.id === this.editingCommentId);
-            if (commentIndex !== -1) {
-              post.comments[commentIndex] = updatedComment;
+  this.commentService.editComment(this.editingCommentId, this.editCommentText).subscribe({
+    next: (response) => {
+      console.log('Comment updated:', response);
+
+      // Merge response with original comment to preserve user details
+      const updatedComment = {
+        ...originalComment,
+        content: this.editCommentText,
+        updatedAt: response.createdAt || new Date()
+      };
+
+      // Update comment in posts array
+      this.posts.forEach(post => {
+        if (post.comments) {
+          const commentIndex = post.comments.findIndex(c => c.id === this.editingCommentId);
+          if (commentIndex !== -1) {
+            post.comments[commentIndex] = updatedComment;
+          }
+        }
+      });
+
+      // Update in topLevelComments
+      if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
+        // Update top level comments
+        const topLevelIndex = this.topLevelComments[this.selectedPost.id].findIndex(
+          c => c.id === this.editingCommentId
+        );
+        if (topLevelIndex !== -1) {
+          this.topLevelComments[this.selectedPost.id][topLevelIndex] = updatedComment;
+        }
+
+        // Update replies
+        this.topLevelComments[this.selectedPost.id].forEach(comment => {
+          if (comment.replies) {
+            const replyIndex = comment.replies.findIndex(r => r.id === this.editingCommentId);
+            if (replyIndex !== -1) {
+              comment.replies[replyIndex] = updatedComment;
             }
           }
         });
 
-        // Update comment in the topLevelComments object - this is what's displayed in the modal
-        if (this.selectedPost && this.selectedPost.id && this.topLevelComments[this.selectedPost.id]) {
-          const topLevelIndex = this.topLevelComments[this.selectedPost.id].findIndex(
-            c => c.id === this.editingCommentId
-          );
-          if (topLevelIndex !== -1) {
-            this.topLevelComments[this.selectedPost.id][topLevelIndex] = updatedComment;
-          }
-
-          // Also check for replies within top level comments
-          this.topLevelComments[this.selectedPost.id].forEach(comment => {
-            if (comment.replies) {
-              const replyIndex = comment.replies.findIndex(r => r.id === this.editingCommentId);
-              if (replyIndex !== -1) {
-                comment.replies[replyIndex] = updatedComment;
-              }
-            }
-          });
-        }
-
-        // Create a new reference to trigger change detection
-        if (this.selectedPost && this.selectedPost.id) {
-          this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
-        }
-
-        // Reset edit mode
-        this.editingCommentId = null;
-        this.editCommentText = '';
-      },
-      error: (err) => {
-        console.error('Error updating comment:', err);
+        // Trigger change detection
+        this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
       }
-    });
-  }
+
+      // Reset edit mode
+      this.editingCommentId = null;
+      this.editCommentText = '';
+    },
+    error: (err) => {
+      console.error('Error updating comment:', err);
+    }
+  });
+}
 
   cancelEditComment(): void {
     this.editingCommentId = null;
@@ -728,121 +933,73 @@ addComment(postId: string, commentText: string): void {
   }
 
 // Component properties to manage reply input state
-showReplyInput: { [key: string]: boolean } = {};
-replyContent: { [key: string]: string } = {};
-replySubmitting: { [key: string]: boolean } = {};
+  showReplyInput: { [key: string]: boolean } = {};
+  replyContent: { [key: string]: string } = {};
+  replySubmitting: { [key: string]: boolean } = {};
 
 // Toggle reply input visibility
-toggleReplyInput(commentId: string): void {
-  this.showReplyInput[commentId] = !this.showReplyInput[commentId];
-  if (!this.showReplyInput[commentId]) {
-    this.replyContent[commentId] = '';
+  toggleReplyInput(commentId: string): void {
+    this.showReplyInput[commentId] = !this.showReplyInput[commentId];
+    if (!this.showReplyInput[commentId]) {
+      this.replyContent[commentId] = '';
+    }
   }
-}
 
 // Submit a reply to a comment
-submitReply(commentId: string): void {
-  if (!this.replyContent[commentId] || !this.replyContent[commentId].trim()) {
-    return;
-  }
-
-  // Show loading indicator
-  this.replySubmitting[commentId] = true;
-
-  // Call the comment service to submit the reply
-  this.commentService.replyToComment(commentId, this.replyContent[commentId], this.USER_ID).subscribe({
-    next: (reply) => {
-      // Add the reply to the selected post (modal view)
-      this.addReplyToComment(commentId, reply);
-
-      // Also update the post in the main posts list if it exists
-      if (this.selectedPost?.id && this.posts) {
-        const mainPost = this.posts.find(p => p.id === this.selectedPost?.id);
-        if (mainPost) {
-          this.addReplyToComment(commentId, reply, mainPost.comments);
-        }
-      }
-
-      // Update the top-level comments if they were already fetched
-      if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
-        this.addReplyToComment(commentId, reply, this.topLevelComments[this.selectedPost.id]);
-      }
-
-      // Reset state
-      this.replyContent[commentId] = '';
-      this.showReplyInput[commentId] = false;
-      this.replySubmitting[commentId] = false;
-    },
-    error: (errorObj) => {
-      this.replySubmitting[commentId] = false;
-
-      if (errorObj == "OK") {
-        this.toxicContentDetected = true;
-        this.handleToxicContentError();
-      } else {
-        // Handle other errors
-        console.error('Error adding reply:', errorObj);
-        this.error = errorObj.message || 'An error occurred';
-      }
-    }
-  });
-}
 
 // Helper method to recursively find the parent comment and add the reply
-addReplyToComment(parentId: string, reply: ForumComment, comments: ForumComment[] = this.selectedPost?.comments ?? []): boolean {
-  for (let i = 0; i < comments.length; i++) {
-    const comment = comments[i];
+  addReplyToComment(parentId: string, reply: ForumComment, comments: ForumComment[] = this.selectedPost?.comments ?? []): boolean {
+    for (let i = 0; i < comments.length; i++) {
+      const comment = comments[i];
 
-    // If this is the parent comment we're looking for
-    if (comment.id === parentId) {
-      if (!comment.replies) {
-        comment.replies = [];
-      }
+      // If this is the parent comment we're looking for
+      if (comment.id === parentId) {
+        if (!comment.replies) {
+          comment.replies = [];
+        }
 
-      // Check if the reply already exists
-      const replyExists = comment.replies.some(r => r.id === reply.id);
-      if (!replyExists) {
-        comment.replies.push(reply);
-      }
-      return true;
-    }
-
-    // Search through nested replies recursively
-    if (comment.replies && comment.replies.length > 0) {
-      if (this.addReplyToComment(parentId, reply, comment.replies)) {
+        // Check if the reply already exists
+        const replyExists = comment.replies.some(r => r.id === reply.id);
+        if (!replyExists) {
+          comment.replies.push(reply);
+        }
         return true;
       }
+
+      // Search through nested replies recursively
+      if (comment.replies && comment.replies.length > 0) {
+        if (this.addReplyToComment(parentId, reply, comment.replies)) {
+          return true;
+        }
+      }
     }
+
+    return false;
   }
 
-  return false;
-}
 // Store top-level comments by post ID
-topLevelComments: { [postId: string]: ForumComment[] } = {};
+  topLevelComments: { [postId: string]: ForumComment[] } = {};
 
 // Get top-level comments for a post
-getTopLevelComments(postId: string): ForumComment[] {
-  // Check if we already have the comments for this post
-  if (!this.topLevelComments[postId]) {
-    // If not, fetch them
-    console.log('Fetching top-level comments for postId:', postId);
-    this.commentService.getTolevel(postId).subscribe({
-      next: (comments) => {
-        console.log('Received top-level comments:', comments);
-        this.topLevelComments[postId] = comments || [];
-      },
-      error: (error) => {
-        console.error('Error fetching comments:', error);
-        this.topLevelComments[postId] = [];
-      }
-    });
+  getTopLevelComments(postId: string): ForumComment[] {
+    // Check if we already have the comments for this post
+    if (!this.topLevelComments[postId]) {
+      // If not, fetch them
+      this.commentService.getTolevel(postId).subscribe({
+        next: (comments) => {
+          this.topLevelComments[postId] = comments || [];
+        },
+        error: (error) => {
+          this.topLevelComments[postId] = [];
+        }
+      });
 
-    // Initialize with empty array while waiting for response
-    this.topLevelComments[postId] = [];
+      // Initialize with empty array while waiting for response
+      this.topLevelComments[postId] = [];
+    }
+
+    return this.topLevelComments[postId] || [];
   }
-
-  return this.topLevelComments[postId] || [];
-}
 
 
   getRepliesForComment(commentId: string): ForumComment[] {
@@ -865,4 +1022,365 @@ getTopLevelComments(postId: string): ForumComment[] {
   }
 
 
+  // Add to your component class
+  isMediaSidebarOpen: boolean = false;
+  mediaDescription: string = '';
+  contentType: string = 'image';
+  mediaStyle: string = 'realistic';
+  isGenerating: boolean = false;
+  generatedMediaUrl: string | null = null;
+
+  toggleMediaSidebar() {
+    this.isMediaSidebarOpen = !this.isMediaSidebarOpen;
+    if (this.isMediaSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  closeMediaSidebar(event: Event) {
+    if (event.target === event.currentTarget) {
+      this.isMediaSidebarOpen = false;
+      document.body.style.overflow = '';
+    }
+  }
+
+  generatedPostId: string | null = null;
+  contentCheckSubscription: Subscription | null = null;
+  downloadLink: string | null = null;
+
+
+// Update the generateMedia method
+  generateMedia() {
+    if (!this.mediaDescription) return;
+
+    this.isGenerating = true;
+    this.generatedMediaUrl = null;
+
+    // Call the Spring Boot API to generate content
+    this.postService.generateContent(this.mediaDescription, this.contentType).subscribe({
+      next: (response) => {
+        console.log('Content generation initiated:', response);
+        this.generatedPostId = response.postId;
+
+        // Start polling to check if content is ready
+if (this.generatedPostId) {
+          this.pollContentStatus(this.generatedPostId);
+        }      },
+      error: (error) => {
+        console.error('Error generating content:', error);
+        this.isGenerating = false;
+      }
+    });
+  }
+
+// Add method to poll content status
+  pollContentStatus(postId: string) {
+    // Clear previous subscription if any
+    if (this.contentCheckSubscription) {
+      this.contentCheckSubscription.unsubscribe();
+    }
+
+    // Poll every 2 seconds until content is ready
+    this.contentCheckSubscription = interval(2000)
+      .pipe(
+        switchMap(() => this.postService.checkContentStatus(postId)),
+        takeWhile(response => response.status !== 'completed', true)
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.status === 'completed') {
+            this.isGenerating = false;
+            this.generatedMediaUrl = response.contentUrl;
+            this.downloadLink = response.contentUrl;
+
+            // Stop polling
+            if (this.contentCheckSubscription) {
+              this.contentCheckSubscription.unsubscribe();
+              this.contentCheckSubscription = null;
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Error checking content status:', error);
+          this.isGenerating = false;
+
+          // Stop polling on error
+          if (this.contentCheckSubscription) {
+            this.contentCheckSubscription.unsubscribe();
+            this.contentCheckSubscription = null;
+          }
+        }
+      });
+  }
+
+// Update regenerateMedia to use the API
+  regenerateMedia() {
+    this.generateMedia();
+  }
+
+// Add method for "Use This" button
+  useGeneratedMedia() {
+    if (this.generatedMediaUrl) {
+      // Create a file object from the URL
+      fetch(this.generatedMediaUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          // Create appropriate filename based on content type
+          const filename = this.contentType === 'image'
+            ? 'ai-generated-image.jpg'
+            : 'ai-generated-video.mp4';
+
+          // Create a File object
+          const file = new File([blob], filename, {
+            type: this.contentType === 'image' ? 'image/jpeg' : 'video/mp4'
+          });
+
+          // Add to uploaded files (using the existing uploadedFiles array in your component)
+          this.uploadedFiles.push({
+            file: file,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            objectURL: this.generatedMediaUrl
+          });
+
+          // Close sidebar
+          this.isMediaSidebarOpen = false;
+          document.body.style.overflow = '';
+
+          // Optional: Open post modal to use the generated content
+          this.openPostModal();
+        })
+        .catch(error => {
+          console.error('Error converting URL to file:', error);
+        });
+    }
+  }
+
+// Add download functionality
+downloadMedia() {
+  if (!this.generatedMediaUrl) return;
+
+  // Show a loading indicator
+  const button = document.querySelector('.btn-outline-primary');
+  let originalButtonText = '';
+  if (button) {
+    originalButtonText = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Downloading...';
+  }
+
+  // Use fetch to get the file as a blob
+  fetch(this.generatedMediaUrl)
+    .then(response => response.blob())
+    .then(blob => {
+      // Create a blob URL
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      // Create a link element with download attribute
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = this.contentType === 'image' ? 'ai-generated-image.jpg' : 'ai-generated-video.mp4';
+      link.style.display = 'none';
+
+      // Append to body, click and cleanup
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+        if (button) {
+          button.innerHTML = originalButtonText;
+        }
+      }, 100);
+    })
+    .catch(error => {
+      console.error('Download failed:', error);
+      if (button) {
+        button.innerHTML = originalButtonText;
+      }
+    });
+}// Clean up subscriptions when component is destroyed
+  ngOnDestroy() {
+    if (this.contentCheckSubscription) {
+      this.contentCheckSubscription.unsubscribe();
+    }
+
+  }
+
+
+
+
+goToUserPosts(userId: number | undefined): void {
+  if (userId === undefined) {
+    console.error('User ID is undefined');
+    return;
+  }
+  // Navigate to the mesPost route with userId
+  this.router.navigate(['../', 'mesPost'], {
+    relativeTo: this.route,
+    queryParams: { userId: userId }
+  });
+  console.log('Navigating to user posts for user ID:', userId);
+}
+
+
+
+// Add these properties to your component
+selectedAITool: 'generator' | 'translator' = 'generator';
+textToTranslate: string = '';
+translatedText: string = '';
+targetLanguage: string = '';
+availableLanguages: Map<string, string> = new Map();
+languagesArray: {code: string, name: string}[] = [];
+isTranslating: boolean = false;
+copySuccess: boolean = false;
+
+// Add this to your ngOnInit
+
+
+// Add these methods to your component
+selectAITool(tool: 'generator' | 'translator'): void {
+  this.selectedAITool = tool;
+
+  // Reset states when switching tools
+  if (tool === 'generator') {
+    this.translatedText = '';
+    this.copySuccess = false;
+  } else {
+    this.generatedMediaUrl = null;
+    if (this.languagesArray.length === 0) {
+      this.loadAvailableLanguages();
+    }
+  }
+}
+
+// Add to your component properties
+translationError: string = '';
+copyTranslation(): void {
+  if (!this.translatedText) return;
+
+  navigator.clipboard.writeText(this.translatedText).then(() => {
+    this.copySuccess = true;
+    setTimeout(() => this.copySuccess = false, 2000);
+  });
+}
+
+// Update your reset method to handle both tools
+resetAndCloseMediaSidebar(event: Event) {
+  this.isMediaSidebarOpen = false;
+  document.body.style.overflow = '';
+
+  // Reset generator states
+  this.mediaDescription = '';
+  this.generatedMediaUrl = null;
+  this.isGenerating = false;
+  if (this.contentCheckSubscription) {
+    this.contentCheckSubscription.unsubscribe();
+    this.contentCheckSubscription = null;
+  }
+
+  // Reset translator states
+  this.textToTranslate = '';
+  this.translatedText = '';
+  this.copySuccess = false;
+}
+
+
+// Add a loading indicator
+isLoadingLanguages: boolean = false;
+
+loadAvailableLanguages(): void {
+  this.isLoadingLanguages = true;
+  this.postService.getAvailableLanguages().subscribe({
+    next: (languages) => {
+      // Convert plain object to Map or handle as object
+      this.availableLanguages = languages;
+
+      // Use Object.entries instead of languages.keys()
+      this.languagesArray = Object.entries(languages).map(([code, name]) => ({
+        code: code,
+        name: name as string
+      })).sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+
+      this.isLoadingLanguages = false;
+    },
+    error: (error) => {
+      console.error('Error loading available languages:', error);
+      this.isLoadingLanguages = false;
+    }
+  });
+}
+
+  private floresCodeToApiCode: {[key: string]: string} = {
+    "eng_Latn": "en",
+    "fra_Latn": "fr",
+    "arb_Arab": "ar", // Another possible code for Arabic
+    "spa_Latn": "es",
+    "deu_Latn": "de",
+    "ita_Latn": "it",
+    "zho_Hans": "zh",
+    "jpn_Jpan": "ja",
+    "kor_Hang": "ko",
+    "rus_Cyrl": "ru",
+
+  };
+
+  // Keep existing code...
+
+  // Update this method to convert the language code
+  translateText(): void {
+    if (!this.textToTranslate || !this.targetLanguage) return;
+
+    this.isTranslating = true;
+    this.translatedText = '';
+    this.translationError = '';
+
+    // Convert the FLORES code to the API code
+    const apiLanguageCode = this.floresCodeToApiCode[this.targetLanguage] || this.targetLanguage;
+
+    this.postService.translateText(this.textToTranslate, apiLanguageCode).subscribe({
+      next: (response) => {
+        this.translatedText = response.translatedText;
+        this.isTranslating = false;
+      },
+      error: (error) => {
+        console.error('Error translating text:', error);
+        this.isTranslating = false;
+        this.translationError = 'Translation service is temporarily unavailable. Please try again later.';
+      }
+    });
+  }
+
+generateVideoThumbnail(videoElement: HTMLVideoElement, media: Media): void {
+  // Skip if we already have a thumbnail
+  if (media.thumbnailUrl) return;
+
+  // Set video to a specific point
+  videoElement.currentTime = 1.0; // Go to 1 second
+
+  // Create thumbnail once we seek to that position
+  videoElement.addEventListener('seeked', () => {
+    // Create a canvas to capture the frame
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    // Draw the video frame on the canvas
+    const ctx = canvas.getContext('2d');
+    ctx?.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to data URL
+    try {
+      const thumbnailUrl = canvas.toDataURL('image/jpeg');
+      // Store the thumbnail URL in the media object
+      media.thumbnailUrl = thumbnailUrl;
+    } catch (e) {
+      console.error('Could not generate thumbnail', e);
+    }
+  }, { once: true });
+}
 }

@@ -7,4 +7,8 @@ export class ForumComment {
   postId?: string;
   parentCommentId?: string | null; // For nested comments
   replies?: ForumComment[];
+  userProfilePic?: string; // Added property
+  sentiment?: 'Positive' | 'Negative' | 'Neutral'; // Add this property
+
+
 }

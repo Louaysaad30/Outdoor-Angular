@@ -86,7 +86,7 @@ export class SignupComponent {
             text: 'You have been successfully registered.',
           });
           this.router.navigate(['/auth/twostep'], {
-            queryParams: { email: this.registrationForm.value.email }
+            queryParams: { email: this.registrationForm.get('email')?.value }
           });
         },
         (error) => {

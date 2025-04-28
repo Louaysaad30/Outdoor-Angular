@@ -16,4 +16,6 @@ export interface Event {
     id?: number;
   };
   tickets?: any[];
+
+  participants?: any[];
 }

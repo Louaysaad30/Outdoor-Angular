@@ -1,7 +1,7 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, UntypedFormGroup, FormBuilder, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import {ActivatedRoute, RouterLink} from '@angular/router';
 import { SharedModule } from '../../../../shared/shared.module';
 import { NgxDropzoneModule } from 'ngx-dropzone';
 import { PickerComponent } from '@ctrl/ngx-emoji-mart';
@@ -15,8 +15,11 @@ import { Reaction } from '../../models/reaction.model';
 import { Media } from "../../models/media.model";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TabsModule} from "ngx-bootstrap/tabs";
-import {Observable} from "rxjs";
+import {forkJoin, Observable, of} from "rxjs";
 import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
+import {catchError, map} from "rxjs/operators";
+import {UserServiceService} from "../../../../account/auth/services/user-service.service";
+import { tap } from 'rxjs/operators';
 ;
 
 
@@ -33,14 +36,21 @@ import {ModalDirective, ModalModule} from "ngx-bootstrap/modal";
     ReactiveFormsModule,
     BsDropdownModule,
     TabsModule,
-    ModalModule
+    ModalModule,
   ],
   templateUrl: './mes-posts.component.html',
   styleUrl: './mes-posts.component.scss'
 })
 export class MesPostsComponent implements OnInit {
+
+  isLoadingComments: boolean = false;
+
+  userId: number | null = null;
+  isCurrentUser = true;
+  username = '';
   // Constants
-  readonly USER_ID = 10; // Current user ID - should be retrieved from auth service in a real app
+  USER_ID: number;
+  addpost: boolean = true;
 
   // State variables
   posts: Post[] = [];
@@ -51,6 +61,7 @@ export class MesPostsComponent implements OnInit {
   reactionBarVisible: Map<string, boolean> = new Map<string, boolean>();
   hideReactionBarTimeouts: Map<string, any> = new Map<string, any>();
 
+
   // UI state
   isDetailModalOpen = false;
   newComment = '';
@@ -60,13 +71,19 @@ export class MesPostsComponent implements OnInit {
 
   // Enums
   ReactionType = ReactionType;
+   firstnameUser: any;
 
   constructor(
     private postService: PostService,
     private commentService: CommentService,
     private reactionService: ReactionService,
-    private formBuilder: FormBuilder
-  ) {
+    private formBuilder: FormBuilder,
+  private  userService: UserServiceService,
+  private route: ActivatedRoute // Inject ActivatedRoute
+
+
+) {
+    this.USER_ID=0;
     // Initialize form
     this.formData = this.formBuilder.group({
       message: ['', Validators.required]
@@ -74,36 +91,120 @@ export class MesPostsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadUserPosts();
-    this.loadUserMedia();
+    // Get the current user ID
 
+    this.USER_ID = JSON.parse(localStorage.getItem('user')!).id;
+    this.profileImage = JSON.parse(localStorage.getItem('user')!).image;
+    this.firstnameUser = JSON.parse(localStorage.getItem('user')!).prenom + ' ' + JSON.parse(localStorage.getItem('user')!).nom;
+
+
+
+    // Check if a specific user ID was passed in the URL
+    this.route.queryParams.subscribe(params => {
+      this.userId = params['userId'] ? Number(params['userId']) : this.USER_ID;
+      this.isCurrentUser = this.userId === this.USER_ID;
+
+      // Load posts for the specified user
+      this.loadUserPosts();
+
+      // Get username if not current user
+      if (!this.isCurrentUser && this.userId) {
+        this.addpost = false;
+        this.userService.getUserById(this.userId).subscribe({
+          next: (user) => {
+            this.username = `${user.prenom} ${user.nom}`;
+          },
+          error: (error) => console.error('Error loading user data', error)
+        });
+      }
+    });
   }
-  onTabSelect(event: any): void {
-    if (event.heading === 'Media') {
-      this.loadUserMedia();
-    }
+
+
+
+onTabSelect(event: any): void {
+  if (event.heading === 'Photos' || event.heading === 'Media') {
+    console.log('Photos tab selected, loading media...');
+    this.loadUserMedia();
+  } else if (event.heading === 'Videos') {
+    console.log('Videos tab selected, loading media...');
+    this.loadUserMedia();
+  }
+}
+
+hasAnyMedia(): boolean {
+    const mediaCount = this.getAllMedia().length;
+    return mediaCount > 0;
+  }
+
+getAllMedia(): Media[] {
+    // Return all media from all posts with post reference properly set
+    return this.posts
+      .filter(post => post.hasMedia && post.media && post.media.length > 0)
+      .flatMap(post => {
+        // Make sure each media item has its post reference set
+        return (post.media || []).map(media => {
+          if (!media.post) {
+            media.post = {
+              id: post.id,
+              userId: post.userId
+            } as Post;
+          }
+          return media;
+        });
+      });
   }
 
   loadUserPosts(): void {
-    this.loading = true;
-    this.postService.getUserPosts(this.USER_ID).subscribe({
-      next: (data) => {
-        this.posts = data;
-        // Load reactions for each post
-        this.posts.forEach(post => {
-          if (post.id) {
-            this.loadReactions(post.id);
+    if (!this.userId) return;
+if (this.posts.length==0) {
+  this.loading = false;
+}
+else {
+  this.loading= true;}
+
+
+    this.postService.getPostsByUserId(this.userId).subscribe({
+      next: (posts) => {
+        const postsWithUsers$ = posts.map((post: Post) => {
+          return this.userService.getUserById(post.userId!).pipe(
+            map((user: any) => {
+              post.username = user.nom + ' ' + user.prenom;
+              post.userProfilePic = user.image;
+              return post;
+            }),
+            catchError((error: any) => {
+              console.error(`Error fetching user data for post ID ${post.id}:`, error);
+              return of(post); // continue even if user data fails
+            })
+          );
+        });
+
+        forkJoin(postsWithUsers$).subscribe({
+          next: (posts: Post[]) => {
+            this.posts = posts;
+            this.posts.forEach(post => {
+              if (post.id) {
+                this.loadReactions(post.id);
+              }
+            });
+            this.loading = false;
+          },
+          error: (error: any) => {
+            console.error('Error loading posts with user data', error);
+            this.loading = false;
           }
         });
-        this.loading = false;
       },
-      error: (error) => {
-        console.error('Error fetching user posts', error);
-        this.error = `Failed to load your posts. Please try again later.`;
+      error: (error: any) => {
+        console.error('Error fetching posts', error);
+        this.error = `Failed to load posts (${error.status}). Please check if the backend server is running.`;
         this.loading = false;
       }
     });
   }
+
+
 
   // Reaction handling methods
   loadReactions(postId: string): void {
@@ -256,39 +357,103 @@ export class MesPostsComponent implements OnInit {
 
 
   // Comment methods
-  addComment(postId: string, commentText: string): void {
-    if (!commentText || !commentText.trim()) return;
-
-    this.commentService.addComment(postId, commentText, this.USER_ID).subscribe({
-      next: (comment: ForumComment) => {
-        const post = this.posts.find(p => p.id === postId);
-        if (post) {
-          if (!post.comments) {
-            post.comments = [];
-          }
-          post.comments.push(comment);
-        }
-      },
-      error: (error) => {
-        console.error('Error adding comment:', error);
-      }
-    });
-  }
 
 
 
   openPostDetail(post: Post): void {
-    this.selectedPost = {...post};
-    console.log("Post:", this.selectedPost);
-    console.log(this.selectedPost.comments);
+    this.selectedPost = post;
     this.isDetailModalOpen = true;
+    this.newDetailComment = '';
+    this.currentMediaIndex = 0;
+    this.isLoadingComments = true; // Add this flag
+
+
+
     // Pre-load top level comments when opening post detail
     this.commentService.getTolevel(post.id!).subscribe({
       next: (comments) => {
+        let remainingComments = comments ? comments.length : 0;
+
+        if (remainingComments === 0) {
+          this.topLevelComments[post.id!] = [];
+          this.isLoadingComments = false;
+          return;
+        }
+
         this.topLevelComments[post.id!] = comments || [];
+
+        // Process top-level comments and their replies recursively
+        this.topLevelComments[post.id!].forEach((comment, index) => {
+          this.enrichCommentWithUserDetails(comment, (updatedComment) => {
+            this.topLevelComments[post.id!][index] = updatedComment;
+            remainingComments--;
+            if (remainingComments === 0) {
+              this.isLoadingComments = false;
+            }
+          });
+        });
+      },
+      error: () => {
+        this.isLoadingComments = false;
       }
     });
+  }
+// Recursive helper method to enrich comments and their replies with user details
+  private enrichCommentWithUserDetails(comment: any, callback: (updatedComment: any) => void): void {
+    this.commentService.getCommentWithUserDetails(comment.id!).subscribe({
+      next: (response) => {
+        // Enrich the current comment with user details
+        const enrichedComment = {
+          ...response.comment,
+          userProfilePic: response.user.image,
+          username: `${response.user.prenom} ${response.user.nom}`
+        };
 
+        // If this comment has replies, process them recursively
+        if (enrichedComment.replies && enrichedComment.replies.length > 0) {
+          let pendingReplies = enrichedComment.replies.length;
+
+          enrichedComment.replies.forEach((reply: any, replyIndex: number) => {
+            this.enrichCommentWithUserDetails(reply, (updatedReply) => {
+              enrichedComment.replies[replyIndex] = updatedReply;
+
+              // When all replies are processed, call the callback
+              pendingReplies--;
+              if (pendingReplies === 0) {
+                callback(enrichedComment);
+              }
+            });
+          });
+        } else {
+          // If no replies, just call the callback
+          callback(enrichedComment);
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching user details:', error);
+        callback(comment); // Return original comment on error
+      }
+    });
+  }  // Helper method to fetch user details for replies recursively
+
+
+
+  fetchUserDetailsForReplies(replies: ForumComment[]): void {
+    replies.forEach(reply => {
+      this.commentService.getCommentWithUserDetails(reply.id!).subscribe({
+        next: (response) => {
+          reply.userProfilePic = response.user.image;
+
+          // Process nested replies if any
+          if (reply.replies && reply.replies.length > 0) {
+            this.fetchUserDetailsForReplies(reply.replies);
+          }
+        },
+        error: (error) => {
+          console.error(`Error fetching user details for reply ${reply.id}:`, error);
+        }
+      });
+    });
   }
 
   closeDetailModal() {
@@ -297,60 +462,12 @@ export class MesPostsComponent implements OnInit {
     this.newDetailComment = '';
   }
 
-  addDetailComment(): void {
-    if (!this.newDetailComment.trim() || !this.selectedPost) return;
-
-    this.commentService.addComment(this.selectedPost.id!, this.newDetailComment, this.USER_ID).subscribe({
-      next: (comment: ForumComment) => {
-        // Update the post's comments array
-        if (this.selectedPost && this.selectedPost.comments) {
-          this.selectedPost.comments.push(comment);
-        }
-
-        // Update the topLevelComments collection which is displayed in the modal
-        if (this.selectedPost && this.selectedPost.id) {
-          if (!this.topLevelComments[this.selectedPost.id]) {
-            this.topLevelComments[this.selectedPost.id] = [];
-          }
-          this.topLevelComments[this.selectedPost.id].push(comment);
-
-          // Create a new array reference to trigger change detection
-          this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
-        }
-
-        // Clear the input field
-        this.newDetailComment = '';
-      },
-
-      error: (errorObj) => {
-        this.isSubmitting = false; // Reset submission state
-        if (errorObj == "OK") {
-          this.toxicContentDetected = true;
-          this.handleToxicContentError()
-        }
-        else {
-          // Handle other errors if needed
-          this.error = errorObj.message || 'An error occurred';
-        }
-      }
-    });
-  }
 
   /*** Modal Controls ***/
   openPostModal() {
     this.isModalOpen = true;
   }
-/*
 
-  closePostModal() {
-    this.isModalOpen = false;
-    this.showFileUpload = false;
-    this.uploadedFiles = [];
-    this.postContent = '';
-    this.formData.reset();
-    this.submitted1 = false;
-  }
-*/
 
   /*** Emoji Picker ***/
   toggleEmojiPicker() {
@@ -389,47 +506,7 @@ export class MesPostsComponent implements OnInit {
   }
 
   /*** Post Submission ***/
-/*
-  publishPost() {
-    this.submitted1 = true;
 
-    if (this.formData.invalid && !this.uploadedFiles.length) {
-      return;
-    }
-
-    if (this.isSubmitting) {
-      return;
-    }
-
-    if (this.postContent.trim() || this.uploadedFiles.length > 0) {
-      this.isSubmitting = true;
-
-      // Create post object matching the Spring Boot entity
-      const post: Post = {
-        content: this.postContent,
-        hasMedia: this.uploadedFiles.length > 0,
-        userId: this.USER_ID, // Using the user ID constant
-        username: 'Iyed Mejri',
-        email: 'iyed.mejri@example.com'
-      };
-
-      // Extract actual File objects for upload
-      const mediaFiles = this.uploadedFiles.map(fileObj => fileObj.file);
-
-      // Call service with both post data and files
-      this.postService.createPost(post, mediaFiles).subscribe({
-        next: (createdPost) => {
-          console.log('Post created successfully', createdPost);
-          this.handlePostSuccess();
-        },
-        error: (error) => {
-          console.error('Error creating post', error);
-          this.isSubmitting = false;
-        }
-      });
-    }
-  }
-*/
 
   private handlePostSuccess() {
     this.closePostModal();
@@ -483,13 +560,24 @@ export class MesPostsComponent implements OnInit {
     return this.formData?.controls;
   }
 
+
+
+
 // Add to component properties
 isEditMode = false;
 editPostId: string | null = null;
 editingPost: Post | null = null;
-  mediaToDelete: string[] = [];
+mediaToDelete: string[] = [];
 
 editPost(post: Post): void {
+
+  console.log(this.USER_ID);
+    // Check if the current user is the author of the post
+    if (post.userId !== this.USER_ID) {
+      console.warn('Cannot edit: Post belongs to another user');
+      return; // Exit the function if not the post owner
+    }
+
     this.isEditMode = true;
     this.editPostId = post.id!;
     this.editingPost = {...post};
@@ -513,7 +601,7 @@ editPost(post: Post): void {
 
     this.mediaToDelete = [];
     this.isModalOpen = true;
-  }
+}
 
   publishPost() {
     this.submitted1 = true;
@@ -529,15 +617,21 @@ editPost(post: Post): void {
         // Extract new files to upload (not existing media)
         const newMediaFiles = this.uploadedFiles
           .filter(file => !file.isExisting)
-          .map(file => file.file || file);
+          .map(file => {
+            // Make sure we're getting the actual File object for new uploads
+            return file.file instanceof File ? file.file : file;
+          });
 
-        const mediaTypes = this.uploadedFiles
-          .map(file => file.type);
+        // Make sure media types are correct
+        const mediaTypes = this.uploadedFiles.map(file => file.type);
 
-        // Determine if post has media after edit (both new and existing that haven't been deleted)
+        // Log for debugging
+        console.log('New media files:', newMediaFiles);
+        console.log('Media types:', mediaTypes);
+
+        // Determine if post has media after edit
         const hasMedia = this.uploadedFiles.length > 0;
 
-        // Update the post with hasMedia flag
         this.postService.updatePost(
           this.editPostId,
           this.postContent,
@@ -547,6 +641,7 @@ editPost(post: Post): void {
           hasMedia
         ).subscribe({
           next: (updatedPost) => {
+            console.log('Post updated successfully:', updatedPost);
             this.handlePostSuccess();
           },
           error: (error) => {
@@ -554,14 +649,14 @@ editPost(post: Post): void {
             this.isSubmitting = false;
           }
         });
+
       } else {
         // Existing create post logic
         const post: Post = {
           content: this.postContent,
           hasMedia: this.uploadedFiles.length > 0,
           userId: this.USER_ID,
-          username: 'Iyed Mejri',
-          email: 'iyed.mejri@example.com'
+
         };
 
         const mediaFiles = this.uploadedFiles.map(fileObj => fileObj.file);
@@ -629,9 +724,13 @@ hasMoreMedia = false;
 // Call this in ngOnInit or in a specific method when the media tab is selected
 loadUserMedia(): void {
   this.loading = true;
-  this.postService.getUserMedia(this.USER_ID).subscribe({
+  const userIdToLoad = this.userId || this.USER_ID;
+  console.log('Loading media for user ID:', userIdToLoad);
+
+  this.postService.getUserMedia(userIdToLoad).subscribe({
     next: (mediaList) => {
       this.mediaItems = mediaList;
+      console.log('Media loaded successfully:', mediaList);
       this.loading = false;
     },
     error: (error) => {
@@ -640,36 +739,41 @@ loadUserMedia(): void {
     }
   });
 }
-hasAnyMedia(): boolean {
-  return this.mediaItems && this.mediaItems.length > 0;
-}
 
-getAllMedia(): Media[] {
-  return this.mediaItems;
-}
-
-  getOnlyImages(): Media[] {
-    return this.mediaItems.filter(media => this.isImage(media.mediaUrl!)
-    && media.post&& media.post.id);
-  }
 
 getOnlyVideos(): Media[] {
-  // Logging for debugging
-
-  const videos = this.mediaItems.filter(media =>
-    this.isVideo(media.mediaUrl!) &&
-    media.post &&
-    media.post.id
-  );
+  const videos = this.getAllMedia().filter((media: Media) => {
+    const isvid = this.isVideo(media.mediaUrl!);
+    return isvid;
+  });
 
   return videos;
-}  isImage(url: string): boolean {
-    return url.match(/\.(jpeg|jpg|gif|png|webp)$/) !== null;
-  }
+}
 
+// Update your getOnlyImages method
+getOnlyImages(): Media[] {
+
+  const images = this.getAllMedia().filter((media: Media) => {
+    const isImg = this.isImage(media.mediaUrl!);
+    return isImg  ;
+  });
+
+  return images;
+}
+// Make sure your isImage method is correctly detecting images
+isImage(url: string): boolean {
+  if (!url) return false;
+  // More robust image detection - check file extension and content type
+  return url.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i) != null ||
+         url.includes('/image/') ||
+         url.includes('data:image/');
+}
+
+// Similarly update isVideo if needed
   isVideo(url: string): boolean {
     return url.match(/\.(mp4|webm|ogg|mov|avi)$/) !== null;
   }
+
 
 
 
@@ -694,15 +798,74 @@ goToPost(postId: string | undefined): void {
   // Add loading state
   this.loading = true;
 
+  // First get the basic post details
   this.postService.getPostById(postId).subscribe({
     next: (post) => {
       console.log('Post fetched successfully:', post);
-      this.loading = false;
       if (post) {
-        this.selectedPost = {...post};
-        this.isDetailModalOpen = true;
+        this.selectedPost = { ...post };
+        this.isLoadingComments = true;
+        this.newDetailComment = '';
+        this.currentMediaIndex = 0;
+
+        // Fetch the post author information
+        if (post.userId) {
+          this.userService.getUserById(post.userId).subscribe({
+            next: (user) => {
+              if (this.selectedPost) {
+                this.selectedPost.username =  user?.prenom + ' ' +  user?.nom;
+                this.selectedPost.userProfilePic = user?.image ?? 'assets/images/users/default-avatar.jpg';
+              }
+
+              // Load top-level comments like in openPostDetail
+              this.commentService.getTolevel(postId).subscribe({
+                next: (comments) => {
+                  let remainingComments = comments ? comments.length : 0;
+
+                  if (remainingComments === 0) {
+                    this.topLevelComments[postId] = [];
+                    this.isLoadingComments = false;
+                    this.loading = false;
+                    this.isDetailModalOpen = true;
+                    return;
+                  }
+
+                  this.topLevelComments[postId] = comments || [];
+
+                  // Process top-level comments and their replies recursively
+                  this.topLevelComments[postId].forEach((comment, index) => {
+                    this.enrichCommentWithUserDetails(comment, (updatedComment) => {
+                      this.topLevelComments[postId][index] = updatedComment;
+                      remainingComments--;
+                      if (remainingComments === 0) {
+                        this.isLoadingComments = false;
+                        this.loading = false;
+                        this.isDetailModalOpen = true;
+                      }
+                    });
+                  });
+                },
+                error: (error) => {
+                  console.error('Error fetching top-level comments:', error);
+                  this.isLoadingComments = false;
+                  this.loading = false;
+                  this.isDetailModalOpen = true;
+                }
+              });
+            },
+            error: (err) => {
+              console.error('Error fetching post author details:', err);
+              this.loading = false;
+              this.isDetailModalOpen = true;
+            }
+          });
+        } else {
+          // No userId, fetch comments directly
+          this.fetchTopLevelComments(postId);
+        }
       } else {
         console.error('Post data is empty');
+        this.loading = false;
       }
     },
     error: (error) => {
@@ -711,6 +874,47 @@ goToPost(postId: string | undefined): void {
     }
   });
 }
+
+// Helper method to fetch top-level comments
+private fetchTopLevelComments(postId: string): void {
+  this.isLoadingComments = true;
+
+  this.commentService.getTolevel(postId).subscribe({
+    next: (comments) => {
+      let remainingComments = comments ? comments.length : 0;
+
+      if (remainingComments === 0) {
+        this.topLevelComments[postId] = [];
+        this.isLoadingComments = false;
+        this.loading = false;
+        this.isDetailModalOpen = true;
+        return;
+      }
+
+      this.topLevelComments[postId] = comments || [];
+
+      // Process top-level comments and their replies recursively
+      this.topLevelComments[postId].forEach((comment, index) => {
+        this.enrichCommentWithUserDetails(comment, (updatedComment) => {
+          this.topLevelComments[postId][index] = updatedComment;
+          remainingComments--;
+          if (remainingComments === 0) {
+            this.isLoadingComments = false;
+            this.loading = false;
+            this.isDetailModalOpen = true;
+          }
+        });
+      });
+    },
+    error: (error) => {
+      console.error('Error fetching top-level comments:', error);
+      this.isLoadingComments = false;
+      this.loading = false;
+      this.isDetailModalOpen = true;
+    }
+  });
+}
+
 
   currentMediaIndex: number = 0;
 
@@ -764,6 +968,137 @@ goToPost(postId: string | undefined): void {
   editingCommentId: string | null = null;
   editCommentText: string = '';
 
+  addComment(postId: string, commentText: string): void {
+    if (!commentText || !commentText.trim()) return;
+
+    this.commentService.addComment(postId, commentText, this.USER_ID).subscribe({
+      next: (comment: ForumComment) => {
+        const post = this.posts.find(p => p.id === postId);
+        if (post) {
+          if (!post.comments) {
+            post.comments = [];
+          }
+          post.comments.push(comment);
+        }
+      },
+
+      error: (errorObj) => {
+        this.isSubmitting = false; // Reset submission state
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError()
+        } else {
+          // Handle other errors if needed
+          this.error = errorObj.message || 'An error occurred';
+        }
+      }
+    });
+  }
+
+
+  // Method to handle adding a comment in the detail modal
+  addDetailComment(): void {
+    if (!this.newDetailComment || !this.newDetailComment.trim() || !this.selectedPost) return;
+
+    this.isSubmitting = true;
+
+    this.commentService.addComment(this.selectedPost.id!, this.newDetailComment, this.USER_ID).subscribe({
+      next: (comment: ForumComment) => {
+        // Load user details for the new comment
+        this.userService.getUserById(comment.userId!).subscribe({
+          next: (user) => {
+            comment.username = user.nom + ' ' + user.prenom;
+            comment.userProfilePic = user.image;
+
+            // Add comment to both data structures
+            if (!this.selectedPost!.comments) {
+              this.selectedPost!.comments = [];
+            }
+            this.selectedPost!.comments.push(comment);
+
+            if (!this.topLevelComments[this.selectedPost!.id!]) {
+              this.topLevelComments[this.selectedPost!.id!] = [];
+            }
+            this.topLevelComments[this.selectedPost!.id!].push(comment);
+
+            // Create new reference to trigger change detection
+            this.topLevelComments[this.selectedPost!.id!] = [...this.topLevelComments[this.selectedPost!.id!]];
+
+            this.newDetailComment = '';
+            this.isSubmitting = false;
+          },
+          error: (error) => {
+            console.error('Error fetching user details:', error);
+            this.isSubmitting = false;
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error adding comment:', error);
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+// Update the submitReply method to fetch user details for replies
+  submitReply(commentId: string): void {
+    if (!this.replyContent[commentId] || !this.replyContent[commentId].trim()) {
+      return;
+    }
+
+    this.replySubmitting[commentId] = true;
+
+    this.commentService.replyToComment(commentId, this.replyContent[commentId], this.USER_ID).subscribe({
+      next: (reply) => {
+        // Fetch user details for the reply
+        this.userService.getUserById(reply.userId!).subscribe({
+          next: (user) => {
+            reply.username = user.nom + ' ' + user.prenom;
+            reply.userProfilePic = user.image;
+
+            // Now add the reply with user details
+            this.addReplyToComment(commentId, reply);
+
+            if (this.selectedPost?.id && this.posts) {
+              const mainPost = this.posts.find(p => p.id === this.selectedPost?.id);
+              if (mainPost) {
+                this.addReplyToComment(commentId, reply, mainPost.comments);
+              }
+            }
+
+            if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
+              this.addReplyToComment(commentId, reply, this.topLevelComments[this.selectedPost.id]);
+
+              // Trigger change detection
+              this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
+            }
+
+            this.replyContent[commentId] = '';
+            this.showReplyInput[commentId] = false;
+            this.replySubmitting[commentId] = false;
+          },
+          error: (error) => {
+            console.error('Error fetching user details for reply:', error);
+            this.replySubmitting[commentId] = false;
+          }
+        });
+      },
+      error: (errorObj) => {
+        this.replySubmitting[commentId] = false;
+
+        if (errorObj == "OK") {
+          this.toxicContentDetected = true;
+          this.handleToxicContentError();
+        } else {
+          console.error('Error adding reply:', errorObj);
+          this.error = errorObj.message || 'An error occurred';
+        }
+      }
+    });
+  }
+
+
+
   // Update the editComment method
   editComment(comment: ForumComment): void {
     this.editingCommentId = comment.id!;
@@ -772,63 +1107,90 @@ goToPost(postId: string | undefined): void {
   }
 
   // Add a saveEditedComment method
-saveEditedComment(): void {
-  if (!this.editingCommentId || !this.editCommentText.trim()) return;
+  saveEditedComment(): void {
+    if (!this.editingCommentId || !this.editCommentText.trim()) return;
 
-  this.commentService.editComment(this.editingCommentId, this.editCommentText).subscribe({
-    next: (updatedComment) => {
-      // Update comment in selectedPost if it exists
-      if (this.selectedPost && this.selectedPost.comments) {
-        const commentIndex = this.selectedPost.comments.findIndex(c => c.id === this.editingCommentId);
-        if (commentIndex !== -1) {
-          this.selectedPost.comments[commentIndex] = updatedComment;
-        }
-      }
+    // Find the original comment to preserve all its details
+    let originalComment: any = null;
 
-      // Update comment in the main posts array
-      this.posts.forEach(post => {
-        if (post.comments) {
-          const commentIndex = post.comments.findIndex(c => c.id === this.editingCommentId);
-          if (commentIndex !== -1) {
-            post.comments[commentIndex] = updatedComment;
+    // Search in all possible locations
+    if (this.selectedPost && this.selectedPost.id) {
+      const comments = this.topLevelComments[this.selectedPost.id] || [];
+
+      // Search in top level comments
+      originalComment = comments.find(c => c.id === this.editingCommentId);
+
+      // If not found, search in replies
+      if (!originalComment) {
+        for (const comment of comments) {
+          if (comment.replies) {
+            const reply = comment.replies.find(r => r.id === this.editingCommentId);
+            if (reply) {
+              originalComment = reply;
+              break;
+            }
           }
         }
-      });
+      }
+    }
 
-      // Update comment in the topLevelComments object - this is what's displayed in the modal
-      if (this.selectedPost && this.selectedPost.id && this.topLevelComments[this.selectedPost.id]) {
-        const topLevelIndex = this.topLevelComments[this.selectedPost.id].findIndex(
-          c => c.id === this.editingCommentId
-        );
-        if (topLevelIndex !== -1) {
-          this.topLevelComments[this.selectedPost.id][topLevelIndex] = updatedComment;
-        }
+    this.commentService.editComment(this.editingCommentId, this.editCommentText).subscribe({
+      next: (response) => {
+        console.log('Comment updated:', response);
 
-        // Also check for replies within top level comments
-        this.topLevelComments[this.selectedPost.id].forEach(comment => {
-          if (comment.replies) {
-            const replyIndex = comment.replies.findIndex(r => r.id === this.editingCommentId);
-            if (replyIndex !== -1) {
-              comment.replies[replyIndex] = updatedComment;
+        // Merge response with original comment to preserve user details
+        const updatedComment = {
+          ...originalComment,
+          content: this.editCommentText,
+          updatedAt: response.createdAt || new Date()
+        };
+
+        // Update comment in posts array
+        this.posts.forEach(post => {
+          if (post.comments) {
+            const commentIndex = post.comments.findIndex(c => c.id === this.editingCommentId);
+            if (commentIndex !== -1) {
+              post.comments[commentIndex] = updatedComment;
             }
           }
         });
-      }
 
-      // Create a new reference to trigger change detection
-      if (this.selectedPost && this.selectedPost.id) {
-        this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
-      }
+        // Update in topLevelComments
+        if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
+          // Update top level comments
+          const topLevelIndex = this.topLevelComments[this.selectedPost.id].findIndex(
+            c => c.id === this.editingCommentId
+          );
+          if (topLevelIndex !== -1) {
+            this.topLevelComments[this.selectedPost.id][topLevelIndex] = updatedComment;
+          }
 
-      // Reset edit mode
-      this.editingCommentId = null;
-      this.editCommentText = '';
-    },
-    error: (err) => {
-      console.error('Error updating comment:', err);
-    }
-  });
-}  cancelEditComment(): void {
+          // Update replies
+          this.topLevelComments[this.selectedPost.id].forEach(comment => {
+            if (comment.replies) {
+              const replyIndex = comment.replies.findIndex(r => r.id === this.editingCommentId);
+              if (replyIndex !== -1) {
+                comment.replies[replyIndex] = updatedComment;
+              }
+            }
+          });
+
+          // Trigger change detection
+          this.topLevelComments[this.selectedPost.id] = [...this.topLevelComments[this.selectedPost.id]];
+        }
+
+        // Reset edit mode
+        this.editingCommentId = null;
+        this.editCommentText = '';
+      },
+      error: (err) => {
+        console.error('Error updating comment:', err);
+      }
+    });
+  }
+
+
+cancelEditComment(): void {
     this.editingCommentId = null;
     this.editCommentText = '';
   }
@@ -913,52 +1275,6 @@ saveEditedComment(): void {
   }
 
 // Submit a reply to a comment
-  submitReply(commentId: string): void {
-    if (!this.replyContent[commentId] || !this.replyContent[commentId].trim()) {
-      return;
-    }
-
-    // Show loading indicator
-    this.replySubmitting[commentId] = true;
-
-    // Call the comment service to submit the reply
-    this.commentService.replyToComment(commentId, this.replyContent[commentId], this.USER_ID).subscribe({
-      next: (reply) => {
-        // Add the reply to the selected post (modal view)
-        this.addReplyToComment(commentId, reply);
-
-        // Also update the post in the main posts list if it exists
-        if (this.selectedPost?.id && this.posts) {
-          const mainPost = this.posts.find(p => p.id === this.selectedPost?.id);
-          if (mainPost) {
-            this.addReplyToComment(commentId, reply, mainPost.comments);
-          }
-        }
-
-        // Update the top-level comments if they were already fetched
-        if (this.selectedPost?.id && this.topLevelComments[this.selectedPost.id]) {
-          this.addReplyToComment(commentId, reply, this.topLevelComments[this.selectedPost.id]);
-        }
-
-        // Reset state
-        this.replyContent[commentId] = '';
-        this.showReplyInput[commentId] = false;
-        this.replySubmitting[commentId] = false;
-      },
-      error: (errorObj) => {
-        this.replySubmitting[commentId] = false;
-
-        if (errorObj == "OK") {
-          this.toxicContentDetected = true;
-          this.handleToxicContentError();
-        } else {
-          // Handle other errors
-          console.error('Error adding reply:', errorObj);
-          this.error = errorObj.message || 'An error occurred';
-        }
-      }
-    });
-  }
 
 // Helper method to recursively find the parent comment and add the reply
   addReplyToComment(parentId: string, reply: ForumComment, comments: ForumComment[] = this.selectedPost?.comments ?? []): boolean {
@@ -1019,23 +1335,6 @@ getTopLevelComments(postId: string): ForumComment[] {
 }
 
 
-  getRepliesForComment(commentId: string): ForumComment[] {
-  if (!this.selectedPost || !this.selectedPost.comments) {
-    return [];
-  }
-  return this.selectedPost.comments.filter(comment =>
-    comment.parentCommentId === commentId
-  );
-}
-  getCommentReplies(commentId: string): any[] {
-    if (!this.selectedPost || !this.selectedPost.comments) {
-      return [];
-    }
-
-    return this.selectedPost.comments.filter(comment =>
-      comment.parentCommentId === commentId
-    );
-  }
 
 
 }

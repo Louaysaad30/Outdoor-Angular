@@ -1,7 +1,15 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs [title]="'Event Details'" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
-<!-- End Breadcrumbs -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Bold Event Details title on the left -->
+  <h5 class="fw-bold">{{ event?.title }}  Details</h5>
 
+  <!-- Breadcrumb navigation on the right -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+<li class="breadcrumb-item"><a class="breadcrumb-link" [routerLink]="['/eventfront/user/events']">Events</a></li>      <li class="breadcrumb-item active">{{ event?.title }} Details</li>
+    </ol>
+  </nav>
+</div>
 <!-- Loading Spinner -->
 <div *ngIf="loading" class="text-center py-5">
                 <div class="spinner-border text-primary avatar-md" role="status">
@@ -64,7 +72,7 @@
               </div>
               <div class="flex-grow-1 ms-3">
                 <h6 class="mb-1">Event Date</h6>
-                <p class="text-muted mb-0">{{ event?.startDate | date: 'EEEE, MMMM d, y' }}</p>
+                <p class="text-muted mb-0">{{ event?.startDate | date: 'EEEE, MMMM d, y' }} - {{ event?.endDate | date: 'EEEE, MMMM d, y' }}</p>
               </div>
             </div>
           </div>
@@ -169,8 +177,7 @@
         <div class="card">
           <div class="card-body text-center">
             <button class="btn btn-primary btn-lg w-100" [routerLink]="['/eventfront/user/events', event?.id, 'tickets']">
-              <span class="me-2">Participate</span>
-              <span class="fw-medium">$7000</span>
+              <span class="me-2">RESERVE YOUR TICKET</span>
             </button>
           </div>
         </div>

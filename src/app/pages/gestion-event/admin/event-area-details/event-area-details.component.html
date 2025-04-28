@@ -1,5 +1,17 @@
 <!-- Start Breadcrumbs -->
-<app-breadcrumbs title="Event Area Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- Next to breadcrumbs -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Bold Event Details title on the left -->
+  <h5 class="fw-bold">{{ eventArea?.name }}  Details</h5>
+
+  <!-- Breadcrumb navigation on the right -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a class="breadcrumb-link" [routerLink]="['/eventback/admin/event-area-list']">Event Areas</a></li>
+      <li class="breadcrumb-item active">{{ eventArea?.name }} Details</li>
+    </ol>
+  </nav>
+</div>
 <!-- End Breadcrumbs -->
 
 <div class="row">
@@ -7,40 +19,59 @@
     <div class="card">
       <div class="card-body">
         <!-- Swiper -->
-        <ngx-slick-carousel class="carousel" [config]="slidesConfig" #slickModal class="swiper property-slider mb-3">
-          <div ngxSlickItem class="swiper-slide">
-            <div class="position-relative ribbon-box">
-              <div class="ribbon ribbon-danger fw-medium rounded-end mt-2"> For Sale</div>
-              <div dropdown class="dropdown position-absolute top-0 end-0 m-3">
-                <button dropdownToggle class="btn bg-white avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="bi bi-three-dots-vertical"></i>
-                </button>
-                <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="javascript:void(0);" (click)="editEventArea()"><i class="bi bi-pencil-square me-1 align-baseline"></i> Edit</a></li>
-                  <li><a class="dropdown-item" href="javascript:void(0);" (click)="removeItem()"><i class="bi bi-trash3 me-1 align-baseline"></i> Delete</a></li>
-                </ul>
+
+
+        <div class="position-relative">
+          <img [src]="eventArea?.areaImg || 'assets/images/placeholder-image.jpg'" alt="Event Area" class="img-fluid w-100" style="height: 350px; object-fit: cover;">
+          <div dropdown class="dropdown position-absolute top-0 end-0 m-3">
+            <button dropdownToggle class="btn bg-white avatar-xs p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="javascript:void(0);" (click)="editEventArea()"><i class="bi bi-pencil-square me-1 align-baseline"></i> Edit</a></li>
+              <li><a class="dropdown-item" href="javascript:void(0);" (click)="removeItem()"><i class="bi bi-trash3 me-1 align-baseline"></i> Delete</a></li>
+            </ul>
+          </div>
+          <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);">
+            <div class="d-flex justify-content-between align-items-end">
+              <div>
+                <h2 class="text-white mb-1">{{eventArea?.name}}</h2>
+                <p class="text-white-50 mb-0">
+                  <i class="bi bi-geo-alt me-1"></i> {{eventArea?.address || 'Loading address...'}}
+                </p>
               </div>
-              <img [src]="eventArea?.areaImg" alt="Event Area Image" class="img-fluid rounded mb-3" style="height: 450px ;width: 890px">
+
+     <span class="badge rounded-pill fs-6 px-3 py-2"
+           [ngClass]="{
+               'bg-warning-subtle text-warning': eventArea?.status === 'PENDING',
+               'bg-success-subtle text-success': eventArea?.status === 'APPROVED',
+               'bg-danger-subtle text-danger cursor-pointer': eventArea?.status === 'REJECTED'
+           }"
+           (click)="eventArea?.status === 'REJECTED' && showRejectionMessage()">
+         <i class="bi me-1"
+            [ngClass]="{
+                'bi-hourglass-split': eventArea?.status === 'PENDING',
+                'bi-check-circle-fill': eventArea?.status === 'APPROVED',
+                'bi-x-circle-fill': eventArea?.status === 'REJECTED'
+            }"></i>
+         {{eventArea?.status}}
+         <i *ngIf="eventArea?.status === 'REJECTED'" class="bi bi-info-circle ms-1" title="Click to view rejection message"></i>
+     </span>
             </div>
           </div>
-        </ngx-slick-carousel><!--end slider-->
+        </div>
 
         <div class="pt-1">
           <button type="button" class="btn btn-subtle-warning custom-toggle float-end btn-icon btn-sm" data-bs-toggle="button">
             <span class="icon-on"><i class="bi bi-star"></i></span>
             <span class="icon-off"><i class="bi bi-star-fill"></i></span>
           </button>
-          <h6 class="card-title">{{ eventArea?.name }}</h6>
           <div class="text-muted hstack gap-2 flex-wrap list-unstyled mb-3">
-            <div>
-              <i class="bi bi-geo-alt align-baseline me-1"></i>  {{ eventArea?.address }}
-            </div>
-            <div class="vr"></div>
             <div>
               <i class="bi bi-calendar-event align-baseline me-1"></i> Update 2 days ago
             </div>
             <div>
-              <i class="bi bi-calendar-event align-baseline me-1"></i> {{ eventArea.capacity }}
+              <i class="bi bi-calendar-event align-baseline me-1"></i> Capacity : {{ eventArea.capacity }} People
             </div>
           </div>
           <p class="text-muted">{{ eventArea?.description }}</p>
@@ -90,65 +121,63 @@
         <h6 class="card-title mb-0">Even Area Location</h6>
       </div>
       <div class="card-body">
-        <div id="leaflet-map-group-control" leaflet [leafletOptions]="options" [leafletLayers]="[marker]" class="leaflet-map leaflet-gray" style="min-height: 100%;"></div>
+        <div
+          id="map"
+          leaflet
+          [leafletOptions]="options"
+          [leafletLayers]="mapMarkers"
+          (leafletMapReady)="onMapReady($event)"
+          class="leaflet-map leaflet-gray rounded"
+          style="height: 400px; width: 100%;">
+        </div>
       </div>
     </div>
 
   </div><!--end col-->
   <div class="col-xl-3 col-lg-4">
     <div class="row">
-      <div class="col-lg-12">
-        <div class="card card-primary text-center">
-          <div class="card-body">
-            <h4 class="text-reset fw-normal">$7000 - $8000</h4>
-            <p class="text-white-75 fs-md mb-0">Sale Price</p>
-          </div>
+
+<!-- User Details Card -->
+
+<div class="col-lg-12">
+  <div class="card shadow-sm mb-4">
+  <div class="card-header">
+    <h6 class="card-title mb-0">
+      <i class="bi bi-person-badge me-2"></i>
+      Event Area Creator
+    </h6>
+  </div>
+  <div class="card-body">
+    <div class="d-flex gap-3 align-items-center mb-3">
+      <div class="flex-shrink-0">
+        <div class="avatar-sm bg-primary-subtle text-primary rounded d-flex align-items-center justify-content-center">
+          <i class="bi bi-person-fill fs-5"></i>
         </div>
-      </div><!--end col-->
-      <div class="col-lg-12">
-        <div class="card">
-          <div class="card-body">
-            <div class="text-center">
-              <img src="assets/images/users/avatar-1.jpg" alt="" class="avatar-md rounded mx-auto d-block">
-              <h5 class="mt-3">Jerry Emard</h5>
-              <p class="text-muted">OWNER</p>
-              <p class="text-muted mb-4">73 Alum Rock Rd, Birmingham, West Midland, United Kingdom - s B8
-                1LY</p>
-            </div>
-            <ul class="list-unstyled hstack justify-content-center gap-2 mb-0">
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title rounded bg-primary-subtle text-primary">
-                    <i class="bi bi-facebook"></i>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title bg-success-subtle text-success rounded">
-                    <i class="bi bi-whatsapp"></i>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title bg-info-subtle text-info rounded">
-                    <i class="bi bi-twitter"></i>
-                  </div>
-                </a>
-              </li>
-              <li>
-                <a href="javascript:void(0);" class="avatar-xs d-inline-block">
-                  <div class="avatar-title bg-danger-subtle text-danger rounded">
-                    <i class="bi bi-instagram"></i>
-                  </div>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div><!--end col-->
-      <div class="col-lg-12">
+      </div>
+      <div class="flex-grow-1">
+        <h6 class="fs-md">{{userDetails?.prenom}} {{userDetails?.nom}}</h6>
+        <p class="text-muted mb-0">Area Creator</p>
+      </div>
+    </div>
+    <div class="creator-details">
+      <div class="mb-2">
+        <a href="mailto:{{userDetails?.email}}" class="text-decoration-none text-muted d-flex align-items-center">
+          <i class="bi bi-envelope me-2"></i>
+          <span>{{userDetails?.email}}</span>
+        </a>
+      </div>
+      <div *ngIf="userDetails?.tel">
+        <a href="tel:{{userDetails?.tel}}" class="text-decoration-none text-muted d-flex align-items-center">
+          <i class="bi bi-telephone me-2"></i>
+          <span>{{userDetails?.tel}}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="col-lg-12">
         <div class="card">
           <div class="card-header">
             <a href="javascript:void(0);" class="float-end link-effect">View More <i class="bi bi-arrow-right align-baseline ms-1"></i></a>
@@ -167,90 +196,79 @@
             <button class="btn btn-secondary w-100" id="agent-chat" (click)="openChatbox()"><i class="bi bi-chat-text align-baseline me-1"></i> Get In Touch</button>
           </div>
         </div>
-      </div><!--end col-->
-      <div class="col-lg-12">
+      </div>
+
+<div class="col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4 class="card-title mb-0">Owner History</h4>
+            <h4 class="card-title mb-0">
+              <i class="bi bi-calendar-event text-primary me-2"></i>Events at this Venue
+            </h4>
           </div>
           <div class="card-body">
-            <div class="table-responsive table-card pt-2">
-              <table class="table mb-0">
+            <!-- Loading state -->
+            <div *ngIf="isLoadingEvents" class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading events...</span>
+              </div>
+              <p class="mt-2 text-muted">Loading events...</p>
+            </div>
+
+            <!-- No events state -->
+            <div *ngIf="!isLoadingEvents && events.length === 0" class="text-center py-3">
+              <div class="avatar-md mx-auto mb-3">
+                <div class="avatar-title bg-light text-primary rounded-circle">
+                  <i class="bi bi-calendar-x fs-1"></i>
+                </div>
+              </div>
+              <h5>No Events Scheduled</h5>
+              <p class="text-muted">There are currently no events scheduled at this venue.</p>
+            </div>
+
+            <!-- Events list -->
+            <div *ngIf="!isLoadingEvents && events.length > 0" class="table-responsive table-card">
+              <table class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Event Details</th>
+                    <th class="text-end">Status</th>
+                  </tr>
+                </thead>
                 <tbody>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center gap-1">
-                      <div class="flex-shrink-0">
-                        <img src="assets/images/users/avatar-1.jpg" alt="" class="avatar-sm rounded-circle p-1">
+                  <tr *ngFor="let event of events">
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="flex-shrink-0">
+                          <img [src]="event.imageUrl || 'assets/images/small/img-3.jpg'" alt="" class="avatar-sm rounded">
+                        </div>
+                        <div class="flex-grow-1">
+                          <h6 class="fs-md mb-1">{{ event.title }}</h6>
+                          <p class="text-muted mb-0">
+                            <i class="bi bi-calendar-check me-1"></i>{{ event.startDate | date:'mediumDate' }}
+                            <i class="bi bi-clock ms-2 me-1"></i>{{ event.startDate | date:'shortTime' }}
+                          </p>
+                        </div>
                       </div>
-                      <div class="flex-grow-1">
-                        <h6 class="fs-md mb-1">Jerry Emard</h6>
-                        <p class="text-muted mb-0">03 Nav, 2022 - Present</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-end">
-                    <p class="fs-md mb-0 text-muted"><i class="bi bi-star-half text-warning align-baseline me-1"></i> 4.9
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center gap-1">
-                      <div class="flex-shrink-0">
-                        <img src="assets/images/users/avatar-7.jpg" alt="" class="avatar-sm rounded-circle p-1">
-                      </div>
-                      <div class="flex-grow-1">
-                        <h6 class="fs-md mb-1">Sonia Conn</h6>
-                        <p class="text-muted mb-0">24 March, 2022 - 03 Nav, 2022</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-end">
-                    <p class="fs-md mb-0 text-muted"><i class="bi bi-star-half text-warning align-baseline me-1"></i> 4.8
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center gap-1">
-                      <div class="flex-shrink-0">
-                        <img src="assets/images/users/avatar-4.jpg" alt="" class="avatar-sm rounded-circle p-1">
-                      </div>
-                      <div class="flex-grow-1">
-                        <h6 class="fs-md mb-1">Talon Bradtke</h6>
-                        <p class="text-muted mb-0">27 Aug, 2021 - 24 March, 2022</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-end">
-                    <p class="fs-md mb-0 text-muted"><i class="bi bi-star-half text-warning align-baseline me-1"></i> 4.4
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center gap-1">
-                      <div class="flex-shrink-0">
-                        <img src="assets/images/users/avatar-5.jpg" alt="" class="avatar-sm rounded-circle p-1">
-                      </div>
-                      <div class="flex-grow-1">
-                        <h6 class="fs-md mb-1">Tyrell Kerluke</h6>
-                        <p class="text-muted mb-0">09 June, 2019 - 27 Aug, 2021</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-end">
-                    <p class="fs-md mb-0 text-muted"><i class="bi bi-star-half text-warning align-baseline me-1"></i> 4.6
-                    </p>
-                  </td>
-                </tr>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge"
+                            [ngClass]="{
+                              'bg-success': event.status === 'UPCOMING',
+                              'bg-info': event.status === 'ONGOING',
+                              'bg-danger': event.status === 'CANCELED',
+                              'bg-secondary': event.status === 'FINISHED'
+                            }">
+                        {{ event.status }}
+                      </span>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
-      </div><!--end col-->
+      </div>
+
     </div><!--end row-->
   </div><!--end col-->
 </div><!--end row-->
@@ -517,3 +535,164 @@
     </div>
   </div>
 </div>
+
+
+
+
+<!-- modal to show rejection message -->
+<div bsModal #rejectionModal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rejection-modal">
+      <!-- Stylish header with gradient background -->
+      <div class="modal-header border-0 rejection-header">
+        <h5 class="modal-title fw-bold text-white mb-0">
+          <i class="bi bi-exclamation-circle me-2"></i>Rejection Feedback
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="rejectionModal.hide()"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <!-- Top visual section with animation -->
+        <div class="rejection-visual-container">
+          <div class="rejection-icon-wrapper">
+            <div class="rejection-icon-pulse"></div>
+            <i class="bi bi-x-circle rejection-icon animated-icon"></i>
+          </div>
+          <h4 class="mt-3 fw-bold text-danger">Area Not Approved</h4>
+          <p class="text-muted">This area requires changes before it can be approved</p>
+        </div>
+
+        <!-- Rejection message in a card-style container -->
+        <div class="rejection-message-container p-4">
+          <div class="rejection-message-label mb-2">
+            <i class="bi bi-chat-quote-fill me-2 text-danger"></i>
+            <span class="fw-semibold">Admin Feedback:</span>
+          </div>
+          <div class="rejection-message">
+            {{ eventArea?.rejectionMessage || 'No rejection reason provided.' }}
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 bg-light py-3">
+        <button type="button" class="btn btn-light hover-btn me-2" (click)="rejectionModal.hide()">
+          <i class="bi bi-x me-1"></i>Dismiss
+        </button>
+        <button type="button" class="btn btn-primary hover-btn"  (click)="rejectionModal.hide() ; editEventArea()">
+          <i class="bi bi-arrow-repeat me-1"></i>Make Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Modern styling for rejection modal */
+.rejection-modal {
+  border-radius: 16px;
+  overflow: hidden;
+  transform: scale(0.95);
+  animation: modal-pop 0.3s ease forwards;
+}
+
+.rejection-header {
+  background: linear-gradient(135deg, #ff4b4b 0%, #ff416c 100%);
+  padding: 1.25rem 1.5rem;
+}
+
+.rejection-visual-container {
+  background-color: #fff;
+  padding: 2.5rem 1.5rem 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.rejection-icon-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.rejection-icon {
+  font-size: 3.5rem;
+  color: #ff416c;
+  position: relative;
+  z-index: 2;
+}
+
+.rejection-icon-pulse {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background-color: rgba(255, 65, 108, 0.1);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+}
+
+.rejection-message-container {
+  background-color: #f9f9f9;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.rejection-message-label {
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.rejection-message {
+  background-color: white;
+  border-left: 4px solid #ff416c;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.rejection-message:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.hover-btn {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hover-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.animated-icon {
+  animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+  animation-delay: 0.5s;
+}
+
+/* Animations */
+@keyframes modal-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate(-1px, 0); }
+  20%, 80% { transform: translate(2px, 0); }
+  30%, 50%, 70% { transform: translate(-3px, 0); }
+  40%, 60% { transform: translate(3px, 0); }
+}
+</style>

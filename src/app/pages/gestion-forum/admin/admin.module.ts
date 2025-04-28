@@ -32,7 +32,6 @@ import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 // Leaflet map
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import {DashboardForumComponent} from "./dashboard-forum/dashboard-forum.component";
-import {DashboardsRoutingModule} from "../../dashboards/dashboards-routing.module";
 
 // component
 
