@@ -20,10 +20,6 @@ import { UserServiceService } from '../services/user-service.service';
     maxAttempts = 3;
 
 
-// Signin Component
-export class SigninComponent {
-  failedAttempts = 0;
-  maxAttempts = 3;
   @ViewChild('captchaElem') captchaElem: any; // Add this line at the top
 
     year: number = new Date().getFullYear();
@@ -114,6 +110,12 @@ export class SigninComponent {
             });
 
             this.failedAttempts++;
+               // Reset recaptcha
+          if (this.captchaElem) {
+            this.captchaElem.resetCaptcha();
+          }
+          this.loginForm.get('recaptcha')?.reset();
+
             if (this.failedAttempts >= this.maxAttempts) {
               this.userService.blockUserFailByEmail(this.loginForm.get('email')?.value).subscribe(() => {
                 Swal.fire({
@@ -130,43 +132,12 @@ export class SigninComponent {
                 text: `${errorMessage} (${this.maxAttempts - this.failedAttempts} attempts left)`,
               });
             }
-          }
+            this.errorLoginMessage = errorMessage;
 
-  
-          this.failedAttempts++;
-          // Reset recaptcha
-          if (this.captchaElem) {
-            this.captchaElem.resetCaptcha();
           }
-          this.loginForm.get('recaptcha')?.reset();
-
-          if (this.failedAttempts >= this.maxAttempts) {
-            // Block user after 3 failed attempts
-            this.userService.blockUserFailByEmail(this.loginForm.get('email')?.value).subscribe(() => {
-              Swal.fire({
-                icon: 'error',
-                title: 'Account Blocked',
-                text: 'Your account has been blocked due to 3 failed login attempts.',
-              });
-  
-              // Disable form after blocking
-              this.loginForm.disable();
-            });
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Login Failed',
-              text: errorMessage + ` (${this.maxAttempts - this.failedAttempts} attempts left)`,
-            });
-          }
-  
-          this.errorLoginMessage = errorMessage;
-        }
-      );
         );
-      }
+        }
     }
-
     toggleFieldTextType(): void {
       this.fieldTextType = !this.fieldTextType;
     }
