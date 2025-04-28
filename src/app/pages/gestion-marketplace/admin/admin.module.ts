@@ -21,11 +21,14 @@ import { FlatpickrModule } from 'angularx-flatpickr';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
 import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
-
+import { BsDropdownConfig } from 'ngx-bootstrap/dropdown';
+import { ProgressbarModule } from 'ngx-bootstrap/progressbar';
+import { SimplebarAngularModule } from 'simplebar-angular';
+import { ReviewAnalysisComponent } from './reviewAnalysis/reviewAnalysis.component';
 
 
 @NgModule({
-  declarations: [AddProductComponent, ProductListComponent, AddProductCodeComponent, AddPCategoryComponent,OrdersComponent],
+  declarations: [AddProductComponent, ProductListComponent, AddProductCodeComponent, AddPCategoryComponent,OrdersComponent,ReviewAnalysisComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -44,6 +47,8 @@ import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
     TooltipModule.forRoot(),
     BsDropdownModule.forRoot(),
     BsDatepickerModule.forRoot(),
+    ProgressbarModule.forRoot(),
+    SimplebarAngularModule
 
 
 

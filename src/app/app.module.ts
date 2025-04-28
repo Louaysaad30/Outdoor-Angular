@@ -63,7 +63,7 @@ if (environment.defaultauth === 'firebase') {
   declarations: [
     AppComponent,
     AuthlayoutComponent,
-    
+
   ],
   imports: [
     TranslateModule.forRoot({

@@ -215,8 +215,8 @@
                 <div class="progress" style="height: 6px;">
                   <div class="progress-bar bg-success"
                        [style.width]="delivery.etatLivraison === Status.DELIVERED ? '100%' :
-                                     delivery.etatLivraison === Status.SHIPPED ? '50%' :
-                                     delivery.etatLivraison === Status.IN_PROGRESS ? '25%' : '0%'">
+                                     delivery.etatLivraison === Status.IN_PROGRESS ? '50%' :
+                                     delivery.etatLivraison === Status.ON_HOLD ? '25%' : '0%'">
                   </div>
                 </div>
               </div>
@@ -224,13 +224,13 @@
               <!-- Action Buttons -->
               <div class="action-buttons d-flex gap-2">
                 <ng-container *ngIf="delivery.etatLivraison !== Status.DELIVERED && delivery.etatLivraison !== Status.CANCELED">
-                  <button *ngIf="delivery.etatLivraison === Status.IN_PROGRESS"
+                  <button *ngIf="delivery.etatLivraison === Status.ON_HOLD"
                           class="btn btn-sm btn-outline-primary"
-                          (click)="updateDeliveryStatus(delivery, Status.SHIPPED)">
+                          (click)="updateDeliveryStatus(delivery, Status.IN_PROGRESS)">
                     <i class="bi bi-truck me-1"></i> Start
                   </button>
 
-                  <button *ngIf="delivery.etatLivraison === Status.SHIPPED"
+                  <button *ngIf="delivery.etatLivraison === Status.IN_PROGRESS"
                           class="btn btn-sm btn-outline-success"
                           (click)="updateDeliveryStatus(delivery, Status.DELIVERED)">
                     <i class="bi bi-check-circle me-1"></i> Complete
