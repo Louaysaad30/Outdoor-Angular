@@ -1121,5 +1121,27 @@ export const MENU: MenuItem[] = [
               parentId: 8
             }
           ]
+        },
+        {
+          id: 9,
+          label: 'Events',
+          icon: 'ph-calendar-check',
+          parentId: 3,
+          subItems: [
+            {
+              id: 9,
+              label: 'Event List',
+              link: '/eventfront/user/events',
+              parentId: 8
+            },
+            {
+              id: 10,
+              label: 'My Reservations',
+              link: '/eventfront/user/reservations',
+              parentId: 8
+            }
+          ]
         }
+
+
     ]

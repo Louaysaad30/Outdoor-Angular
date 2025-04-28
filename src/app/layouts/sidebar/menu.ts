@@ -1153,7 +1153,37 @@ export const MENU = {
       link: '/User/pages/applications',
       parentId: 3
     },
-
+      {
+        id: 8,
+        label: 'Event Management',
+        icon: 'ph-calendar-check',
+        subItems: [
+          {
+            id: 43,
+            label: 'Event Area Approval',
+            link: '/eventback/admin/event-area-approval',
+            parentId: 8
+          },
+          {
+            id: 44,
+            label: 'Event list',
+            link: '/eventback/admin/event-list/',
+            parentId: 8
+          },
+          {
+            id: 45,
+            label: 'Event Area list',
+            link: '/eventback/admin/event-area-list',
+            parentId: 8
+          },
+          {
+            id: 46,
+            label: 'Ticket list',
+            link: '/eventback/admin/ticket-list',
+            parentId: 8
+          }
+        ]
+      },
   ],
   //navbar ADMIN
   UserMenu: [
@@ -1198,7 +1228,28 @@ export const MENU = {
 
   ] ,
   FormateurMenu: [] ,
-  EventManagerMenu: [] ,
-  AgenceMenu: [] ,
+  EventManagerMenu: [
+    {
+      id: 44,
+      label: 'Event list',
+      icon: 'ph-calendar',
+      link: '/eventback/event-manager/event-list/',
+      parentId: 8
+    },
+    {
+      id: 45,
+      label: 'Event Area list',
+      icon: 'ph-map-pin',
+      link: '/eventback/event-manager/event-area-list',
+      parentId: 8
+    },
+    {
+      id: 46,
+      label: 'Ticket list',
+      icon: 'ph-ticket',
+      link: '/eventback/event-manager/ticket-list',
+      parentId: 8
+    }
+  ],  AgenceMenu: [] ,
   LivreurMenu: [] ,
 }

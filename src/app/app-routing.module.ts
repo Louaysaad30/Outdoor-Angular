@@ -22,7 +22,7 @@ const routes: Routes = [
   { path: 'forumback', component: LayoutComponent, loadChildren: () => import('./pages/gestion-forum/gestion-forum.module').then(m => m.GestionForumModule) ,  canActivate: [ roleGuard] ,  data: { role: 'ADMIN' }  },
   { path: 'forumfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-forum/gestion-forum.module').then(m   => m.GestionForumModule)  },
   { path: 'eventback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-event/gestion-event.module').then( m   => m.GestionEventModule)  },
-  { path: 'eventfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-event/gestion-event.module').then( m   => m.GestionEventModule)  ,  canActivate: [ roleGuard] ,  data: { roles: ['USER'] } },
+  { path: 'eventfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-event/gestion-event.module').then( m   => m.GestionEventModule)   },
   { path: 'formationback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-formation/gestion-formation.module').then( m   => m.GestionFormationModule)  },
   { path: 'formationfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-formation/gestion-formation.module').then( m   => m.GestionFormationModule)  },
   { path: 'marketplaceback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-marketplace/gestion-marketplace.module').then( m   => m.GestionMarketplaceModule)  },
