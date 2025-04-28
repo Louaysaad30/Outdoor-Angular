@@ -1,0 +1,95 @@
+<div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-xxl-4">
+              <h5 class="card-title mb-3">Modifier le véhicule</h5>
+              <p class="text-muted">Modifiez les champs et cliquez sur "Mettre à jour".</p>
+            </div>
+            <div class="col-xxl-8">
+              <form [formGroup]="vehiculeForm" (ngSubmit)="onSubmit()" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label class="form-label">Modèle <span class="text-danger">*</span></label>
+                  <input formControlName="modele" type="text" class="form-control" placeholder="Ex: Clio 4">
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Type <span class="text-danger">*</span></label>
+                  <select formControlName="type" class="form-select">
+                    <option value="">Sélectionner un type</option>
+                    <option value="VOITURE">Voiture</option>
+                    <option value="MOTO">Moto</option>
+                    <option value="VELO">Vélo</option>
+                    <option value="BUS">Bus</option>
+                    <option value="MINIBUS">Minibus</option>
+                  </select>
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Nombre de places <span class="text-danger">*</span></label>
+                  <input formControlName="nbPlace" type="number" class="form-control" placeholder="Ex: 5">
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Prix par jour (TND) <span class="text-danger">*</span></label>
+                  <input formControlName="prixParJour" type="number" class="form-control" placeholder="Ex: 120">
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Localisation <span class="text-danger">*</span></label>
+                  <input formControlName="localisation" type="text" class="form-control" placeholder="Ex: Tunis, Centre-ville">
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Statut</label>
+                  <select formControlName="statut" class="form-select">
+                    <option value="DISPONIBLE">DISPONIBLE</option>
+                    <option value="EN_MAINTENANCE">EN_MAINTENANCE</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Description <span class="text-danger">*</span></label>
+                  <textarea formControlName="description" class="form-control" rows="3" placeholder="Ajoutez une description du véhicule"></textarea>
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Image actuelle</label><br>
+                  <img *ngIf="currentImage" [src]="currentImage" alt="Image actuelle" class="img-thumbnail" width="200">
+                </div>
+  
+                <div class="mb-3">
+                  <label class="form-label">Nouvelle image</label>
+                  <input type="file" class="form-control" (change)="onFileChange($event)">
+                </div>
+  
+                <div class="hstack gap-2 justify-content-end mt-4">
+                  <button class="btn btn-danger" type="button" (click)="onCancel()">
+                    <i class="ph-x align-middle"></i> Annuler
+                  </button>
+                  <button class="btn btn-primary" type="submit" [disabled]="vehiculeForm.invalid">
+                    <i class="ph-check align-middle"></i> Mettre à jour
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Toast de succès -->
+      <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast align-items-center text-white bg-success border-0" role="alert"
+          aria-live="assertive" aria-atomic="true" *ngIf="showToast">
+          <div class="d-flex">
+            <div class="toast-body">
+              Véhicule mis à jour avec succès !
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="showToast = false"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

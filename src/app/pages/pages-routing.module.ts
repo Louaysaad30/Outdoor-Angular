@@ -14,9 +14,6 @@ const routes: Routes = [
     path: 'ecommerce', loadChildren: () => import('./ecommerce/ecommerce.module').then(m => m.EcommerceModule)
   },
   {
-    path: 'learning', loadChildren: () => import('./learning/learning.module').then(m => m.LearningModule)
-  },
-  {
     path: 'ui', loadChildren: () => import('./ui/ui.module').then(m => m.UiModule)
   },
   {

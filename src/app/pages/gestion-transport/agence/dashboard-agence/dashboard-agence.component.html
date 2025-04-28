@@ -1,0 +1,714 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs
+  title="Vehicle Rental"
+  [breadcrumbItems]="breadCrumbItems"
+></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<!-- Error Message -->
+<div *ngIf="errorMessage" class="alert alert-danger mt-3">
+  {{ errorMessage }}
+</div>
+
+<!-- Loading Spinner -->
+<div *ngIf="loading" class="text-center my-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<!-- Dashboard Content -->
+<div *ngIf="!loading && !errorMessage">
+  <div class="row">
+    <div class="col-xxl-3 col-md-6">
+      <div
+        class="card card-hover"
+        (click)="navigateToVehicles()"
+        style="cursor: pointer"
+      >
+        <div class="card-body">
+          <div class="d-flex">
+            <div class="flex-grow-1">
+              <div class="d-flex flex-column h-100">
+                <p class="fs-md text-muted mb-4">Total Vehicles</p>
+                <h3 class="mb-0 mt-auto">
+                  <span
+                    class="counter-value"
+                    [countUp]="stats.totalVehicles.value"
+                  ></span>
+                  <small class="text-success fs-xs mb-0 ms-1">
+                    <i class="bi bi-arrow-up me-1"></i>
+                    {{ stats.totalVehicles.change }}%
+                  </small>
+                </h3>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <div id="total_vehicles" class="apex-charts" dir="ltr">
+                <apx-chart
+                  [series]="[
+                    { data: [25, 20, 30, 35, 40, 45, 40, 50, 55, 50, 60, 65] }
+                  ]"
+                  chartType="line"
+                  [colors]="['#3b5de7']"
+                  height="60"
+                  width="100"
+                >
+                </apx-chart>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--end col-->
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex">
+            <div class="flex-grow-1">
+              <div class="d-flex flex-column h-100">
+                <p class="fs-md text-muted mb-4">Available Vehicles</p>
+                <h3 class="mb-0 mt-auto">
+                  <span
+                    class="counter-value"
+                    [countUp]="stats.availableVehicles.value"
+                  ></span>
+                  <small class="text-success fs-xs mb-0 ms-1">
+                    <i class="bi bi-arrow-up me-1"></i>
+                    {{ stats.availableVehicles.change }}%
+                  </small>
+                </h3>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <div id="available_vehicles" class="apex-charts" dir="ltr">
+                <apx-chart
+                  [series]="[
+                    { data: [15, 18, 22, 25, 28, 30, 32, 35, 38, 40, 42, 45] }
+                  ]"
+                  chartType="line"
+                  [colors]="['#45cb85']"
+                  height="60"
+                  width="100"
+                >
+                </apx-chart>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--end col-->
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex">
+            <div class="flex-grow-1">
+              <div class="d-flex flex-column h-100">
+                <p class="fs-md text-muted mb-4">Reservations</p>
+                <h3 class="mb-0 mt-auto">
+                  <span
+                    class="counter-value"
+                    [countUp]="stats.reservations.value"
+                  ></span>
+                  <small class="text-success fs-xs mb-0 ms-1">
+                    <i class="bi bi-arrow-up me-1"></i>
+                    {{ stats.reservations.change }}%
+                  </small>
+                </h3>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <div id="reservations_chart" class="apex-charts" dir="ltr">
+                <apx-chart
+                  [series]="[
+                    {
+                      data: [
+                        80, 90, 100, 110, 120, 130, 125, 135, 140, 145, 150, 155
+                      ]
+                    }
+                  ]"
+                  chartType="line"
+                  [colors]="['#eeb902']"
+                  height="60"
+                  width="100"
+                >
+                </apx-chart>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--end col-->
+
+    <div class="col-xxl-3 col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex">
+            <div class="flex-grow-1">
+              <div class="d-flex flex-column h-100">
+                <p class="fs-md text-muted mb-4">In Maintenance</p>
+                <h3 class="mb-0 mt-auto">
+                  <span
+                    class="counter-value"
+                    [countUp]="stats.inMaintenance.value"
+                  ></span>
+                  <small class="text-danger fs-xs mb-0 ms-1">
+                    <i class="bi bi-arrow-down me-1"></i>
+                    {{ stats.inMaintenance.change }}%
+                  </small>
+                </h3>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <div id="maintenance_chart" class="apex-charts" dir="ltr">
+                <apx-chart
+                  [series]="[
+                    { data: [10, 12, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6] }
+                  ]"
+                  chartType="line"
+                  [colors]="['#ff715b']"
+                  height="60"
+                  width="100"
+                >
+                </apx-chart>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--end col-->
+  </div>
+  <!--end row-->
+
+  <div class="row">
+    <div class="col-xxl-4 order-last order-xxl-first">
+      <div class="card">
+        <div class="card-header d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Vehicle Types</h4>
+          <div dropdown class="dropdown card-header-dropdown float-end">
+            <a
+              dropdownToggle
+              class="text-reset dropdown-btn"
+              href="javascript:void(0);"
+            >
+              <i class="bi bi-three-dots-vertical"></i>
+            </a>
+            <div *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);">Today</a>
+              <a class="dropdown-item" href="javascript:void(0);">Last Week</a>
+              <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+              <a class="dropdown-item" href="javascript:void(0);"
+                >Current Year</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div
+            echarts
+            [options]="vehicleTypeChart"
+            id="vehicle_type"
+            style="height: 336px"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <!--end col-->
+
+    <div class="col-xxl-8">
+      <div class="card">
+        <div class="card-header d-flex align-items-center">
+          <h5 class="card-title flex-grow-1 mb-0">Revenue Overview</h5>
+          <div class="flex-shrink-0">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              mwlFlatpickr
+              [(ngModel)]="currentDate"
+              altFormat="d M, Y"
+              dateFormat="d M, Y"
+              mode="range"
+              [altInput]="true"
+              [convertModelValue]="true"
+            />
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="revenue-chart" class="apex-charts" dir="ltr">
+            <apx-chart
+              [series]="revenueChart.series"
+              [chart]="revenueChart.chart"
+              [xaxis]="revenueChart.xaxis"
+              [stroke]="revenueChart.stroke"
+              [colors]="revenueChart.colors"
+              [dataLabels]="revenueChart.dataLabels"
+              [grid]="revenueChart.grid"
+              [tooltip]="revenueChart.tooltip"
+            >
+            </apx-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--end col-->
+  </div>
+  <!--end row-->
+
+  <!-- Add this below your existing stats cards but before the Agency Vehicles section -->
+  <div class="row mt-4">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <!-- Pending Reservations -->
+            <div class="col-xxl-4 col-md-6 border-end-md border-dashed">
+              <div class="text-center">
+                <p class="text-muted">Pending Reservations</p>
+                <div class="mx-3 mb-3 pb-1">
+                  <div
+                    id="pending-reservations-chart"
+                    class="apex-charts"
+                    dir="ltr"
+                  >
+                    <apx-chart
+                      [series]="pendingReservationsChart.series"
+                      [chart]="pendingReservationsChart.chart"
+                      [colors]="pendingReservationsChart.colors"
+                      [stroke]="pendingReservationsChart.stroke"
+                      dir="ltr"
+                    ></apx-chart>
+                  </div>
+                </div>
+                <h5 class="mb-0">
+                  {{ stats.pendingReservations.value }}
+                  <small
+                    class="badge fs-2xs"
+                    [ngClass]="{
+                      'bg-warning-subtle text-warning':
+                        stats.pendingReservations.change >= 0,
+                      'bg-danger-subtle text-danger':
+                        stats.pendingReservations.change < 0
+                    }"
+                  >
+                    <i
+                      class="bi"
+                      [ngClass]="{
+                        'bi-arrow-up': stats.pendingReservations.change >= 0,
+                        'bi-arrow-down': stats.pendingReservations.change < 0
+                      }"
+                    ></i>
+                    {{ stats.pendingReservations.change }}%
+                  </small>
+                </h5>
+              </div>
+            </div>
+            <!--end col-->
+
+            <!-- Approved Reservations -->
+            <div class="col-xxl-4 col-md-6 border-end-md border-dashed">
+              <div class="text-center">
+                <p class="text-muted">Approved Reservations</p>
+                <div class="mx-3 mb-3 pb-1">
+                  <div
+                    id="approved-reservations-chart"
+                    class="apex-charts"
+                    dir="ltr"
+                  >
+                    <apx-chart
+                      [series]="approvedReservationsChart.series"
+                      [chart]="approvedReservationsChart.chart"
+                      [colors]="approvedReservationsChart.colors"
+                      [stroke]="approvedReservationsChart.stroke"
+                      dir="ltr"
+                    ></apx-chart>
+                  </div>
+                </div>
+                <h5 class="mb-0">
+                  {{ stats.approvedReservations.value }}
+                  <small
+                    class="badge fs-2xs"
+                    [ngClass]="{
+                      'bg-success-subtle text-success':
+                        stats.approvedReservations.change >= 0,
+                      'bg-danger-subtle text-danger':
+                        stats.approvedReservations.change < 0
+                    }"
+                  >
+                    <i
+                      class="bi"
+                      [ngClass]="{
+                        'bi-arrow-up': stats.approvedReservations.change >= 0,
+                        'bi-arrow-down': stats.approvedReservations.change < 0
+                      }"
+                    ></i>
+                    {{ stats.approvedReservations.change }}%
+                  </small>
+                </h5>
+              </div>
+            </div>
+            <!--end col-->
+
+            <!-- Rejected Reservations -->
+            <div class="col-xxl-4 col-md-6">
+              <div class="text-center">
+                <p class="text-muted">Rejected Reservations</p>
+                <div class="mx-3 mb-3 pb-1">
+                  <div
+                    id="rejected-reservations-chart"
+                    class="apex-charts"
+                    dir="ltr"
+                  >
+                    <apx-chart
+                      [series]="rejectedReservationsChart.series"
+                      [chart]="rejectedReservationsChart.chart"
+                      [colors]="rejectedReservationsChart.colors"
+                      [stroke]="rejectedReservationsChart.stroke"
+                      dir="ltr"
+                    ></apx-chart>
+                  </div>
+                </div>
+                <h5 class="mb-0">
+                  {{ stats.rejectedReservations.value }}
+                  <small
+                    class="badge fs-2xs"
+                    [ngClass]="{
+                      'bg-danger-subtle text-danger':
+                        stats.rejectedReservations.change >= 0,
+                      'bg-success-subtle text-success':
+                        stats.rejectedReservations.change < 0
+                    }"
+                  >
+                    <i
+                      class="bi"
+                      [ngClass]="{
+                        'bi-arrow-up': stats.rejectedReservations.change >= 0,
+                        'bi-arrow-down': stats.rejectedReservations.change < 0
+                      }"
+                    ></i>
+                    {{ stats.rejectedReservations.change }}%
+                  </small>
+                </h5>
+              </div>
+            </div>
+            <!--end col-->
+          </div>
+          <!--end row-->
+        </div>
+      </div>
+      <!--end card-->
+    </div>
+  </div>
+
+  <!-- Agency Vehicles Section -->
+  <div class="row">
+    <div class="col-xxl-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center">
+          <h4 class="card-title mb-0 flex-grow-1">My Agency Vehicles</h4>
+          <div class="flex-shrink-0">
+            <button
+              class="btn btn-primary btn-sm"
+              routerLink="/transportback/agence/vehicules/add"
+            >
+              <i class="bi bi-plus-circle me-1"></i> Add Vehicle
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="search-box">
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  [(ngModel)]="vehicleFilter"
+                  (input)="filterVehicles()"
+                  placeholder="Search vehicles..."
+                />
+                <i class="bi bi-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-borderless table-centered align-middle table-nowrap mb-0"
+            >
+              <thead class="text-muted table-light">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Vehicle</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Daily Rate</th>
+                  <th scope="col">Seats</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let vehicle of pagedVehicles">
+                  <td>{{ vehicle.id }}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img
+                        [src]="
+                          vehicle.image ||
+                          'assets/images/vehicle-placeholder.png'
+                        "
+                        alt="{{ vehicle.modele }}"
+                        class="rounded"
+                        height="40"
+                      />
+                      <div>
+                        <h6 class="mb-0">{{ vehicle.modele }}</h6>
+                        <small class="text-muted">{{ vehicle.type }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ vehicle.type }}</td>
+                  <td>
+                    {{
+                      (
+                        vehicle.prixParJour?.toString()
+                        | currency : "TND" : "symbol" : "1.2-2"
+                      )?.replace("TND", "") + "TND"
+                    }}
+                  </td>
+                  <td>{{ vehicle.nbPlace }}</td>
+                  <td>
+                    <span
+                      class="badge bg-{{
+                        getVehicleStatusBadgeClass(vehicle)
+                      }} text-white py-1"
+                    >
+                      {{ getVehicleStatusText(vehicle) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <button
+                        class="btn btn-sm btn-outline-success"
+                        [routerLink]="[
+                          '/transportback/agence/update-vehicule',
+                          vehicle.id
+                        ]"
+                      >
+                        <i class="bi bi-pencil"></i> Update
+                      </button>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="deleteVehicle(vehicle.id)"
+                      >
+                        <i class="bi bi-trash"></i> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="pagedVehicles.length === 0">
+                  <td colspan="7" class="text-center py-4">
+                    No vehicles found
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Vehicles Pagination -->
+            <div
+              class="row mt-3 align-items-center"
+              *ngIf="filteredVehicles.length > itemsPerPage"
+            >
+              <div class="col-sm">
+                <div class="text-muted text-center text-sm-start">
+                  Page {{ vehiclePage }} - Showing
+                  <span class="fw-semibold">{{ pagedVehicles.length }}</span> of
+                  <span class="fw-semibold">{{ filteredVehicles.length }}</span>
+                  Vehicles
+                </div>
+              </div>
+              <div class="col-sm-auto mt-3 mt-sm-0">
+                <pagination
+                  [boundaryLinks]="true"
+                  [totalItems]="filteredVehicles.length"
+                  [itemsPerPage]="itemsPerPage"
+                  [(ngModel)]="vehiclePage"
+                  (pageChanged)="onPageChange($event)"
+                  previousText="&lsaquo;"
+                  nextText="&rsaquo;"
+                  firstText="&laquo;"
+                  lastText="&raquo;"
+                  class="pagination-sm"
+                >
+                </pagination>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agency Reservations Section -->
+  <div class="row mt-4">
+    <div class="col-xxl-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center">
+          <h4 class="card-title mb-0 flex-grow-1">Recent Reservations</h4>
+        </div>
+        <div class="card-body">
+          <!-- Filter Section -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="search-box">
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  [(ngModel)]="reservationFilter"
+                  (input)="filterReservations()"
+                  placeholder="Search reservations..."
+                />
+                <i class="bi bi-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-borderless table-centered align-middle table-nowrap mb-0"
+            >
+              <thead class="text-muted table-light">
+                <tr>
+                  <th scope="col">Vehicle</th>
+                  <th scope="col">Client</th>
+                  <th scope="col">Dates</th>
+                  <th scope="col">Total Price</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let reservation of pagedReservations">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img
+                        [src]="
+                          reservation.vehicule.image ||
+                          'assets/images/vehicle-placeholder.png'
+                        "
+                        alt="{{ reservation.vehicule.modele }}"
+                        class="rounded"
+                        height="40"
+                      />
+                      <div>
+                        <h6 class="mb-0">{{ reservation.vehicule.modele }}</h6>
+                        <small class="text-muted">{{
+                          reservation.vehicule.type
+                        }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ reservation.fullName }}</td>
+                  <td>
+                    {{ reservation.debutLocation | date : "shortDate" }} -
+                    {{ reservation.finLocation | date : "shortDate" }}
+                  </td>
+                  <td>
+                    {{
+                      reservation.prixTotal
+                        | currency : "TND" : "symbol" : "1.2-2"
+                    }}
+                  </td>
+                  <td>
+                    <span
+                      class="badge bg-{{
+                        getReservationStatusBadgeClass(reservation)
+                      }} text-white py-1"
+                    >
+                      {{ getReservationStatusText(reservation.statut) }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-2 align-items-center">
+                      <div *ngIf="reservation.statut === 'EN_ATTENTE'">
+                        <button
+                          class="btn btn-sm btn-outline-success"
+                          (click)="
+                            updateReservationStatus(reservation.id, 'APPROUVÉE')
+                          "
+                        >
+                          <i class="bi bi-check-circle me-1"></i> Approve
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="
+                            updateReservationStatus(reservation.id, 'REJETÉE')
+                          "
+                        >
+                          <i class="bi bi-x-circle me-1"></i> Reject
+                        </button>
+                      </div>
+                      <div *ngIf="reservation.statut !== 'EN_ATTENTE'">
+                        <button
+                          class="btn btn-sm btn-outline-warning"
+                          (click)="
+                            updateReservationStatus(
+                              reservation.id,
+                              'EN_ATTENTE'
+                            )
+                          "
+                        >
+                          <i class="bi bi-arrow-counterclockwise me-1"></i>
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="pagedReservations.length === 0">
+                  <td colspan="6" class="text-center py-4">
+                    No reservations found
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Reservations Pagination -->
+        <div
+          class="row mt-3 align-items-center"
+          *ngIf="filteredReservations.length > itemsPerPage"
+        >
+          <div class="col-sm">
+            <div class="text-muted text-center text-sm-start">
+              Page {{ reservationPage }} - Showing
+              <span class="fw-semibold">{{ pagedReservations.length }}</span> of
+              <span class="fw-semibold">{{ filteredReservations.length }}</span>
+              Reservations
+            </div>
+          </div>
+          <div class="col-sm-auto mt-3 mt-sm-0">
+            <pagination
+              [boundaryLinks]="true"
+              [totalItems]="filteredReservations.length"
+              [itemsPerPage]="itemsPerPage"
+              [(ngModel)]="reservationPage"
+              (pageChanged)="onReservationPageChange($event)"
+              previousText="&lsaquo;"
+              nextText="&rsaquo;"
+              firstText="&laquo;"
+              lastText="&raquo;"
+              class="pagination-sm"
+            >
+            </pagination>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

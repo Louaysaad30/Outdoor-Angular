@@ -1,0 +1,77 @@
+<div class="container mt-4">
+  <h2 class="text-center">Vehicle Reservation</h2>
+  
+  <form [formGroup]="reservationForm" (ngSubmit)="onSubmit()" *ngIf="!loading; else loadingIndicator">
+    
+    <!-- Full Name -->
+    <div class="mb-3">
+      <label for="fullName" class="form-label">Full Name</label>
+      <input type="text" id="fullName" class="form-control" formControlName="fullName">
+      <div *ngIf="formErrors.fullName" class="text-danger small mt-1">{{ formErrors.fullName }}</div>
+    </div>
+
+    <!-- Phone -->
+    <div class="mb-3">
+      <label for="phone" class="form-label">Phone</label>
+      <input type="tel" id="phone" class="form-control" formControlName="phone">
+      <div *ngIf="formErrors.phone" class="text-danger small mt-1">{{ formErrors.phone }}</div>
+    </div>
+
+    <!-- Vehicle Selection -->
+    <div class="mb-3">
+      <label for="vehicule" class="form-label">Vehicle</label>
+      <select id="vehicule" class="form-control" formControlName="vehicule">
+        <option value="">Select a vehicle</option>
+        <option *ngFor="let vehicule of vehicules" [value]="vehicule.id">
+          {{ vehicule.marque }} - {{ vehicule.modele }} ({{ vehicule.prixParJour | currency }} /day)
+        </option>
+      </select>
+      <div *ngIf="formErrors.vehicule" class="text-danger small mt-1">{{ formErrors.vehicule }}</div>
+    </div>
+
+    <!-- Date Selection -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label for="debutLocation" class="form-label">Start Date</label>
+        <input type="datetime-local" id="debutLocation" class="form-control" 
+               formControlName="debutLocation" [min]="minDate">
+        <div *ngIf="formErrors.debutLocation" class="text-danger small mt-1">{{ formErrors.debutLocation }}</div>
+      </div>
+      <div class="col-md-6">
+        <label for="finLocation" class="form-label">End Date</label>
+        <input type="datetime-local" id="finLocation" class="form-control" 
+               formControlName="finLocation" [min]="minDate">
+        <div *ngIf="formErrors.finLocation" class="text-danger small mt-1">{{ formErrors.finLocation }}</div>
+      </div>
+    </div>
+
+    <!-- Pickup Location -->
+    <div class="mb-3">
+      <label class="form-label">Pickup Location</label>
+      <input type="text" class="form-control" formControlName="pickupLocation" readonly>
+      <div #pickupMap id="pickupMap" class="leaflet-map" style="height: 300px;"></div>
+    </div>
+
+    <!-- Status (Hidden, always "PENDING") -->
+    <input type="hidden" formControlName="statut" value="PENDING">
+    
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary w-100" [disabled]="reservationForm.invalid || vehicleUnavailable">
+      {{ loading ? 'Processing...' : 'Book Now' }}
+    </button>
+
+    <div *ngIf="vehicleUnavailable" class="alert alert-danger mt-3">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      This vehicle is not available for the selected dates. Please choose different dates or another vehicle.
+    </div>
+  </form>
+
+  <ng-template #loadingIndicator>
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Loading vehicle data...</p>
+    </div>
+  </ng-template>
+</div>
