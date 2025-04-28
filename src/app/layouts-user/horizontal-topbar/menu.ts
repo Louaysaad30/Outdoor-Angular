@@ -1091,17 +1091,11 @@ export const MENU: MenuItem[] = [
         {
           id: 7,
           label: 'Forum',
-          icon: 'ph-calendar',
+          icon: 'ph-users',
           link: '/forumfront/user/forumpost',
           parentId: 3
         },
-        {
-          id: 6,
-          label: 'Applications',
-          icon: 'ph-calendar',
-          link: '/User/pages/applications',
-          parentId: 3
-        },
+        
         {
           id: 8,
           label: 'Camping',
@@ -1121,5 +1115,71 @@ export const MENU: MenuItem[] = [
               parentId: 8
             }
           ]
+        },
+
+        
+        {
+          id: 9,
+          label: 'Events',
+          icon: 'ph-calendar-check',
+          parentId: 3,
+          subItems: [
+            {
+              id: 9,
+              label: 'Event List',
+              link: '/eventfront/user/events',
+              parentId: 8
+            },
+            {
+              id: 10,
+              label: 'My Reservations',
+              link: '/eventfront/user/reservations',
+              parentId: 8
+            }
+          ]
+        },
+        {
+          id: 9,
+          label: 'MarkeT Place',
+          icon: 'ph-storefront',
+          parentId: 3,
+          subItems: [
+            {
+              id: 9,
+              label: 'Market',
+              link: '/marketplacefront/user/market-place',
+              parentId: 8
+            },
+            {
+              id: 10,
+              label: 'My orders',
+              link: '/marketplacefront/user/overview',
+              parentId: 8
+            }
+          ]
+        },
+
+        {
+          id: 9,
+          label: 'Transport',
+          icon: 'ph-bus',
+          parentId: 3,
+          subItems: [
+            {
+              id: 9,
+              label: 'List vehicles',
+              link: '/transportfront/user/vehicule-list',
+              parentId: 8
+            },
+            {
+              id: 10,
+              label: 'My reservations',
+              link: '/transportfront/user/reservations',
+              parentId: 8
+            }
+          ]
         }
+
+
+
     ]

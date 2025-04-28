@@ -11,21 +11,26 @@ export class roleGuard implements CanActivate {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
 
     if (!user) {
-      // Utilisateur non connecté → redirection vers login
       this.router.navigate(['/auth/signin'], { queryParams: { returnUrl: state.url } });
       return false;
     }
 
-    // Rôle requis défini dans la route
     const requiredRole = route.data['role'];
     const userRole = user.authorities[0]?.authority;
 
-    if (userRole !== requiredRole) {
-      // Rôle incorrect → redirection vers une page d'erreur
-      this.router.navigate(['/auth/errors/503']); // ou '404' ou autre selon ce que tu veux
-      return false;
+    // Handle both array and single string role requirements
+    if (Array.isArray(requiredRole)) {
+      if (!requiredRole.includes(userRole)) {
+        this.router.navigate(['/auth/errors/503']);
+        return false;
+      }
+    } else {
+      if (userRole !== requiredRole && userRole !== 'ADMIN') { // ADMIN can access everything
+        this.router.navigate(['/auth/errors/503']);
+        return false;
+      }
     }
 
-    return true; // L'utilisateur a le bon rôle
+    return true;
   }
 }
