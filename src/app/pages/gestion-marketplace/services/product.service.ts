@@ -61,4 +61,8 @@ export class ProductService {
     const productImageService = new ProductImageService(this.http);
     return productImageService.addImageToProduct(productId, imageUrl);
   }
+
+
+
+  
 }

@@ -5,15 +5,15 @@ import { ModalDirective } from 'ngx-bootstrap/modal';
 import { CheckoutService } from '../../services/checkout.service';
 import { Commande } from '../../models/Commande';
 import { PageChangedEvent } from 'ngx-bootstrap/pagination';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { debounceTime, take, switchMap, catchError, map } from 'rxjs/operators';
 import { Status } from '../../models/Status';
 import { UserService } from '../../services/user-service/user.service';
-import { take } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { DeliveryService } from '../../services/livraison/delivery.service';
 import { Livraison } from '../../models/Livraison';
-
+import { BehaviorSubject } from 'rxjs';
+import { MailerService } from '../../services/mail/mailer.service';
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.component.html',
@@ -21,6 +21,8 @@ import { Livraison } from '../../models/Livraison';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdersComponent implements OnInit, AfterViewInit {
+  currentStartDate: Date = new Date(new Date().setMonth(new Date().getMonth() - 1));
+  currentEndDate: Date = new Date();
   Status = Status;
   term: any;
   // bread crumb items
@@ -57,6 +59,9 @@ export class OrdersComponent implements OnInit, AfterViewInit {
   // Chart data
   ordersByDate: Map<string, number> = new Map();
 
+  // Recent orders for activity feed
+  recentOrders: Commande[] = [];
+
   @ViewChild('showModal', { static: false }) showModal?: ModalDirective;
   @ViewChild('deleteRecordModal', { static: false }) deleteRecordModal?: ModalDirective;
 
@@ -64,10 +69,11 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     private formBuilder: UntypedFormBuilder,
     private checkoutService: CheckoutService,
     private datePipe: DatePipe,
-    private userService: UserService, // Assuming you have a UserService to fetch delivery persons
-    private deliveryService: DeliveryService, // Add this line
+    private userService: UserService,
+    private deliveryService: DeliveryService,
     private cdr: ChangeDetectorRef,
     private toastr: ToastrService,
+    private mailerService: MailerService, // Add this line
   ) { }
 
   ngOnInit(): void {
@@ -88,13 +94,14 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       shippingMethod: ['', [Validators.required]],
       etat: ['', [Validators.required]]
     });
-    this._linebasicChart('["--tb-primary", "--tb-secondary"]');
+
+    // Add this to your existing ngOnInit
+    this.setupProductNameLoader();
   }
 
   ngAfterViewInit() {
     // Force chart update after view is initialized
     setTimeout(() => {
-      this.prepareChartData(this.Orderlist);
       this.cdr.detectChanges();
     }, 100);
   }
@@ -127,14 +134,18 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       console.log('Orders:', this.Orderlist);
       this.Order = orders.slice(0, 8);
 
-      console.log('Calculating order statistics...',orders);
-      this.calculateOrderStatistics(orders);
+      // Get the 5 most recent orders for the activity feed
+      this.recentOrders = [...orders]
+        .sort((a, b) => new Date(b.dateCommande || 0).getTime() - new Date(a.dateCommande || 0).getTime())
+        .slice(0, 5);
 
-      this._linebasicChart('["--tb-primary", "--tb-secondary"]');
-      this.prepareChartData(orders);
+      console.log('Calculating order statistics...', orders);
+      this.calculateOrderStatistics(orders);
 
       // Précharger les noms de produits pour les commandes affichées
       this.preloadProductNames(this.Order);
+      // Also preload product names for recent orders
+      this.preloadProductNames(this.recentOrders);
 
       this.loading = false;
       document.getElementById('elmLoader')?.classList.add('d-none');
@@ -166,8 +177,8 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     const pendingOrders = orders.filter(order =>
       order.etat === Status.IN_PROGRESS || order.etat?.toString() === Status.IN_PROGRESS.toString());
 
-    const shippedOrders = orders.filter(order =>
-      order.etat === Status.SHIPPED || order.etat?.toString() === Status.SHIPPED.toString());
+    const ONHOLDOrders = orders.filter(order =>
+      order.etat === Status.ON_HOLD || order.etat?.toString() === Status.ON_HOLD.toString());
 
     const deliveredOrders = orders.filter(order =>
       order.etat === Status.DELIVERED || order.etat?.toString() === Status.DELIVERED.toString());
@@ -176,156 +187,21 @@ export class OrdersComponent implements OnInit, AfterViewInit {
       order.etat === Status.CANCELED || order.etat?.toString() === Status.CANCELED.toString());
 
     console.log("Pending orders count:", pendingOrders.length);
-    console.log("Shipped orders count:", shippedOrders.length);
+    console.log("Shipped orders count:", ONHOLDOrders.length);
     console.log("Delivered orders count:", deliveredOrders.length);
     console.log("Canceled orders count:", canceledOrders.length);
 
     // Set counts
     this.pendingOrders = pendingOrders.length;
-    this.shippedOrders = shippedOrders.length;
+    this.shippedOrders = ONHOLDOrders.length;
     this.completedOrders = deliveredOrders.length;
     this.canceledOrders = canceledOrders.length;
 
     // Calculate revenue by status
     this.revenuePending = pendingOrders.reduce((sum, order) => sum + (order.montantCommande || 0), 0);
-    this.revenueShipped = shippedOrders.reduce((sum, order) => sum + (order.montantCommande || 0), 0);
+    this.revenueShipped = ONHOLDOrders.reduce((sum, order) => sum + (order.montantCommande || 0), 0);
     this.revenueDelivered = deliveredOrders.reduce((sum, order) => sum + (order.montantCommande || 0), 0);
     this.revenueCancelled = canceledOrders.reduce((sum, order) => sum + (order.montantCommande || 0), 0);
-  }
-
-  /**
-   * Prepare chart data from orders
-   */
-  prepareChartData(orders: Commande[]) {
-    // Group orders by date
-    const ordersByDate = new Map<string, number>();
-    const returnsByDate = new Map<string, number>();
-
-    // Initialize last 28 days with proper date formatting
-    const today = new Date();
-    const dateLabels: string[] = [];
-
-    for (let i = 27; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(today.getDate() - i);
-      const formattedDate = this.datePipe.transform(date, 'MM/dd/yyyy') || '';
-      dateLabels.push(formattedDate);
-      ordersByDate.set(formattedDate, 0);
-      returnsByDate.set(formattedDate, 0);
-    }
-
-    // Count orders by date
-    orders.forEach(order => {
-      if (order.dateCommande) {
-        const orderDate = this.datePipe.transform(new Date(order.dateCommande), 'MM/dd/yyyy') || '';
-        if (ordersByDate.has(orderDate)) {
-          ordersByDate.set(orderDate, (ordersByDate.get(orderDate) || 0) + 1);
-        }
-
-        // Count returns (orders with canceled status)
-        if (order.etat === Status.CANCELED) {
-          returnsByDate.set(orderDate, (returnsByDate.get(orderDate) || 0) + 1);
-        }
-      }
-    });
-
-    // Convert to arrays for chart, preserving the order
-    const orderCounts = dateLabels.map(date => ordersByDate.get(date) || 0);
-    const returnCounts = dateLabels.map(date => returnsByDate.get(date) || 0);
-
-    // Update chart data safely
-    if (this.linebasicChart && this.linebasicChart.series) {
-      this.linebasicChart.series[0].data = orderCounts;
-      this.linebasicChart.series[1].data = returnCounts;
-      this.linebasicChart.xaxis.categories = dateLabels;
-
-      // Force chart update
-      this.linebasicChart = {...this.linebasicChart};
-      this.cdr.detectChanges();
-    }
-  }
-
-  // Chart Colors Set
-  private getChartColorsArray(colors: any) {
-    colors = JSON.parse(colors);
-    return colors.map(function (value: any) {
-      var newValue = value.replace(" ", "");
-      if (newValue.indexOf(",") === -1) {
-        var color = getComputedStyle(document.documentElement).getPropertyValue(newValue);
-        if (color) {
-          color = color.replace(" ", "");
-          return color;
-        }
-        else return newValue;;
-      } else {
-        var val = value.split(',');
-        if (val.length == 2) {
-          var rgbaColor = getComputedStyle(document.documentElement).getPropertyValue(val[0]);
-          rgbaColor = "rgba(" + rgbaColor + "," + val[1] + ")";
-          return rgbaColor;
-        } else {
-          return newValue;
-        }
-      }
-    });
-  }
-
-  /**
-  * Sale Charts
-  */
-  private _linebasicChart(colors: any) {
-    colors = this.getChartColorsArray(colors);
-    this.linebasicChart = {
-      series: [
-        {
-          name: "New Orders",
-          data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        },
-        {
-          name: "Return Orders",
-          data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        }
-      ],
-      chart: {
-        height: 350,
-        type: 'line',
-        toolbar: {
-          show: false
-        }
-      },
-      legend: {
-        show: true,
-        position: 'top',
-        horizontalAlign: 'right',
-      },
-      grid: {
-        yaxis: {
-          lines: {
-            show: false
-          }
-        },
-      },
-      markers: {
-        size: 0,
-        hover: {
-          sizeOffset: 4
-        }
-      },
-      stroke: {
-        curve: 'smooth',
-        width: 2
-      },
-      colors: colors,
-      xaxis: {
-        // Change to category type
-        type: 'category',
-        categories: this.getLast28Days().map(date =>
-          this.datePipe.transform(date, 'MM/dd/yyyy') || '')
-      },
-      yaxis: {
-        show: false,
-      }
-    };
   }
 
   /**
@@ -632,9 +508,9 @@ export class OrdersComponent implements OnInit, AfterViewInit {
    */
   productNamesCache: Map<number, string[]> = new Map();
 
-  // Replace the getProductName method with this improved version
+  // Replace the getProductName method with this optimized version
   getProductName(order: Commande): string {
-    // If the ID of order is not valid, return a default value
+    // If the order ID is not valid, return a default value
     if (!order.idCommande) {
       return 'Aucun produit';
     }
@@ -643,83 +519,114 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     if (this.productNamesCache.has(order.idCommande)) {
       const names = this.productNamesCache.get(order.idCommande);
       if (names && names.length > 0) {
-        if (names.length === 1) {
-          return names[0];
-        } else {
-          return `${names[0]} +${names.length - 1} autre(s)`;
+        // Don't show loading indicator in the UI
+        if (names[0] === 'Chargement...') {
+          return '⌛'; // Show a simple loading indicator
         }
-      } else {
-        return 'Aucun produit';
+        return names.length === 1
+          ? names[0]
+          : `${names[0]} (+${names.length - 1} plus)`;
       }
+      return 'Aucun produit';
     }
 
-    // Set a placeholder while loading - crucial to prevent loops
+    // Request this product name (will be batched)
     this.productNamesCache.set(order.idCommande, ['Chargement...']);
-
-    // Load product names from API, but only if not already loading
-    this.checkoutService.getProductNamesByCommandeId(order.idCommande)
-      .pipe(
-        // Only take the first result to prevent multiple subscribers
-        take(1)
-      )
-      .subscribe({
-        next: (names: string[]) => {
-          this.productNamesCache.set(order.idCommande!, names);
-          // Force view update with OnPush change detection
-          this.Order = [...this.Order];
-          this.cdr.detectChanges(); // Add this line
-        },
-        error: (error) => {
-          console.error('Error loading product names:', error);
-          this.productNamesCache.set(order.idCommande!, []);
-          this.cdr.detectChanges(); // Add this line
-        }
-      });
+    this.productLoadingSubject.next([order.idCommande]);
 
     // Return loading indicator
-    return 'Chargement...';
+    return '⌛';
+  }
+
+  private productLoadingSubject = new BehaviorSubject<number[]>([]);
+  private productNamesBatchSize = 10;
+  private productNamesLoading = false;
+  private lastRequestedOrderIds: number[] = []; // Track last requested order IDs
+
+  private setupProductNameLoader() {
+    this.productLoadingSubject.pipe(
+      debounceTime(100), // Wait 100ms after latest request
+      switchMap(orderIds => {
+        if (orderIds.length === 0) return of([]);
+
+        // Store the order IDs for later use
+        this.lastRequestedOrderIds = [...orderIds];
+
+        console.log(`Batch loading product names for ${orderIds.length} orders`);
+        this.productNamesLoading = true;
+
+        // Create an array of observables for each order ID
+        const requests = orderIds.map(id =>
+          this.checkoutService.getProductNamesByCommandeId(id).pipe(
+            take(1),
+            catchError(err => {
+              console.error(`Error loading products for order ${id}:`, err);
+              return of([]);
+            })
+          )
+        );
+
+        // Execute all requests in parallel
+        return forkJoin(requests).pipe(
+          catchError(err => {
+            console.error('Error in batch loading products:', err);
+            return of(Array(orderIds.length).fill([]));
+          })
+        );
+      })
+    ).subscribe({
+      next: (results) => {
+        const orderIds = this.productLoadingSubject.getValue();
+
+        // Update cache with results
+        results.forEach((names, index) => {
+          if (orderIds[index]) {
+            this.productNamesCache.set(orderIds[index], names);
+          }
+        });
+
+        this.productNamesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Product name loader error:', err);
+        this.productNamesLoading = false;
+      }
+    });
   }
 
   // Méthode pour précharger les noms de produits
   preloadProductNames(orders: Commande[]) {
+    // Skip if already loading or no orders
+    if (this.productNamesLoading || !orders || orders.length === 0) {
+      return;
+    }
+
     // Filter only orders with valid IDs and not already in cache
     const orderIdsToLoad = orders
       .filter(order =>
         order.idCommande !== undefined &&
-        !this.productNamesCache.has(order.idCommande)
+        !this.productNamesCache.has(order.idCommande) &&
+        // Don't include orders with loading placeholder
+        !(order.idCommande &&
+          this.productNamesCache.has(order.idCommande) &&
+          this.productNamesCache.get(order.idCommande)?.[0] === 'Chargement...')
       )
       .map(order => order.idCommande!);
 
-    // Skip if no orders need loading
     if (orderIdsToLoad.length === 0) {
       return;
     }
 
-    console.log(`Preloading product names for ${orderIdsToLoad.length} orders`);
+    console.log(`Requesting product names for ${orderIdsToLoad.length} orders`);
 
-    // Prefill cache with loading placeholders to prevent duplicate requests
+    // Add loading placeholders
     orderIdsToLoad.forEach(id => {
       this.productNamesCache.set(id, ['Chargement...']);
     });
 
-    // Load product names for each order
-    orderIdsToLoad.forEach(id => {
-      this.checkoutService.getProductNamesByCommandeId(id)
-        .pipe(take(1))
-        .subscribe({
-          next: (names) => {
-            this.productNamesCache.set(id, names);
-            // Only update view once all are loaded to reduce refresh cycles
-            if (orderIdsToLoad.indexOf(id) === orderIdsToLoad.length - 1) {
-              this.Order = [...this.Order];
-            }
-          },
-          error: (err) => {
-            console.error(`Error loading product names for order ${id}:`, err);
-            this.productNamesCache.set(id, []);
-          }
-        });
-    });
+    // Trigger batch loading
+    this.productLoadingSubject.next(orderIdsToLoad);
   }
 
   fileChange(event: Event): void {
@@ -767,19 +674,31 @@ export class OrdersComponent implements OnInit, AfterViewInit {
 
     this.toastr.info('Assigning delivery person...', 'Processing');
 
-    // First get the order to have its details
-    this.checkoutService.getCommande(orderId).subscribe({
-      next: (order) => {
+    // First get all delivery persons, then filter by ID
+    this.userService.getUsersByRoleLivreur().pipe(
+      switchMap(deliveryPersons => {
+        // Find the specific delivery person by ID
+        const deliveryPerson = deliveryPersons.find(person => person.id === livreurIdNumber);
+
+        if (!deliveryPerson) {
+          throw new Error(`Delivery person with ID ${livreurIdNumber} not found`);
+        }
+
+        console.log('Found delivery person:', deliveryPerson);
+
+        // Now get the order details
+        return this.checkoutService.getCommande(orderId).pipe(
+          map((order): { order: any; deliveryPerson: any } => ({ order, deliveryPerson }))
+        );
+      }),
+      switchMap(({ order, deliveryPerson }) => {
         // Create a new Livraison object
         const newLivraison = new Livraison();
         newLivraison.dateLivraison = new Date(); // Current date
         newLivraison.adresseLivraison = order.adresse || 'Address not provided';
-
-        // Always set a specific status for a new delivery - don't use order.etat
-        newLivraison.etatLivraison = Status.IN_PROGRESS; // Set explicitly to IN_PROGRESS
-
-        newLivraison.livreurId = livreurIdNumber; // For your Java backend
-
+        newLivraison.etatLivraison = Status.ON_HOLD; // Initial status
+        newLivraison.livreurId = livreurIdNumber;
+        newLivraison.LivreurId = livreurIdNumber; // Uppercase version
         newLivraison.montantCommande = order.montantCommande || 0;
         newLivraison.paymentMethod = order.paymentMethod || 'cod';
         newLivraison.OrderNumber = order.OrderNumber || `ORD-${order.idCommande}`;
@@ -787,34 +706,46 @@ export class OrdersComponent implements OnInit, AfterViewInit {
         console.log('Creating delivery record with data:', newLivraison);
 
         // Add the livraison first
-        this.deliveryService.addLivraison(newLivraison).subscribe({
-          next: (createdLivraison) => {
-            console.log('Livraison created successfully:', createdLivraison);
+        return this.deliveryService.addLivraison(newLivraison).pipe(
+          map(createdLivraison => ({ order, deliveryPerson, createdLivraison }))
+        );
+      }),
+      switchMap(({ order, deliveryPerson, createdLivraison }) => {
+        console.log('Livraison created successfully:', createdLivraison);
 
-            // Now assign the livraison to the order - THIS IS THE ONLY OPERATION NEEDED
-            this.checkoutService.affecterLivraisonACommande(orderId, createdLivraison.idLivraison!).subscribe({
-              next: (updatedOrder) => {
-                console.log('Order updated with livraison:', updatedOrder);
+        // Now assign the livraison to the order
+        return this.checkoutService.affecterLivraisonACommande(orderId, createdLivraison.idLivraison!).pipe(
+          map(updatedOrder => ({ updatedOrder, deliveryPerson, createdLivraison }))
+        );
+      }),
+      switchMap(({ updatedOrder, deliveryPerson, createdLivraison }) => {
+        console.log('Order updated with livraison:', updatedOrder);
+        this.updateOrderInLists(updatedOrder);
 
-                // Just update our UI with the returned order - no need for another API call
-                this.updateOrderInLists(updatedOrder);
-                this.toastr.success('Delivery person assigned successfully');
-              },
-              error: (error) => {
-                console.error('Error assigning delivery to order:', error);
-                this.toastr.error('Failed to assign delivery to order');
-              }
-            });
-          },
-          error: (error) => {
-            console.error('Error creating delivery:', error);
-            this.toastr.error('Failed to create delivery record');
-          }
-        });
+        // Send notification email to the delivery person
+        return this.sendDeliveryAssignmentEmail(
+          deliveryPerson.email,
+          deliveryPerson.name || deliveryPerson.username || 'Delivery Partner',
+          updatedOrder,
+          createdLivraison
+        ).pipe(
+          map(() => 'Success'),
+          catchError(error => {
+            console.warn('Email notification failed, but delivery assignment succeeded:', error);
+            return of('Email Failed');
+          })
+        );
+      })
+    ).subscribe({
+      next: (result) => {
+        this.toastr.success('Delivery person assigned successfully');
+        if (result === 'Email Failed') {
+          this.toastr.warning('Delivery assigned but notification email could not be sent');
+        }
       },
       error: (error) => {
-        console.error('Error fetching order details:', error);
-        this.toastr.error('Failed to load order details');
+        console.error('Error in delivery assignment process:', error);
+        this.toastr.error('Failed to assign delivery: ' + (error.message || 'Unknown error'));
       }
     });
   }
@@ -840,6 +771,277 @@ export class OrdersComponent implements OnInit, AfterViewInit {
     this.cdr.detectChanges();
   }
 
+  getPercentage(count: number): number {
+    return this.totalOrders > 0 ? (count / this.totalOrders) * 100 : 0;
+  }
 
+  /**
+   * Send delivery assignment email notification to the delivery person
+   */
+  private sendDeliveryAssignmentEmail(
+    email: string,
+    deliveryPersonName: string,
+    order: Commande,
+    livraison: Livraison
+  ) {
+    const subject = `New Delivery Assignment - Order #${order.OrderNumber || order.idCommande}`;
 
+    // Format the order products
+    let productItems = '<p>Products not available</p>';
+    if (order.idCommande && this.productNamesCache.has(order.idCommande)) {
+      const products = this.productNamesCache.get(order.idCommande);
+      if (products && products.length > 0) {
+        productItems = products.map(name =>
+          `<div class="product-item">
+          <div class="product-icon">📦</div>
+          <div class="product-name">${name}</div>
+          </div>`
+        ).join('');
+      }
+    }
+
+    const emailContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>New Delivery Assignment</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+          font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .email-container {
+          border: 1px solid #e0e0e0;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .header {
+          background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+          padding: 30px 20px;
+          text-align: center;
+        }
+        .header h1 {
+          color: white;
+          margin: 10px 0;
+          font-weight: 700;
+          letter-spacing: 1px;
+        }
+        .content {
+          padding: 40px 30px;
+          background-color: #fff;
+        }
+        .greeting {
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .highlight-box {
+          background-color: #f9f9f9;
+          border-left: 4px solid #4CAF50;
+          padding: 20px;
+          margin: 25px 0;
+          border-radius: 0 8px 8px 0;
+        }
+        .order-details {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+        .detail-item {
+          flex: 1 1 45%;
+          min-width: 200px;
+        }
+        .detail-label {
+          font-weight: 600;
+          color: #666;
+          font-size: 12px;
+          text-transform: uppercase;
+          margin-bottom: 5px;
+        }
+        .detail-value {
+          font-size: 15px;
+          color: #333;
+        }
+        .product-section {
+          margin-top: 30px;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+          padding: 20px;
+        }
+        .product-heading {
+          font-size: 16px;
+          color: #2E7D32;
+          margin-bottom: 15px;
+          font-weight: 600;
+        }
+        .product-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .product-item {
+          display: flex;
+          align-items: center;
+          padding: 10px;
+          background-color: white;
+          border-radius: 6px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .product-icon {
+          margin-right: 10px;
+          font-size: 20px;
+        }
+        .product-name {
+          font-size: 14px;
+        }
+        .footer {
+          background-color: #f7f7f7;
+          padding: 25px 20px;
+          text-align: center;
+          font-size: 13px;
+          color: #666;
+        }
+        .cta-button {
+          display: block;
+          text-align: center;
+          margin: 30px auto 10px;
+        }
+        .btn {
+          display: inline-block;
+          padding: 12px 28px;
+          background: linear-gradient(to right, #4CAF50, #2E7D32);
+          color: white;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: 600;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .divider {
+          height: 1px;
+          background-color: #eaeaea;
+          margin: 30px 0;
+        }
+        .signature {
+          margin-top: 25px;
+          font-size: 14px;
+        }
+        .company-name {
+          font-weight: 600;
+        }
+        .social-links {
+          margin-top: 15px;
+        }
+        .social-link {
+          display: inline-block;
+          margin: 0 5px;
+          color: #666;
+          text-decoration: none;
+        }
+        @media only screen and (max-width: 550px) {
+          .content {
+            padding: 30px 20px;
+          }
+          .detail-item {
+            flex: 1 1 100%;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <div class="header">
+          <h1>OUTDOOR ADVENTURES</h1>
+        </div>
+
+        <div class="content">
+          <h2 style="color: #2E7D32; margin-bottom: 20px; font-weight: 600;">🚚 New Delivery Assignment</h2>
+
+          <p class="greeting">Hello ${deliveryPersonName},</p>
+
+          <p>You have been assigned a new delivery. Please find the details below:</p>
+
+          <div class="highlight-box">
+            <div class="order-details">
+              <div class="detail-item">
+                <div class="detail-label">Order Number</div>
+                <div class="detail-value">#${order.OrderNumber || order.idCommande}</div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-label">Delivery Date</div>
+                <div class="detail-value">${this.formatDate(livraison.dateLivraison || new Date())}</div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-label">Customer</div>
+                <div class="detail-value">${order.nom || 'Not specified'}</div>
+              </div>
+               <div class="detail-item">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value">${order.phone || 'Not specified'}</div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-label">Amount</div>
+                <div class="detail-value">${order.montantCommande || 0} TND</div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-label">Payment Method</div>
+                <div class="detail-value">${livraison.paymentMethod === 'cod' ? 'Cash on Delivery' : livraison.paymentMethod || 'Cash on Delivery'}</div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-label">Delivery Address</div>
+                <div class="detail-value">${livraison.adresseLivraison || 'Not specified'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-section">
+            <div class="product-heading">📋 Products to Deliver</div>
+            <div class="product-list">
+              ${productItems}
+            </div>
+          </div>
+
+          <p>Please log in to your delivery dashboard to see complete details and manage this delivery.</p>
+
+          <div class="cta-button">
+            <a href="https://outdoor.com/delivery-dashboard" class="btn">VIEW DELIVERY DETAILS</a>
+          </div>
+
+          <div class="signature">
+            <p>Thank you,<br><span class="company-name">The Outdoor Management Team</span></p>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p style="margin: 5px 0;">© ${new Date().getFullYear()} Outdoor - All Rights Reserved</p>
+          <p style="margin: 5px 0;">Tunisia, Africa Mall</p>
+
+          <div class="social-links">
+            <a href="#" class="social-link">Facebook</a> •
+            <a href="#" class="social-link">Instagram</a> •
+            <a href="#" class="social-link">Twitter</a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+    // Send the email with HTML content
+    return this.mailerService.sendEmail(email, subject, emailContent);
+  }
 }

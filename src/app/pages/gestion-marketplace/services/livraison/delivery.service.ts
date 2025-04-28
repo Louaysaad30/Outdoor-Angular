@@ -37,40 +37,19 @@ export class DeliveryService {
 
 
   addLivraison(livraison: Livraison): Observable<Livraison> {
-    // Create a mapping object with the proper camel case for backend
-    const livraisonToSend = {
-      dateLivraison: livraison.dateLivraison,
-      adresseLivraison: livraison.adresseLivraison,
-      etatLivraison: livraison.etatLivraison,
-      // Use the property name that matches the backend exactly
-      LivreurId: livraison.livreurId, // This is what matches your backend Long LivreurId;
-      montantCommande: livraison.montantCommande,
-      paymentMethod: livraison.paymentMethod,
-      OrderNumber: livraison.OrderNumber
+    console.log('Sending livraison to server:', JSON.stringify(livraison));
+    return this.http.post<Livraison>(`${this.apiUrl}/addLivraison`, livraison).pipe(
+      tap(response => {
+        console.log(`Created new delivery with ID: ${response.idLivraison}`);
+        console.log('Server response:', response);
 
-    };
-
-    console.log('Sending livraison to server:', JSON.stringify(livraisonToSend));
-
-    return this.http.post<Livraison>(`${this.apiUrl}/addLivraison`, livraisonToSend).pipe(
-      tap(newDelivery => {
-        console.log(`Created new delivery with ID: ${newDelivery.idLivraison}`);
-        console.log('Server response:', JSON.stringify(newDelivery));
-
-        // After receiving the response, normalize the property to your frontend model
-        if (newDelivery.livreurId && !newDelivery.livreurId) {
-          newDelivery.livreurId = newDelivery.livreurId;
-        } else if (!newDelivery.livreurId && !newDelivery.livreurId) {
+        // Add warning if response has null livreurId despite sending it
+        if (livraison.livreurId !== undefined && (response.livreurId === null && response.LivreurId === null)) {
           console.warn('Warning: Server returned livraison with null LivreurId and livreurid!');
-          // Restore the original value
-          newDelivery.livreurId = livraison.livreurId;
         }
       }),
       catchError(error => {
-        console.error('Error creating delivery:', error);
-        if (error.error && typeof error.error === 'object') {
-          console.error('Error details:', JSON.stringify(error.error));
-        }
+        console.error('Error creating livraison:', error);
         throw error;
       })
     );
