@@ -53,6 +53,8 @@ export class TopbarComponent {
   totalNotify: number = 0;
   newNotify: number = 0;
   readNotify: number = 0;
+  currentUser: any;
+  image: any;
 
   constructor(@Inject(DOCUMENT) private document: any,
     private eventService: EventService,
@@ -69,6 +71,11 @@ export class TopbarComponent {
     this.element = document.documentElement;
     this.userData = this.TokenStorageService.getUser();
     this.cartData = cartList
+
+    this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    this.authServicee.userUpdated$.subscribe(() => {
+      this.loadUser(); // re-read localStorage
+    });
     this.cartData.map((x: any) => {
       x['total'] = (x['qty'] * x['price']).toFixed(2)
       this.subtotal += parseFloat(x['total'])
@@ -337,7 +344,10 @@ export class TopbarComponent {
       document.querySelector('.empty-notification-elem')?.classList.remove('d-none')
     }
   }
-
+  loadUser(): void {
+    this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    this.image = this.currentUser?.image;
+  }
   /**
    * Logout the user
    */

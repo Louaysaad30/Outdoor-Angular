@@ -54,7 +54,7 @@ export class StatisticsComponent implements OnInit {
   loadStatistics(): void {
     this.isLoading = true;
     this.error = '';
-  
+
     forkJoin({
       total: this.statisticsService.getTotalUsers(),
       verified: this.statisticsService.getVerifiedUsers(),
@@ -87,7 +87,7 @@ export class StatisticsComponent implements OnInit {
       
         this.churnData = [res.churnStats.churn, res.churnStats.notChurn];
 
-  
+
         // Messages by User chart
         this.messagesByUserChartLabels = Object.keys(this.messagesByUser).map(userId => `User ${userId}`);
         this.messagesByUserChartData = [
@@ -96,7 +96,7 @@ export class StatisticsComponent implements OnInit {
             data: Object.values(this.messagesByUser)
           }
         ];
-  
+
         // Messages by Chat Room chart
         this.messagesByChatRoomChartLabels = Object.keys(this.messagesByChatRoom).map(roomId => `Room ${roomId}`);
         this.messagesByChatRoomChartData = [
@@ -105,7 +105,7 @@ export class StatisticsComponent implements OnInit {
             data: Object.values(this.messagesByChatRoom)
           }
         ];
-  
+
         this.isLoading = false;
       },
       error: (err) => {

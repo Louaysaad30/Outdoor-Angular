@@ -17,6 +17,7 @@ import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
 import { Status, Event as CustomEvent } from '../../models/event.model';
 import {ReverseGeocodingService} from "../../services/reverse-geocoding.service";
 import {NlpService} from "../../services/nlp.service";
+import {ReservationService} from "../../services/reservation.service";
       @Component({
         selector: 'app-event-list',
         standalone: true,
@@ -52,10 +53,21 @@ import {NlpService} from "../../services/nlp.service";
         isGeneratingImage = false;
         generatedImageBlob: Blob | null = null;
 
+
+        // Properties for participants modal
+        participants: any[] = [];
+        filteredParticipants: any[] = [];
+        loadingParticipants: boolean = false;
+        participantSearchTerm: string = '';
+        selectedEventTitle: string = '';
+        showNestedParticipantsModal: boolean = false;
+
+
         @ViewChild('eventModal', { static: false }) eventModal?: ModalDirective;
         @ViewChild('calendar') calendarComponent!: FullCalendarComponent;
-
-        constructor(private formBuilder: UntypedFormBuilder, private eventService: EventService , private eventAreaService: EventAreaService, private reverseGeocodingService: ReverseGeocodingService , private nlpService: NlpService ) { }
+// Add this near your other ViewChild declarations
+@ViewChild('participantsModal', { static: false }) participantsModal?: ModalDirective;
+        constructor(private formBuilder: UntypedFormBuilder, private eventService: EventService , private eventAreaService: EventAreaService, private reverseGeocodingService: ReverseGeocodingService , private nlpService: NlpService , private reservationService: ReservationService) { }
 
 
         ngOnInit(): void {
@@ -658,4 +670,70 @@ formatDate(date: Date): string {
             }
           });
         }
+
+
+// Method to show participants
+        showParticipants() {
+          if (!this.editEvent?.id) return;
+
+          this.selectedEventTitle = this.editEvent.title;
+          this.loadingParticipants = true;
+          this.participants = [];
+          this.filteredParticipants = [];
+          this.participantSearchTerm = '';
+
+          this.participantsModal?.show();
+
+          this.reservationService.getEventParticipants(this.editEvent.id).subscribe({
+            next: (data) => {
+              this.participants = data;
+              this.filteredParticipants = data;
+              this.loadingParticipants = false;
+            },
+            error: (error) => {
+              console.error('Error loading participants:', error);
+              this.loadingParticipants = false;
+            }
+          });
+        }
+
+// Filter participants based on search term
+        filterParticipants() {
+          if (!this.participantSearchTerm.trim()) {
+            this.filteredParticipants = this.participants;
+            return;
+          }
+
+          const term = this.participantSearchTerm.toLowerCase();
+          this.filteredParticipants = this.participants.filter(p =>
+            (p.user.nom && p.user.nom.toLowerCase().includes(term)) ||
+            (p.user.prenom && p.user.prenom.toLowerCase().includes(term)) ||
+            (p.user.email && p.user.email.toLowerCase().includes(term))
+          );
+        }
+
+// Export participants to CSV
+        exportParticipantsList() {
+          if (!this.participants.length) return;
+
+          const csvContent = [
+            // Header row
+            ['Name', 'Email', 'Tickets'].join(','),
+            // Data rows
+            ...this.participants.map(p =>
+              [`${p.user.prenom} ${p.user.nom}`, p.user.email, p.ticketCount].join(',')
+            )
+          ].join('\n');
+
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+
+          link.href = url;
+          link.setAttribute('download', `participants-${this.editEvent?.title}-${new Date().toISOString().split('T')[0]}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+
       }

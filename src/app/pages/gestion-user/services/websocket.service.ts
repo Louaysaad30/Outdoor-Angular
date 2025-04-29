@@ -22,7 +22,7 @@ export class WebsocketService {
 
   connect(token: any, userId: any) {
     const socket = new SockJS('http://localhost:9096/ws');
- 
+
     this.stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,

@@ -1,0 +1,458 @@
+<div class="row">
+    <div class="col-xxl-8">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Personal Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <form [formGroup]="checkoutForm" >
+                            <div class="row g-3">
+                                <!-- Name -->
+                                <div class="col-lg-6">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="name"
+                                           placeholder="Enter your full name"
+                                           formControlName="name"
+                                           [ngClass]="{'is-invalid': (submitted || f['name'].touched) && f['name'].errors}">
+                                    <div *ngIf="(submitted || f['name'].touched) && f['name'].errors" class="invalid-feedback d-block">
+                                        <small *ngIf="f['name'].errors['required']">Name is required</small>
+                                        <small *ngIf="f['name'].errors['pattern']">Name must contain only letters</small>
+                                    </div>
+                                </div>
+
+                                <!-- Phone Number -->
+                                <div class="col-lg-6">
+                                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="phoneNumber"
+                                           placeholder="Enter your 8-digit phone number"
+                                           formControlName="phoneNumber"
+                                           [ngClass]="{'is-invalid': (submitted || f['phoneNumber'].touched) && f['phoneNumber'].errors}">
+                                    <div *ngIf="(submitted || f['phoneNumber'].touched) && f['phoneNumber'].errors" class="invalid-feedback d-block">
+                                        <small *ngIf="f['phoneNumber'].errors['required']">Phone number is required</small>
+                                        <small *ngIf="f['phoneNumber'].errors['pattern']">Phone number must be 8 digits</small>
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="col-lg-6">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email"
+                                           class="form-control"
+                                           id="email"
+                                           placeholder="Enter your email address"
+                                           formControlName="email"
+                                           [ngClass]="{'is-invalid': (submitted || f['email'].touched) && f['email'].errors}">
+                                    <div *ngIf="(submitted || f['email'].touched) && f['email'].errors" class="invalid-feedback d-block">
+                                        <small *ngIf="f['email'].errors['required']">Email is required</small>
+                                        <small *ngIf="f['email'].errors['email']">Please enter a valid email address</small>
+                                    </div>
+                                </div>
+
+                                <!-- City -->
+                                <div class="col-lg-6">
+                                    <label for="cityInput" class="form-label">City</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="cityInput"
+                                           placeholder="Enter your city"
+                                           formControlName="city"
+                                           [ngClass]="{'is-invalid': (submitted || f['city'].touched) && f['city'].errors}">
+                                    <div *ngIf="(submitted || f['city'].touched) && f['city'].errors" class="invalid-feedback d-block">
+                                        <small *ngIf="f['city'].errors['required']">City is required</small>
+                                        <small *ngIf="f['city'].errors['pattern']">City must contain only letters</small>
+                                    </div>
+                                </div>
+
+                                <!-- Governorate -->
+                                <div class="col-lg-6">
+                                    <label for="gouvernorate" class="form-label">Governorate</label>
+                                    <select class="form-control"
+                                            id="gouvernorate"
+                                            formControlName="gouvernorate"
+                                            [ngClass]="{'is-invalid': (submitted || f['gouvernorate'].touched) && f['gouvernorate'].errors}">
+                                        <option value="" disabled>Select your governorate</option>
+                                        <option *ngFor="let country of countries" [value]="country.value">
+                                            {{country.label}}
+                                        </option>
+                                    </select>
+                                    <div *ngIf="(submitted || f['gouvernorate'].touched) && f['gouvernorate'].errors" class="invalid-feedback d-block">
+                                        <small *ngIf="f['gouvernorate'].errors['required']">Governorate is required</small>
+                                    </div>
+                                </div>
+
+                                <!-- Address -->
+                                <div class="col-lg-12">
+                                    <label for="addressInput" class="form-label">Address</label>
+                                    <textarea class="form-control"
+                                              id="addressInput"
+                                              rows="3"
+                                              placeholder="Enter your complete address"
+                                              formControlName="address"
+                                              [ngClass]="{'is-invalid': (submitted || f['address'].touched) && f['address'].errors}"></textarea>
+                                    <div *ngIf="(submitted || f['address'].touched) && f['address'].errors" class="invalid-feedback d-block">
+                                        <small *ngIf="f['address'].errors['required']">Address is required</small>
+                                        <small *ngIf="f['address'].errors['minlength']">Address must be at least 5 characters</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Add form status debugging (optional) -->
+                            <div *ngIf="checkoutForm.invalid" class="d-none">
+                                Form Status: {{ checkoutForm.status }}
+                                <pre>{{ getFormValidationErrors() | json }}</pre>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center">
+                        <h6 class="card-title flex-grow-1 mb-0">Shipping Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mt-4">
+                            <h5 class="fs-md mb-3">Shipping Method</h5>
+
+                            <div class="row g-4">
+                                <div class="col-lg-6">
+                                    <div class="form-check card-radio">
+                                        <input id="shippingMethod01" name="shippingMethod" type="radio"
+                                            class="form-check-input" [checked]="!expressDelivery"
+                                            (change)="toggleExpressDelivery(false)">
+                                        <label class="form-check-label d-flex gap-2 align-items-center"
+                                            for="shippingMethod01">
+                                            <span class="avatar-sm">
+                                                <span class="avatar-title bg-light rounded text-body fs-4">
+                                                    <i class="bi bi-truck"></i>
+                                                </span>
+                                            </span>
+                                            <span class="flex-grow-1">
+                                                <span class="fs-md fw-medium mb-1 text-wrap d-block">Free
+                                                    Delivery</span>
+                                                <span class="text-muted fw-normal text-wrap d-block">Expected Delivery 3
+                                                    to 5 Days</span>
+                                            </span>
+                                            <span class="fs-3xl float-end mt-2 text-wrap d-block fw-semibold">Free</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-check card-radio">
+                                        <input id="shippingMethod02" name="shippingMethod" type="radio"
+                                            class="form-check-input" [checked]="expressDelivery"
+                                            (change)="toggleExpressDelivery(true)">
+                                        <label class="form-check-label d-flex gap-2 align-items-center"
+                                            for="shippingMethod02">
+                                            <span class="avatar-sm">
+                                                <span class="avatar-title bg-light rounded text-body fs-4">
+                                                    <i class="bi bi-airplane"></i>
+                                                </span>
+                                            </span>
+                                            <span class="flex-grow-1">
+                                                <span class="fs-md fw-medium mb-1 text-wrap d-block">Express
+                                                    Delivery</span>
+                                                <span class="text-muted fw-normal text-wrap d-block">Delivery within
+                                                    24hrs.</span>
+                                            </span>
+                                            <span class="fs-3xl float-end mt-2 text-wrap d-block fw-semibold">{{expressDeliveryFee}} DT</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!--end col-->
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center">
+                        <h6 class="card-title flex-grow-1 mb-0">Payment Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mt-4">
+                            <h5 class="fs-md mb-3">Payment Method</h5>
+
+                            <div class="row g-4">
+                                <div class="col-lg-6">
+                                    <div class="form-check card-radio">
+                                        <input id="paymentMethod01" name="paymentMethod" type="radio"
+                                            class="form-check-input" checked
+                                            [(ngModel)]="selectedPaymentMethod"
+                                            [value]="'cod'">
+                                        <label class="form-check-label d-flex gap-2 align-items-center"
+                                            for="paymentMethod01">
+                                            <span class="avatar-sm">
+                                                <span class="avatar-title bg-light rounded text-body fs-4">
+                                                    <i class="bi bi-cash"></i>
+                                                </span>
+                                            </span>
+                                            <span class="flex-grow-1">
+                                                <span class="fs-md fw-medium mb-1 text-wrap d-block">Cash On Delivery</span>
+                                                <span class="text-muted fw-normal text-wrap d-block">Pay when you receive your order</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-check card-radio">
+                                        <input id="paymentMethod02" name="paymentMethod" type="radio"
+                                            class="form-check-input"
+                                            [(ngModel)]="selectedPaymentMethod"
+                                            [value]="'stripe'">
+                                        <label class="form-check-label d-flex gap-2 align-items-center"
+                                            for="paymentMethod02">
+                                            <span class="avatar-sm">
+                                                <span class="avatar-title bg-light rounded text-body fs-4">
+                                                    <i class="bi bi-credit-card"></i>
+                                                </span>
+                                            </span>
+                                            <span class="flex-grow-1">
+                                                <span class="fs-md fw-medium mb-1 text-wrap d-block">Card Payment</span>
+                                                <span class="text-muted fw-normal text-wrap d-block">Secure online payment with Stripe</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Stripe Payment Preview (displays when stripe is selected) -->
+                        <div *ngIf="selectedPaymentMethod === 'stripe'" class="mt-4 p-3 border rounded">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://stripe.com/img/v3/home/social.png" alt="Stripe" style="height: 40px;" class="me-3">
+                                <div>
+                                    <h6 class="mb-1">Secure Payment via Stripe</h6>
+                                    <p class="text-muted mb-0 small">You'll be redirected to Stripe's secure checkout page to complete your payment.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-2">
+                                <span class="text-muted">Total amount:</span>
+                                <span class="fw-bold fs-5">{{getDisplayTotal()}} DT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!--end col-->
+        </div><!--end row-->
+    </div><!--col -->
+    <div class="col-xxl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tbody>
+                            <tr>
+                                <th style="width: 90px;" scope="col">Product</th>
+                                <th scope="col">Product Info</th>
+                                <th scope="col" class="text-end">Price</th>
+                            </tr>
+                            <!-- Product rows -->
+                            <tr *ngFor="let item of cartData">
+                                <td>
+                                    <div class="avatar-md">
+                                        <div class="avatar-title bg-light rounded">
+                                            <img [src]="item.produit.imageProduit" [alt]="item.produit.nomProduit" class="avatar-sm">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h5 class="fs-md">{{item.produit.nomProduit}}</h5>
+                                    <p class="text-muted fw-medium mb-0">{{item.produit.prixProduit}} x {{item.quantite}} DT</p>
+                                </td>
+                                <td class="text-end fw-semibold">{{item.produit.prixProduit * item.quantite}} DT</td>
+                            </tr>
+                            <!-- Summary rows -->
+                            <tr>
+                                <td class="fw-semibold" colspan="2">Sub Total :</td>
+                                <td class="fw-semibold text-end">{{subtotal}} DT</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Service Fee :</td>
+                                <td class="text-end">{{flatFee}} DT</td>
+                            </tr>
+                            <tr *ngIf="expressDelivery">
+                                <td colspan="2">Express Delivery :</td>
+                                <td class="text-end">{{expressDeliveryFee}} DT</td>
+                            </tr>
+                            <tr *ngIf="environmentFriendly">
+                                <td colspan="2">Environment Friendly Service :</td>
+                                <td class="text-end">{{environmentFriendlyFee}} DT</td>
+                            </tr>
+                            <tr *ngIf="carePackage">
+                                <td colspan="2">Care Package Service :</td>
+                                <td class="text-end">{{carePackageFee}} DT</td>
+                            </tr>
+                            <tr class="border-top border-dashed">
+                                <th colspan="2">Total (DT) :</th>
+                                <td class="text-end">
+                                    <span class="fw-semibold">{{getDisplayTotal()}} DT</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Additional Service</h5>
+                    </div>
+                    <div class="card-body d-flex form-check form-switch gap-3">
+                        <div class="flex-grow-1">
+                            <label for="additionalServices" class="form-check-label fs-md fw-semibold mb-2">Environment
+                                Friendly</label>
+                            <p class="text-muted mb-0">The primary goal of eco-warriors is creating a better world for
+                                future generations.</p>
+                        </div>
+                        <div class="flex-shrink-0 fw-medium">
+                            {{environmentFriendlyFee}} DT
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="additionalServices"
+                                    [(ngModel)]="environmentFriendly"
+                                    (change)="toggleEnvironmentFriendly(environmentFriendly)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex form-check form-switch gap-3 border-top">
+                        <div class="flex-grow-1">
+                            <label for="additionalServices2" class="form-check-label fs-md fw-semibold mb-2">Care +
+                                Package</label>
+                            <p class="text-muted mb-0">Care packages are sent to acknowledge life transitions, from
+                                joyous occasions, such as engagements.</p>
+                        </div>
+                        <div class="flex-shrink-0 fw-medium">
+                            {{carePackageFee}} DT
+                        </div>
+                        <div class="flex-shrink-0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="additionalServices2"
+                                    [(ngModel)]="carePackage"
+                                    (change)="toggleCarePackage(carePackage)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!--end card-->
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Order Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    [disabled]="checkoutForm.invalid"
+                                    (click)="validateAndShowConfirmation()">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Confirm Order
+                            </button>
+                            <a routerLink="/marketplacefront/user/market-place"
+                               class="btn btn-secondary">
+                                <i class="bi bi-cart me-1"></i>
+                                Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!--end col-->
+</div><!--end row-->
+
+<!-- Modal -->
+<div bsModal #addCard="bs-modal" class="modal fade" id="addCard">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header px-4">
+                <h1 class="modal-title fs-5" id="addCardLabel">Add Card</h1>
+                <button type="button" class="btn-close" (click)="addCard.hide()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="card-wrapper mb-3"></div>
+
+                <div class="form-container active">
+                    <form action="#!" id="card-form-elem" autocomplete="off">
+                        <div class="mb-3 mt-4">
+                            <label for="card-number-input" class="form-label">Card Number</label>
+                            <input class="form-control" placeholder="Card number" type="tel" id="card-number-input">
+                        </div>
+                        <div class="mb-3">
+                            <label for="card-name-input" class="form-label">Card Holder</label>
+                            <input class="form-control" placeholder="Full name" type="text" id="card-name-input">
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label for="card-expiry-input" class="form-label">Expiry</label>
+                                    <input class="form-control" placeholder="MM/YY" type="tel" id="card-expiry-input">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label for="card-cvc-input" class="form-label">CVC</label>
+                                    <input class="form-control" placeholder="CVC" type="number" id="card-cvc-input">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary w-100" type="submit">Add Card</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--confirm orders-->
+<div bsModal #confirmOrderModal="bs-modal" id="confirmOrderModal" class="modal fade zoomIn">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" (click)="confirmOrderModal.hide()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mt-2 text-center">
+                    <i class="bi bi-shop display-6"></i>
+                    <div class="mt-4 pt-2 mx-4 mx-sm-5">
+                        <h4>Confirm your order?</h4>
+                        <p class="text-muted mx-4 mb-0">
+                            <span *ngIf="selectedPaymentMethod === 'cod'">
+                                Your order will be processed for cash on delivery.
+                            </span>
+                            <span *ngIf="selectedPaymentMethod === 'stripe'">
+                                You'll be redirected to Stripe to complete your payment.
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+                    <button type="button" class="btn w-sm btn-ghost-danger" (click)="confirmOrderModal.hide()">
+                        <i class="bi bi-x-lg align-baseline me-1"></i> Close
+                    </button>
+                    <button type="button"
+                            class="btn w-sm btn-success"
+                            [disabled]="processingPayment"
+                            (click)="submitOrder()">
+                        <span *ngIf="processingPayment" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Yes, Confirm Order
+                    </button>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

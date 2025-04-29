@@ -4,6 +4,7 @@ import {CentreCamping} from "./centrecamping.model";
 export interface Logement {
   idLogement: number;
   name: string;
+  description: string;
   quantity: number;
   price: number;
   type: TypeLogement; // Using the TypeLogement enum

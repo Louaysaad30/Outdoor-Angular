@@ -1,0 +1,16 @@
+.year-navigation {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.year-selector {
+  width: 100px;
+  margin: 0 10px;
+}
+.current-year {
+  font-size: 1.1rem;
+}
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

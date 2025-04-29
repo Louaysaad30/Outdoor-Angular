@@ -1,0 +1,312 @@
+<div class="container-fluid p-4">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="mb-4">
+        <i class="fas fa-chart-line me-2"></i>Review Analytics Dashboard
+      </h2>
+      <p class="text-muted">Monitor customer sentiment and demographic insights to improve your product offerings</p>
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="row justify-content-center my-5">
+    <div class="col-auto">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary stats -->
+  <div *ngIf="!loading && reviewAnalyses.length > 0" class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 bg-light h-100">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase text-muted">Total Reviews</h6>
+          <h2 class="display-4">{{reviewAnalyses.length}}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 bg-success bg-opacity-10 h-100">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase text-muted">Positive Sentiment</h6>
+          <h2 class="display-4 text-success">{{positiveCount}}</h2>
+          <p class="mb-0">{{(positiveCount / reviewAnalyses.length * 100).toFixed(1)}}%</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 bg-warning bg-opacity-10 h-100">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase text-muted">Neutral Sentiment</h6>
+          <h2 class="display-4 text-warning">{{neutralCount}}</h2>
+          <p class="mb-0">{{(neutralCount / reviewAnalyses.length * 100).toFixed(1)}}%</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 bg-danger bg-opacity-10 h-100">
+        <div class="card-body text-center">
+          <h6 class="text-uppercase text-muted">Negative Sentiment</h6>
+          <h2 class="display-4 text-danger">{{negativeCount}}</h2>
+          <p class="mb-0">{{(negativeCount / reviewAnalyses.length * 100).toFixed(1)}}%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts section -->
+  <div *ngIf="!loading && reviewAnalyses.length > 0" class="row mb-5">
+    <div class="col-md-6 mb-4 order-last order-xxl-first">
+      <div class="card">
+        <div class="card-header d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Sentiment Analysis</h4>
+          <div class="dropdown card-header-dropdown float-end">
+            <a class="text-reset dropdown-btn" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots-vertical"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterSentimentByDate('today')">Today</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterSentimentByDate('week')">Last Week</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterSentimentByDate('month')">Last Month</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterSentimentByDate('year')">Current Year</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterSentimentByDate('all')">All Time</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container position-relative" style="height: 336px;">
+            <!-- Add a decorative background element for a modern look -->
+            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, rgba(245,247,250,0.1) 0%, rgba(245,247,250,0.3) 100%); border-radius: 10px; z-index: 0;"></div>
+
+            <!-- Chart will be rendered on this canvas -->
+            <canvas #sentimentChart class="position-relative" style="z-index: 1;"></canvas>
+
+            <!-- Add the central statistics for an infographic style -->
+            <div class="position-absolute top-50 start-50 translate-middle text-center d-none d-md-block" style="z-index: 2;">
+              <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                <div>
+                  <div class="h3 mb-0">{{((positiveCount / (positiveCount + neutralCount + negativeCount)) * 100).toFixed(0)}}%</div>
+                  <div class="small text-muted">Positive</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modern, clean statistics row -->
+          <div class="mt-4 d-flex justify-content-around text-center">
+            <div class="sentiment-stat">
+              <div class="d-flex align-items-center justify-content-center mb-2">
+                <div class="rounded-circle bg-success" style="width: 12px; height: 12px;"></div>
+                <span class="ms-2 fw-medium">Positive</span>
+              </div>
+              <h5 class="mb-0 fw-bold text-success">{{positiveCount}}</h5>
+              <p class="small text-muted">{{(positiveCount / (positiveCount + neutralCount + negativeCount) * 100).toFixed(1)}}%</p>
+            </div>
+            <div class="sentiment-stat">
+              <div class="d-flex align-items-center justify-content-center mb-2">
+                <div class="rounded-circle bg-warning" style="width: 12px; height: 12px;"></div>
+                <span class="ms-2 fw-medium">Neutral</span>
+              </div>
+              <h5 class="mb-0 fw-bold text-warning">{{neutralCount}}</h5>
+              <p class="small text-muted">{{(neutralCount / (positiveCount + neutralCount + negativeCount) * 100).toFixed(1)}}%</p>
+            </div>
+            <div class="sentiment-stat">
+              <div class="d-flex align-items-center justify-content-center mb-2">
+                <div class="rounded-circle bg-danger" style="width: 12px; height: 12px;"></div>
+                <span class="ms-2 fw-medium">Negative</span>
+              </div>
+              <h5 class="mb-0 fw-bold text-danger">{{negativeCount}}</h5>
+              <p class="small text-muted">{{(negativeCount / (positiveCount + neutralCount + negativeCount) * 100).toFixed(1)}}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="card">
+        <div class="card-header d-flex">
+          <h4 class="card-title mb-0 flex-grow-1">Age Demographics</h4>
+          <div class="dropdown card-header-dropdown float-end">
+            <a class="text-reset dropdown-btn" href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots-vertical"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterAgeByDate('today')">Today</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterAgeByDate('week')">Last Week</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterAgeByDate('month')">Last Month</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterAgeByDate('year')">Current Year</a>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="filterAgeByDate('all')">All Time</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height: 336px;">
+            <canvas #ageChart></canvas>
+          </div>
+          <div class="mt-3 text-center">
+            <p class="mb-0 text-muted small">Primary age group: <span class="fw-medium">{{getPrimaryAgeGroup()}}</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Performance Insights -->
+  <div *ngIf="!loading && reviewAnalyses.length > 0" class="row mb-5">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-star me-2"></i>Product Performance Insights
+          </h5>
+          <div class="form-inline">
+            <select class="form-select form-select-sm" [(ngModel)]="sortOption" (change)="sortProducts()">
+              <option value="sentiment-desc">Best Rated First</option>
+              <option value="sentiment-asc">Worst Rated First</option>
+              <option value="reviews-desc">Most Reviewed First</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div *ngFor="let product of topProducts" class="col-md-6 col-lg-4 mb-4">
+              <div class="card h-100" [ngClass]="getProductCardClass(product.sentiment)">
+                <div class="card-body">
+                  <div class="d-flex mb-3">
+                    <div class="product-image me-3">
+                      <img [src]="getProductImage(product.idProduit)"
+                           alt="Product Image"
+                           class="img-thumbnail"
+                           style="width: 64px; height: 64px; object-fit: cover;">
+                    </div>
+                    <div>
+                      <h6 class="mb-1">Product #{{product.idProduit}}</h6>
+                      <div [ngClass]="getSentimentClass(product.sentiment)">
+                        <i class="fas" [ngClass]="getSentimentIcon(product.sentiment)"></i>
+                        {{product.sentiment}}
+                      </div>
+                      <small>{{product.reviewCount}} reviews</small>
+                    </div>
+                  </div>
+                  <div class="progress mb-2" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         [style.width]="product.positivePercentage + '%'"
+                         [attr.aria-valuenow]="product.positivePercentage"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-warning" role="progressbar"
+                         [style.width]="product.neutralPercentage + '%'"
+                         [attr.aria-valuenow]="product.neutralPercentage"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-danger" role="progressbar"
+                         [style.width]="product.negativePercentage + '%'"
+                         [attr.aria-valuenow]="product.negativePercentage"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                  </div>
+                  <div class="d-flex justify-content-between small">
+                    <span><i class="fas fa-thumbs-up text-success"></i> {{product.positivePercentage}}%</span>
+                    <span><i class="fas fa-minus text-warning"></i> {{product.neutralPercentage}}%</span>
+                    <span><i class="fas fa-thumbs-down text-danger"></i> {{product.negativePercentage}}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Reviews Section -->
+  <div *ngIf="!loading && reviewAnalyses.length > 0" class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">
+        <i class="fas fa-comment-alt me-2"></i>Customer Reviews
+      </h5>
+      <div>
+        <select class="form-select form-select-sm" [(ngModel)]="reviewSortOption" (change)="sortReviews()">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="sentiment">By Sentiment</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div *ngFor="let review of reviewAnalyses" class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body p-0">
+            <!-- Compact horizontal header with minimized image -->
+            <div class="d-flex align-items-center p-3 border-bottom">
+              <div *ngIf="review.idProduit" class="me-3 flex-shrink-0">
+                <img [src]="getProductImage(review.idProduit)"
+                    alt="Product Image"
+                    class="rounded-2"
+                    style="width: 48px; height: 48px; object-fit: cover;">
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="badge" [ngClass]="getSentimentBadgeClass(review.sentiment)">
+                    <i class="fas" [ngClass]="getSentimentIcon(review.sentiment)"></i>
+                    <span class="ms-1">{{review.sentiment}}</span>
+                  </span>
+                  <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    {{formatDate(review.dateCreation)}}
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review content -->
+            <div class="p-3">
+              <!-- Review text with clean styling -->
+              <div class="mb-3">
+                <p class="mb-0" style="line-height: 1.5; color: #333;">
+                  <i class="fas fa-quote-left text-muted me-2 opacity-50" style="font-size: 0.9rem;"></i>
+                  <span>
+                    {{review.reviewText ? ((review.reviewText.length > 80 ? (review.reviewText | slice:0:80) + '...' : review.reviewText)) : 'No review text'}}
+                  </span>
+                </p>
+              </div>
+
+              <!-- Demographic info -->
+              <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-2">
+                <div class="d-flex align-items-center">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-user-circle text-secondary me-2"></i>
+                    <span class="text-muted small">{{getAgeGroup(review.age)}}</span>
+                  </div>
+                </div>
+
+                <!-- Color-coded sentiment indicator -->
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle me-1"
+                       [ngClass]="getSentimentBadgeClass(review.sentiment)"
+                       style="width: 6px; height: 6px;"></div>
+                  <small [ngClass]="getSentimentClass(review.sentiment)" style="font-weight: 500;">
+                    {{getSentimentLabel(review.sentiment)}}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No data message -->
+  <div *ngIf="!loading && reviewAnalyses.length === 0" class="row justify-content-center my-5">
+    <div class="col-md-6 text-center">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No review analysis data is available. Check back later or refresh the page.
+      </div>
+      <button class="btn btn-primary" (click)="loadReviewAnalyses()">
+        <i class="fas fa-sync me-2"></i>Refresh Data
+      </button>
+    </div>
+  </div>
+</div>

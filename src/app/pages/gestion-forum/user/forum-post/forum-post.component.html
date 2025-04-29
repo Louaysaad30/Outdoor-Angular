@@ -1,6 +1,127 @@
-<!-- Start Breadcrumbs -->
+<!--
+
+
+&lt;!&ndash;add post&ndash;&gt;
+<div class="post-container">
+  <div class="profile">
+    <img [src]="profileImage" alt="Profile Image" class="profile-pic" />
+    <input type="text" placeholder="Quoi de neuf, Iyed ?" (click)="openPostModal()" readonly />
+  </div>
+</div>
+
+&lt;!&ndash; Modal &ndash;&gt;
+<div class="modal fade"
+     [ngClass]="{ show: isModalOpen }"
+     [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+     tabindex="-1"
+     aria-modal="true"
+     role="dialog">
+
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header px-4 pt-4">
+        <h5 class="modal-title">Créer une publication</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="chat-input-section p-3 p-lg-4 border-top border-2">
+          <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
+            <div class="row g-0 align-items-center">
+              <div class="col-auto">
+                <div class="chat-input-links me-2">
+                  <div class="links-list-item">
+                    <button type="button" class="btn btn-link text-decoration-none emoji-btn" (click)="toggleEmojiPicker()" id="emoji-btn">
+                      <i class="bx bx-smile align-middle"></i>
+                    </button>
+                    &lt;!&ndash; Emoji picker &ndash;&gt;
+                    <div *ngIf="showEmojiPicker" class="emoji-picker-container">
+                      <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)" title="Pick your emoji…"></emoji-mart>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col">
+                <div *ngIf="submitted1 && form?.['message']?.errors" class="chat-input-feedback">
+                  <span *ngIf="form?.['message']?.errors?.['required']">Please Enter a Message</span>
+                </div>
+                <textarea class="form-control"
+                          formControlName="message"
+                          [(ngModel)]="postContent"
+                          name="postContent"
+                          rows="3"
+                          (blur)="onBlur()"
+                          (focus)="onFocus()"
+                          id="chat-input"
+                          placeholder="Quoi de neuf, Iyed ?"
+                          autocomplete="off"></textarea>
+              </div>
+
+              <div class="col-auto">
+                <div class="chat-input-links ms-2"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="add-options mt-3 d-flex align-items-center">
+          <span class="options-label">Ajouter à votre publication</span>
+          <button class="btn btn-outline-secondary ml-3 custom-btn" (click)="addPhoto()">
+            <i class="bi bi-image-fill custom-icon"></i>
+            <span class="custom-text">Photo/Video</span>
+          </button>
+        </div>
+
+        <div *ngIf="showFileUpload" class="mt-3">
+          <label class="form-label">Images/Vidéos</label>
+          <ngx-dropzone (change)="onSelect($event)" [multiple]="true">
+            <ngx-dropzone-label>Déposez vos fichiers ici ou cliquez pour télécharger.</ngx-dropzone-label>
+          </ngx-dropzone>
+
+          <ul class="list-unstyled mb-0" *ngIf="uploadedFiles.length > 0">
+            <li *ngFor="let file of uploadedFiles; let i = index" class="mt-2">
+              <div class="border rounded">
+                <div class="d-flex p-2">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar-sm bg-light rounded p-2">
+                      <img class="img-fluid rounded d-block" [src]="file.objectURL" alt="Dropzone-Image" />
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="pt-1">
+                      <h5 class="fs-md mb-1">{{ file.name }}</h5>
+                      <p class="fs-sm text-muted mb-0">{{ (file.size / 1024).toFixed(2) }} KB</p>
+                    </div>
+                  </div>
+                  <div class="flex-shrink-0 ms-3">
+                    <button (click)="removeFile(file)" class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="modal-footer px-4 pb-4">
+        <button type="button" class="btn btn-primary" [disabled]="isSubmitting" (click)="publishPost()">
+          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1"></span>
+          Publier
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+&lt;!&ndash;end post&ndash;&gt;
+
+
+
+&lt;!&ndash; Start Breadcrumbs &ndash;&gt;
+
 <app-breadcrumbs title="Overview" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
-<!-- End Breadcrumbs -->
+&lt;!&ndash; End Breadcrumbs &ndash;&gt;
 
 <div class="card">
   <div class="row g-0">
@@ -35,16 +156,23 @@
             <a routerLink="/tickets/list" class="btn btn-primary btn-sm"> Add Ticket</a>
           </div>
         </div>
-
-        <h6 class="fw-semibold text-uppercase mb-2">Ticket Descriptions</h6>
-        <p class="text-muted mb-4">It's used for building interactive user interfaces and web applications
-          quickly and efficiently with significantly less code than you would with vanilla JavaScript. In
-          React, you develop your applications by creating reusable components that you can think of as
-          independent Lego blocks. React is a JavaScript library developed by Facebook which, among other
-          things, was used to build Instagram.com. Its aim is to allow developers to easily create fast user
-          interfaces for websites and applications alike. The main concept of React. js is virtual DOM. If you
-          need a fast and responsive user interface, ReactJS is the better option. But if you need to handle
-          complex data analysis or number-crunching.</p>
+<h6 class="fw-semibold text-uppercase mb-2">Ticket Descriptions</h6>
+          <p class="text-muted mb-4">
+            <span *ngIf="!showFullDescription">
+              It's used for building interactive user interfaces and web applications quickly and efficiently...
+              <a href="javascript:void(0);" (click)="showFullDescription = true">Read more</a>
+            </span>
+            <span *ngIf="showFullDescription">
+              It's used for building interactive user interfaces and web applications
+              quickly and efficiently with significantly less code than you would with vanilla JavaScript. In
+              React, you develop your applications by creating reusable components that you can think of as
+              independent Lego blocks. React is a JavaScript library developed by Facebook which, among other
+              things, was used to build Instagram.com. Its aim is to allow developers to easily create fast user
+              interfaces for websites and applications alike. The main concept of React. js is virtual DOM. If you
+              need a fast and responsive user interface, ReactJS is the better option. But if you need to handle
+              complex data analysis or number-crunching.
+            </span>
+          </p>
 
         <h6 class="fw-semibold text-uppercase mb-4">Discussion with Themesbrand</h6>
           <div class="d-flex mb-4">
@@ -82,109 +210,1261 @@
           </div>
         </form>
       </div>
-    </div><!--end col-->
-    <div class="col-xl-3 col-lg-4">
-      <div class="card-header">
-        <h6 class="card-title mb-0">Ticket Details</h6>
+    </div>&lt;!&ndash;end col&ndash;&gt;
+  </div>&lt;!&ndash;end row&ndash;&gt;
+</div>
+
+
+-->
+
+<!--Modal detail post-->
+<div class="modal fade" [class.show]="isDetailModalOpen" [style.display]="isDetailModalOpen ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" *ngIf="selectedPost">{{ selectedPost.username }}'s Post</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeDetailModal()"></button>
       </div>
-      <div class="card-body mt-2">
-        <div class="table-responsive table-card">
-          <table class="table table-borderless align-middle mb-0">
-            <tbody>
-            <tr>
-              <th>Ticket No</th>
-              <td>#TBS<span id="t-no">24301901</span> </td>
-            </tr>
-            <tr>
-              <th>Client</th>
-              <td id="t-client">Themesbrand</td>
-            </tr>
-            <tr>
-              <th>Project</th>
-              <td>Steex - Admin & Dashboard</td>
-            </tr>
-            <tr>
-              <th>Assigned To:</th>
-              <td>
-                <div class="avatar-group">
-                  <a href="javascript:void(0);" class="avatar-group-item" placement="top" tooltip="Erica Kernan">
-                    <img src="assets/images/users/avatar-4.jpg" alt="" class="rounded-circle avatar-xs">
-                  </a>
-                  <a href="javascript:void(0);" class="avatar-group-item" placement="top" tooltip="Alexis Clarke">
-                    <img src="assets/images/users/avatar-10.jpg" alt="" class="rounded-circle avatar-xs">
-                  </a>
-                  <a href="javascript:void(0);" class="avatar-group-item" placement="top" tooltip="James Price">
-                    <img src="assets/images/users/avatar-3.jpg" alt="" class="rounded-circle avatar-xs">
-                  </a>
-                  <a href="javascript: void(0);" class="avatar-group-item" placement="top" tooltip="Add Members">
-                    <div class="avatar-xs">
-                      <div class="avatar-title fs-16 rounded-circle bg-light border-dashed border text-primary">
-                        +
+      <div class="modal-body" *ngIf="selectedPost">
+        <div class="d-flex align-items-center mb-3">
+          <img [src]="selectedPost.userProfilePic" alt="User" class="rounded-circle me-2" width="40" height="40">
+          <div>
+            <h6 class="mb-0">{{ selectedPost.username }}</h6>
+            <p class="text-muted mb-0 small">{{ selectedPost.createdAt | date:'medium' }}</p>
+          </div>
+        </div>
+
+
+        <p class="mb-3">{{ selectedPost.content }}</p>
+
+        <!-- Media Gallery -->
+        <!-- Media Gallery with Navigation -->
+        <div *ngIf="selectedPost?.hasMedia && selectedPost?.media && (selectedPost?.media?.length || 0) > 0" class="mb-3 position-relative">
+          <div class="media-detail-container">
+            <!-- Current media display -->
+            <div class="current-media">
+              <ng-container *ngIf="selectedPost?.media && currentMediaIndex < (selectedPost?.media?.length || 0)">
+                <img *ngIf="isImage(selectedPost?.media?.[currentMediaIndex]?.mediaUrl || '')"
+                     [src]="selectedPost?.media?.[currentMediaIndex]?.mediaUrl || ''"
+                     alt="Post image"
+                     class="img-fluid rounded w-100">
+                <video *ngIf="isVideo(selectedPost?.media?.[currentMediaIndex]?.mediaUrl || '')"
+                       controls
+                       class="img-fluid rounded w-100">
+                  <source [src]="selectedPost?.media?.[currentMediaIndex]?.mediaUrl || ''" type="video/mp4">
+                  Your browser does not support HTML video.
+                </video>
+              </ng-container>
+            </div>
+
+            <!-- Navigation arrows - only shown when multiple media items -->
+            <button *ngIf="selectedPost?.media && (selectedPost?.media?.length || 0) > 1"
+                    class="btn btn-light btn-sm rounded-circle media-nav-btn prev-btn"
+                    (click)="prevMedia()">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <button *ngIf="selectedPost?.media && (selectedPost?.media?.length || 0) > 1"
+                    class="btn btn-light btn-sm rounded-circle media-nav-btn next-btn"
+                    (click)="nextMedia()">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <!-- Media indicators/dots - only shown when multiple media items -->
+            <div *ngIf="selectedPost?.media && (selectedPost?.media?.length || 0) > 1" class="media-indicators">
+              <span *ngFor="let _ of selectedPost?.media || []; let i = index"
+                    class="media-indicator"
+                    [class.active]="i === currentMediaIndex"
+                    (click)="goToMedia(i)"></span>
+            </div>
+          </div>
+        </div>
+        <!-- Likes and Comments Count -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <span>
+              <i [class]="userReactions.get(selectedPost.id!) ?
+                  getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!).split(' ')[0] :
+                  'bi bi-hand-thumbs-up'"></i>
+              {{ getTotalReactionCount(selectedPost.id!) }} reactions
+            </span>
+          </div>
+          <div>
+            <span>{{ selectedPost.comments?.length || 0 }} comments</span>
+          </div>
+        </div>
+
+        <!-- Reaction and comment buttons -->
+        <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+          <div class="position-relative">
+            <!-- Main reaction button -->
+            <button class="btn btn-sm"
+                    [ngClass]="userReactions.get(selectedPost.id!) ?
+                              getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                              'text-primary'"
+                    (click)="toggleReactionBar(selectedPost.id!)"
+                    (mouseenter)="showReactionBar(selectedPost.id!)"
+                    (mouseleave)="hideReactionBarWithDelay(selectedPost.id!)">
+              <i [class]="userReactions.get(selectedPost.id!) ?
+                        getReactionIcon(userReactions.get(selectedPost.id!)!.reactionType!) :
+                        'bi bi-hand-thumbs-up text-primary'"></i>
+              <span>
+                {{ userReactions.get(selectedPost.id!) ?
+                userReactions.get(selectedPost.id!)!.reactionType!.charAt(0) + userReactions.get(selectedPost.id!)!.reactionType!.slice(1).toLowerCase() :
+                'Like' }}
+              </span>
+            </button>
+
+            <!-- Reaction bar that shows on hover/click -->
+            <div *ngIf="reactionBarVisible.get(selectedPost.id!)"
+                 class="reaction-bar"
+                 (mouseenter)="keepReactionBarVisible(selectedPost.id!)"
+                 (mouseleave)="hideReactionBar(selectedPost.id!)">
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.LIKE)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.LIKE)">
+                <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.LOVE)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.LOVE)">
+                <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.HAHA)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.HAHA)">
+                <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.WOW)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.WOW)">
+                <i class="bi bi-emoji-dizzy-fill text-warning reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.SAD)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.SAD)">
+                <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+              </button>
+              <button class="reaction-button"
+                      [ngClass]="{'active': hasReacted(selectedPost.id!, ReactionType.ANGRY)}"
+                      (click)="reactToPost(selectedPost.id!, ReactionType.ANGRY)">
+                <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-chat-dots-fill"></i> Comment
+          </button>
+
+          <button class="btn btn-sm text-primary">
+            <i class="bi bi-share-fill"></i> Share
+          </button>
+        </div>
+
+        <hr>
+
+        <!-- Comment List -->
+        <!-- Comment List -->
+        <div class="fb-comments-section mb-3">
+          <h6 class="mb-3">Comments</h6>
+          <div *ngIf="isLoadingComments" class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading comments...</span>
+            </div>
+          </div>
+          <div *ngIf="!isLoadingComments">
+
+          <div *ngIf="selectedPost.comments && selectedPost.comments.length > 0">
+            <ng-container *ngFor="let comment of getTopLevelComments(selectedPost.id!)">
+              <!-- Use recursive template pattern to handle nested comments -->
+              <ng-container *ngTemplateOutlet="commentTemplate; context: {comment: comment, level: 0}"></ng-container>
+            </ng-container>
+          </div>
+          <div *ngIf="!selectedPost.comments || selectedPost.comments.length === 0" class="text-center py-3 bg-light rounded">
+            <i class="bi bi-chat-left-text text-muted fs-4 d-block mb-2"></i>
+            <p class="text-muted mb-0">No comments yet. Be the first to comment!</p>
+          </div>
+          </div>
+        </div>
+
+        <!-- Recursive comment template -->
+        <ng-template #commentTemplate let-comment="comment" let-level="level">
+          <div class="d-flex mb-3" [ngClass]="{'ms-4': level > 0}">
+            <div class="me-2">
+              <img [src]="comment.userProfilePic || 'assets/images/users/avatar-' + ((level % 4) + 1) + '.jpg'" alt="User" class="rounded-circle flex-shrink-0"
+                   [style.width.px]="32 - (level * 2)" [style.height.px]="32 - (level * 2)">
+            </div>
+            <div class="fb-comment-container w-100">
+              <!-- Regular comment view -->
+              <div class="comment-bubble" [ngClass]="{'reply-bubble': level > 0}" *ngIf="editingCommentId !== comment.id">
+                <h6 class="mb-0 fs-sm fw-semibold">{{ comment.username }}</h6>
+                <p class="mb-0 comment-text">{{ comment.content }}</p>
+              </div>
+
+              <!-- Edit comment form -->
+              <div class="edit-comment-form" *ngIf="editingCommentId === comment.id">
+                <div class="input-group mb-1">
+                  <textarea class="form-control" [(ngModel)]="editCommentText" placeholder="Edit your comment..." rows="3"></textarea>
+                </div>
+                <div class="text-end mt-2">
+                  <button class="btn btn-light btn-sm me-2" type="button" (click)="cancelEditComment()">
+                    Cancel
+                  </button>
+                  <button class="btn btn-primary btn-sm" type="button" (click)="saveEditedComment()">
+                    Save
+                  </button>
+                </div>
+              </div>
+
+              <!-- Comment actions -->
+              <div class="comment-actions" *ngIf="editingCommentId !== comment.id">
+                <a href="javascript:void(0);" class="comment-action">Like</a>
+                <span class="action-dot">·</span>
+                <a href="javascript:void(0);" class="comment-action" (click)="toggleReplyInput(comment.id!)">Reply</a>
+                <span class="action-dot">·</span>
+                <span class="comment-time">{{ comment.createdAt | date:'short' }}</span>
+
+                <!-- Comment dropdown menu -->
+                <div class="dropdown d-inline-block" *ngIf="comment.userId === USER_ID">
+                  <span class="action-dot">·</span>
+                  <button class="comment-action dropdown-toggle" type="button" (click)="toggleCommentDropdown(comment.id!)">
+                    <i class="bi bi-three-dots"></i>
+                  </button>
+                  <div class="dropdown-menu shadow-sm border-light position-absolute"
+                       [ngClass]="{'show': activeCommentDropdown === comment.id!}"
+                       style="z-index: 1060;">
+                    <a class="dropdown-item" href="javascript:void(0);" (click)="editComment(comment)">
+                      <i class="bi bi-pencil me-2"></i> Edit
+                    </a>
+                    <a class="dropdown-item text-danger" href="javascript:void(0);" (click)="deleteComment(comment.id!)">
+                      <i class="bi bi-trash me-2"></i> Delete
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reply input form -->
+<div *ngIf="showReplyInput[comment.id!]" class="reply-input-container mt-2 mb-3 animate__animated animate__fadeIn">
+                <div class="d-flex align-items-start">
+                  <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="32" height="32">
+                  <div class="flex-grow-1 reply-input-wrapper">
+                    <div class="position-relative">
+                      <input type="text"
+                             class="form-control fb-reply-input"
+                             placeholder="Write a reply..."
+                             [(ngModel)]="replyContent[comment.id!]"
+                             (keyup.enter)="replyContent[comment.id!]?.trim() && submitReply(comment.id!)">
+
+                      <div class="reply-actions">
+                        <button class="btn-reply-submit" type="button"
+                                [disabled]="!replyContent[comment.id!]?.trim() || replySubmitting[comment.id!]"
+                                (click)="submitReply(comment.id!)">
+                          <i class="bi bi-send-fill"></i>
+                        </button>
                       </div>
                     </div>
-                  </a>
+
+                    <div *ngIf="replySubmitting[comment.id!]" class="reply-loading mt-1">
+                      <div class="spinner-grow spinner-grow-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      <small class="text-muted ms-1">Sending reply...</small>
+                    </div>
+                  </div>
                 </div>
-              </td>
-            </tr>
-            <tr>
-              <th>Status:</th>
-              <td>
-                <select class="form-select" id="t-status" data-choices data-choices-search-false aria-label="Default select example">
-                  <option value>Status</option>
-                  <option value="New" selected>New</option>
-                  <option value="Open">Open</option>
-                  <option value="Inprogress">Inprogress</option>
-                  <option value="Closed">Closed</option>
-                </select>
-              </td>
-            </tr>
-            <tr>
-              <th>Priority</th>
-              <td>
-                <span class="badge bg-danger" id="t-priority">High</span>
-              </td>
-            </tr>
-            <tr>
-              <th>Create Date</th>
-              <td id="c-date">20 Dec, 2023</td>
-            </tr>
-            <tr>
-              <th>Due Date</th>
-              <td id="d-date">29 Dec, 2023</td>
-            </tr>
-            <tr>
-              <th>Last Activity</th>
-              <td>14 min ago</td>
-            </tr>
-            <tr>
-              <th>Labels</th>
-              <td class="hstack text-wrap gap-1">
-                <span class="badge bg-primary-subtle text-primary">Admin</span>
-                <span class="badge bg-primary-subtle text-primary">UI</span>
-                <span class="badge bg-primary-subtle text-primary">Dashboard</span>
-                <span class="badge bg-primary-subtle text-primary">Design</span>
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </div><!--end card-body-->
-      <div class="card-body border-top mt-2">
-        <a href="javascript:void(0);" class="float-end link-effect">View More <i class="bi bi-arrow-right align-baseline ms-1"></i></a>
-        <h6 class="card-title mb-0">Support Team</h6>
-      </div>
-      <div class="card-body">
-        <div class="d-flex gap-2 align-items-center mb-3">
-          <div class="flex-shrink-0">
-            <img src="assets/images/users/avatar-1.jpg" alt="" class="avatar-sm rounded">
+              </div>
+              <!-- Nested replies - recursively render child comments -->
+              <div *ngIf="comment.replies && comment.replies.length > 0" class="nested-replies mt-2">
+                <ng-container *ngFor="let reply of comment.replies">
+                  <ng-container *ngTemplateOutlet="commentTemplate; context: {comment: reply, level: level + 1}"></ng-container>
+                </ng-container>
+              </div>
+            </div>
           </div>
-          <div class="flex-grow-1">
-            <h6 class="fs-md">Morton Satterfield</h6>
-            <p class="text-muted mb-0">Admin & Founder</p>
+        </ng-template>
+
+<div class="comment-input-section mt-3">
+          <div class="d-flex align-items-start">
+            <img [src]="profileImage" alt="User" class="rounded-circle me-2" width="36" height="36">
+            <div class="flex-grow-1 reply-input-wrapper">
+              <input
+                type="text"
+                class="form-control fb-reply-input w-100"
+                placeholder="Write a comment..."
+                [(ngModel)]="newDetailComment"
+                (keyup.enter)="addDetailComment()">
+
+              <div class="reply-actions">
+                <button
+                  class="btn-reply-submit"
+                  type="button"
+                  (click)="addDetailComment()"
+                  [disabled]="!newDetailComment.trim() || isSubmitting">
+                  <i class="bi bi-send-fill"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading indicator (optional) -->
+          <div class="reply-loading ms-5 mt-2" *ngIf="isSubmitting">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>Sending comment...</span>
           </div>
         </div>
-        <button class="btn btn-secondary w-100" id="agent-chat"><i class="bi bi-chat-text align-baseline me-1"></i> Get In Touch</button>
       </div>
     </div>
-  </div><!--end row-->
+  </div>
+</div>
+
+  <div class="row  ">
+
+
+    <!-- Left Sidebar - Navigation -->
+<div class="sidebar-wrapper position-fixed d-none d-lg-block" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; left: 20px;">
+      <!-- User Profile -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="p-3">
+          <div class="d-flex align-items-center mb-3">
+            <div class="position-relative me-2">
+              <img [src]="profileImage"  class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+              <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 10px; height: 10px; border: 2px solid white;"></span>
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold">{{nameUser }}</h6>
+              <small class="text-muted">Actif maintenant</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Navigation -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="list-group list-group-flush">
+          <a [routerLink]="['/forumfront/user/mesPost']" routerLinkActive="active-link" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-people-fill fs-5 text-primary"></i>
+              </div>
+              <span class="fw-medium"> Posts</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                <div class="me-3 fb-icon-container">
+                  <i class="bi bi-bookmark-fill fs-5 text-blue"></i>
+                </div>
+                <span class="fw-medium">Enregistrements</span>
+              </div>
+              <span class="badge bg-primary rounded-pill">4</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-calendar-event fs-5 text-purple"></i>
+              </div>
+              <span class="fw-medium">Événements</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-clock-history fs-5 text-teal"></i>
+              </div>
+              <span class="fw-medium">Souvenirs</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-shop fs-5 text-orange"></i>
+              </div>
+              <span class="fw-medium">Marketplace</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-transparent border-0 pb-0">
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="text-muted mb-0 small">Vos raccourcis</h6>
+            <a href="javascript:void(0)" class="text-primary small">Modifier</a>
+          </div>
+        </div>
+        <div class="list-group list-group-flush">
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-file-earmark-text fs-5 text-info"></i>
+              </div>
+              <span class="fw-medium">Documents récents</span>
+            </div>
+          </a>
+          <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-3 py-2">
+            <div class="d-flex align-items-center">
+              <div class="me-3 fb-icon-container">
+                <i class="bi bi-chat-square-dots fs-5 text-success"></i>
+              </div>
+              <span class="fw-medium">Forums de discussion</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- Main Content Area - Forum Feed -->
+    <div class="col-lg-6 offset-lg-3 ">
+      <!--add post-->
+<div class="create-post-card mb-3 shadow-sm">
+        <div class="card-body p-3">
+          <div class="d-flex align-items-center gap-2">
+            <!-- Profile image with enhanced styling -->
+            <div class="create-post-avatar">
+              <img [src]="profileImage" class="rounded-circle" alt="Profile picture">
+            </div>
+
+            <!-- Improved input placeholder -->
+            <div class="create-post-input flex-grow-1" (click)="openPostModal()">
+              <span class="placeholder-text">What's on your mind, {{firstnameUser}}?</span>
+            </div>
+          </div>
+
+          <!-- Separator -->
+          <div class="separator my-3"></div>
+
+          <!-- Action buttons with improved styling -->
+          <div class="d-flex justify-content-between px-1">
+            <button class="create-post-btn" (click)="openPostModal()">
+              <i class="bi bi-camera-video-fill me-2 text-danger"></i>
+              <span>Live Video</span>
+            </button>
+
+            <button class="create-post-btn" (click)="addPhoto()">
+              <i class="bi bi-image me-2 text-success"></i>
+              <span>Photo/Video</span>
+            </button>
+
+            <button class="create-post-btn" (click)="openPostModal()">
+              <i class="bi bi-emoji-smile me-2 text-warning"></i>
+              <span>Feeling/Activity</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Posts list -->
+
+
+      <div *ngFor="let post of posts" class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <!-- Profile image with enhanced styling -->
+            <div class="profile-image-container me-3" (click)="post.userId && goToUserPosts(post.userId)">
+              <img [src]="post.userProfilePic" class="rounded-circle"
+                   alt="Profile picture">
+            </div>
+
+            <!-- User info with better styling -->
+            <div class="poster-info flex-grow-1">
+              <h6 class="poster-name mb-0" (click)="post.userId && goToUserPosts(post.userId)">
+                {{ post.username || 'Anonymous User' }}
+              </h6>
+              <p class="post-timestamp text-muted small mb-0">
+                {{ post.createdAt | date:'dd MMM yyyy - hh:mm a' }}
+              </p>
+            </div>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-three-dots"></i>
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="javascript:void(0);">Enregistrer la publication</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Masquer la publication</a></li>
+                <li><a class="dropdown-item" href="javascript:void(0);">Signaler la publication</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Post content with read more functionality -->
+          <p class="mb-3 clickable-content">{{ post.content }}</p>
+          <!-- Post media -->
+          <!-- Post media -->
+<div *ngIf="post.hasMedia && post.media && post.media.length > 0" class="post-media mb-3 clickable-content" (click)="openPostDetail(post)">
+            <div class="media-container" [ngClass]="{
+              'media-single': post.media.length === 1,
+              'media-double': post.media.length === 2,
+              'media-grid-3': post.media.length === 3,
+              'media-grid-4 equal-size': post.media.length === 4,
+              'media-grid-more': post.media.length > 4
+            }">
+              <!-- For single photo -->
+              <ng-container *ngIf="post.media.length === 1">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video #videoElement *ngIf="isVideo(post.media[0].mediaUrl!)"
+                        [poster]="post.media[0].thumbnailUrl || ''"
+                        crossOrigin="anonymous"
+                        (loadedmetadata)="generateVideoThumbnail(videoElement, post.media[0])"
+                        controls preload="metadata" class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For double photo layout -->
+              <ng-container *ngIf="post.media.length === 2">
+                <div *ngFor="let media of post.media; let i = index" class="media-item">
+                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video #videoElement *ngIf="isVideo(media.mediaUrl!)"
+                        [poster]="media.thumbnailUrl || ''"
+                        crossOrigin="anonymous"
+                        (loadedmetadata)="generateVideoThumbnail(videoElement, media)"
+                        controls preload="metadata" class="img-fluid rounded">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For triple photo layout -->
+              <ng-container *ngIf="post.media.length === 3">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video #videoElement *ngIf="isVideo(post.media[0].mediaUrl!)"
+                        [poster]="post.media[0].thumbnailUrl || ''"
+                        crossOrigin="anonymous"
+                        (loadedmetadata)="generateVideoThumbnail(videoElement, post.media[0])"
+                        controls preload="metadata" class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+                <div class="secondary-media-container">
+                  <div *ngFor="let media of post.media.slice(1); let i = index" class="media-item secondary-media">
+                    <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                    <video #videoElement *ngIf="isVideo(media.mediaUrl!)"
+                          [poster]="media.thumbnailUrl || ''"
+                          crossOrigin="anonymous"
+                          (loadedmetadata)="generateVideoThumbnail(videoElement, media)"
+                          controls preload="metadata" class="img-fluid rounded">
+                      <source [src]="media.mediaUrl!" type="video/mp4">
+                    </video>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- For 4 photos in 2x2 grid -->
+              <ng-container *ngIf="post.media.length === 4">
+                <div *ngFor="let media of post.media; let i = index"
+                     class="media-item"
+                     [ngClass]="{'main-media': i === 0, 'secondary-media': i > 0}">
+                  <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video #videoElement *ngIf="isVideo(media.mediaUrl!)"
+                        [poster]="media.thumbnailUrl || ''"
+                        crossOrigin="anonymous"
+                        (loadedmetadata)="generateVideoThumbnail(videoElement, media)"
+                        controls preload="metadata" class="img-fluid rounded">
+                    <source [src]="media.mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+              </ng-container>
+
+              <!-- For 5+ photos -->
+              <ng-container *ngIf="post.media.length > 4">
+                <div class="media-item main-media">
+                  <img *ngIf="isImage(post.media[0].mediaUrl!)" [src]="post.media[0].mediaUrl!" alt="Post image" class="img-fluid rounded">
+                  <video #videoElement *ngIf="isVideo(post.media[0].mediaUrl!)"
+                        [poster]="post.media[0].thumbnailUrl || ''"
+                        crossOrigin="anonymous"
+                        (loadedmetadata)="generateVideoThumbnail(videoElement, post.media[0])"
+                        controls preload="metadata" class="img-fluid rounded">
+                    <source [src]="post.media[0].mediaUrl!" type="video/mp4">
+                  </video>
+                </div>
+
+                <div class="secondary-media-container">
+                  <ng-container *ngFor="let media of post.media.slice(1, 4); let i = index">
+                    <div class="media-item secondary-media" [ngClass]="{'has-overlay': i === 2}">
+                      <img *ngIf="isImage(media.mediaUrl!)" [src]="media.mediaUrl!" alt="Post image" class="img-fluid rounded">
+                      <video #videoElement *ngIf="isVideo(media.mediaUrl!)"
+                            [poster]="media.thumbnailUrl || ''"
+                            crossOrigin="anonymous"
+                            (loadedmetadata)="generateVideoThumbnail(videoElement, media)"
+                            controls preload="metadata" class="img-fluid rounded">
+                        <source [src]="media.mediaUrl!" type="video/mp4">
+                      </video>
+
+                      <div *ngIf="i === 2" class="more-overlay" (click)="showAllMedia(post.media); $event.stopPropagation()">
+                        <div class="more-count">+{{ post.media.length - 4 }}</div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+          <!-- Interaction buttons -->
+          <!-- Interaction buttons -->
+          <div class="d-flex justify-content-between border-top border-bottom py-2 mb-3">
+            <div class="position-relative">
+              <!-- Main reaction button -->
+              <button class="btn btn-sm"
+                      [ngClass]="userReactions.get(post.id!) ?
+                    getReactionIcon(userReactions.get(post.id!)!.reactionType!).split(' ').slice(-1)[0] :
+                    'text-primary'"
+                      (click)="toggleReactionBar(post.id!)"
+                      (mouseenter)="showReactionBar(post.id!)"
+                      (mouseleave)="hideReactionBarWithDelay(post.id!)">
+                <i [class]="userReactions.get(post.id!) ?
+              getReactionIcon(userReactions.get(post.id!)!.reactionType!) :
+              'bi bi-hand-thumbs-up text-primary'"></i>
+                <span>
+      {{ userReactions.get(post.id!) ?
+                  userReactions.get(post.id!)!.reactionType!.charAt(0) + userReactions.get(post.id!)!.reactionType!.slice(1).toLowerCase() :
+                  'Like' }}
+                  {{ getTotalReactionCount(post.id!) > 0 ? '(' + getTotalReactionCount(post.id!) + ')' : '' }}
+    </span>
+              </button>
+
+              <!-- Reaction bar that shows on hover/click -->
+              <div *ngIf="reactionBarVisible.get(post.id!)"
+                   class="reaction-bar"
+                   (mouseenter)="keepReactionBarVisible(post.id!)"
+                   (mouseleave)="hideReactionBar(post.id!)">
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LIKE)}"
+                        (click)="reactToPost(post.id!, ReactionType.LIKE)">
+                  <i class="bi bi-hand-thumbs-up-fill text-primary reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.LOVE)}"
+                        (click)="reactToPost(post.id!, ReactionType.LOVE)">
+                  <i class="bi bi-heart-fill text-danger reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.HAHA)}"
+                        (click)="reactToPost(post.id!, ReactionType.HAHA)">
+                  <i class="bi bi-emoji-laughing-fill text-warning reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.WOW)}"
+                        (click)="reactToPost(post.id!, ReactionType.WOW)">
+                  <i class="bi bi-emoji-dizzy-fill text-warning reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.SAD)}"
+                        (click)="reactToPost(post.id!, ReactionType.SAD)">
+                  <i class="bi bi-emoji-frown-fill text-info reaction-icon"></i>
+                </button>
+                <button class="reaction-button"
+                        [ngClass]="{'active': hasReacted(post.id!, ReactionType.ANGRY)}"
+                        (click)="reactToPost(post.id!, ReactionType.ANGRY)">
+                  <i class="bi bi-emoji-angry-fill text-danger reaction-icon"></i>
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-sm text-primary" (click)="openPostDetail(post)">
+              <i class="bi bi-chat-dots me-1"></i>Comment {{ (post.comments || []).length ? '(' + (post.comments || []).length + ')' : '' }}
+            </button>
+
+            <button class="btn btn-sm text-primary">
+              <i class="bi bi-share me-1"></i>Share
+            </button>
+          </div>
+          <!-- Comment Input -->
+          <div class="comment-input-container mt-3 mb-2">
+            <div class="d-flex align-items-start gap-2">
+              <div class="comment-avatar">
+                <img [src]="profileImage" alt="" class="rounded-circle"
+                     style="width: 38px; height: 38px; object-fit: cover;">
+              </div>
+              <div class="comment-input-wrapper flex-grow-1">
+                <div class="position-relative">
+                  <input type="text"
+                         [(ngModel)]="post.newComment"
+                         class="form-control comment-input-field"
+                         placeholder="Write a comment..."
+                         autocomplete="off">
+
+                  <div class="comment-actions-bar">
+                    <button class="btn-send-comment"
+                            [disabled]="!post.newComment || !post.newComment.trim()"
+                            [ngClass]="{'active': post.newComment && post.newComment.trim()}"
+                            (click)="addComment(post.id!, post.newComment || ''); post.newComment = ''">
+                      <i class="bi bi-send-fill"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Modal -->
+<div class="modal fade"
+           [ngClass]="{ show: isModalOpen }"
+           [ngStyle]="{ display: isModalOpen ? 'block' : 'none' }"
+           tabindex="-1"
+           aria-modal="true"
+           role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow rounded-lg">
+            <!-- Modal Header -->
+            <div class="modal-header border-0 px-4 pt-4">
+              <h5 class="modal-title fw-bold">Create post</h5>
+              <button type="button" class="btn-close" aria-label="Close" (click)="closePostModal()"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body px-4 pb-3 pt-0">
+              <!-- Alerts -->
+              <div *ngIf="toxicContentDetected" class="alert-custom shadow-sm animate__animated animate__fadeIn mb-3">
+                <div class="alert-ribbon"></div>
+                <div class="alert-wrapper">
+                  <div class="alert-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                  </div>
+                  <div class="alert-content">
+                    <h6 class="alert-title">Content Warning</h6>
+                    <p class="alert-message">Our system has detected potentially inappropriate content in your post.</p>
+                    <div class="alert-details">
+                      <p>Please review your content and remove any language that may violate our community guidelines.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="toxicImageDetected" class="alert-custom shadow-sm animate__animated animate__fadeIn mb-3">
+                <div class="alert-ribbon"></div>
+                <div class="alert-wrapper">
+                  <div class="alert-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                  </div>
+                  <div class="alert-content">
+                    <h6 class="alert-title">Inappropriate Image Detected</h6>
+                    <p class="alert-message">Our content moderation system has flagged the uploaded image as potentially inappropriate.</p>
+                    <div class="alert-details">
+                      <p>Please remove or replace any media that contains sensitive, explicit, or prohibited visual content according to our community standards.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- User Info -->
+              <div class="d-flex align-items-center mb-3">
+                <div class="create-post-avatar me-2">
+                  <img [src]="profileImage" alt="Profile" class="rounded-circle">
+                </div>
+                <div>
+                  <h6 class="mb-0 fw-semibold poster-name">{{nameUser}}</h6>
+                  <div class="d-flex align-items-center post-timestamp">
+                    <i class="bi bi-globe2 me-1"></i>
+                    <span>Public</span>
+                    <i class="bi bi-caret-down-fill ms-1 small"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Post Content Input -->
+              <div class="create-post-content-area mb-3">
+                <form [formGroup]="formData" id="chatinput-form" enctype="multipart/form-data">
+                  <div *ngIf="submitted1 && form?.['message']?.errors" class="text-danger small mb-2">
+                    <span *ngIf="form?.['message']?.errors?.['required']">Please enter a message</span>
+                  </div>
+                  <textarea class="form-control border-0 bg-transparent fs-5"
+                           formControlName="message"
+                           [(ngModel)]="postContent"
+                           name="postContent"
+                           rows="5"
+                           (blur)="onBlur()"
+                           (focus)="onFocus()"
+                           id="chat-input"
+                           placeholder="What's on your mind, {{firstnameUser}}?"
+                           autocomplete="off"></textarea>
+                </form>
+              </div>
+
+              <!-- Media Upload Preview -->
+              <div *ngIf="uploadedFiles.length > 0" class="media-preview mb-3">
+                <div class="row g-2">
+                  <div *ngFor="let file of uploadedFiles; let i = index"
+                       [ngClass]="{'col-12': uploadedFiles.length === 1,
+                                  'col-6': uploadedFiles.length === 2 || uploadedFiles.length >= 5,
+                                  'col-4': uploadedFiles.length >= 3 && uploadedFiles.length <= 4}">
+                    <div class="position-relative rounded overflow-hidden media-item">
+                      <ng-container *ngIf="file.type.startsWith('image/')">
+                        <img [src]="file.objectURL" alt="Uploaded image" class="w-100 media-content">
+                      </ng-container>
+                      <ng-container *ngIf="file.type.startsWith('video/')">
+                        <video [src]="file.objectURL" controls preload="metadata" class="w-100 media-content">
+                          Your browser does not support the video tag.
+                        </video>
+                      </ng-container>
+                      <button (click)="removeFile(file)" class="btn btn-sm btn-light rounded-circle position-absolute top-0 end-0 m-2 p-1 media-remove-btn">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add to Your Post Section -->
+              <div class="add-to-post-section bg-light rounded-3 p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-dark fw-medium">Add to your post</span>
+                  <div class="post-tool-buttons">
+                    <button class="btn post-tool-btn" (click)="addPhoto()">
+                      <i class="bi bi-image-fill fs-5 text-success"></i>
+                    </button>
+                    <button class="btn post-tool-btn">
+                      <i class="bi bi-person-plus-fill fs-5 text-primary"></i>
+                    </button>
+                    <button class="btn post-tool-btn" (click)="toggleEmojiPicker()">
+                      <i class="bi bi-emoji-smile fs-5 text-warning"></i>
+                    </button>
+                    <div *ngIf="showEmojiPicker" class="emoji-picker-container shadow-lg">
+                      <emoji-mart class="emoji-mart" (emojiSelect)="addEmoji($event)"></emoji-mart>
+                    </div>
+                    <button class="btn post-tool-btn">
+                      <i class="bi bi-geo-alt-fill fs-5 text-danger"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- File Upload Dropzone -->
+              <div *ngIf="showFileUpload" class="mt-3 mb-3">
+                <ngx-dropzone (change)="onSelect($event)" [multiple]="true" class="border-0 bg-light rounded-3">
+                  <ngx-dropzone-label>
+                    <div class="text-center py-4">
+                      <i class="bi bi-cloud-arrow-up-fill fs-2 text-primary"></i>
+                      <p class="mb-0 text-muted">Drop photos or videos here</p>
+                    </div>
+                  </ngx-dropzone-label>
+                </ngx-dropzone>
+              </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+              <button type="button" class="btn btn-primary w-100 rounded-pill py-2 fw-medium"
+                      [disabled]="isSubmitting"
+                      (click)="publishPost()">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                Post
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Feed Posts -->
+      <!-- Loading state -->
+      <div *ngIf="loading" class="text-center my-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+
+      <!-- No posts message -->
+      <div *ngIf="!loading && posts.length === 0 && !error" class="card mb-4 shadow-sm">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-newspaper fs-1 text-muted mb-3"></i>
+          <h5>Aucune publication pour le moment</h5>
+          <p class="text-muted">Soyez le premier à partager quelque chose avec la communauté!</p>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- right Sidebar - Navigation -->
+
+    <div class="col-lg-3 d-none d-lg-block position-fixed" style="width: calc(25% - 30px); max-height: calc(100vh - 70px); overflow-y: auto; right: 20px;">
+      <!-- Contacts Section -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">Contacts</h6>
+            <div>
+              <button class="btn btn-icon btn-sm">
+                <i class="bi bi-search"></i>
+              </button>
+              <button class="btn btn-icon btn-sm ms-1">
+                <i class="bi bi-three-dots"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Online Users List -->
+          <div class="contact-list">
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-2.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Ahmed Ben Ali</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-3.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Sophia Trabelsi</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-4.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Mohamed Karoui</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-5.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-secondary rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Amina Sassi</h6>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-2">
+              <div class="position-relative">
+                <img src="assets/images/users/avatar-6.jpg" alt="User" class="rounded-circle" width="36" height="36">
+                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle" style="width: 8px; height: 8px; border: 1.5px solid white;"></span>
+              </div>
+              <div class="ms-2">
+                <h6 class="mb-0 fs-sm fw-medium">Karim Bensalem</h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Friend Suggestions -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Suggestions d'amis</h6>
+
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/images/users/avatar-7.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Leila Mansour</h6>
+              <p class="text-muted fs-xs mb-0">3 amis en commun</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Suivre</button>
+          </div>
+
+          <div class="d-flex align-items-center mb-3">
+            <img src="assets/images/users/avatar-8.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Youssef Hakim</h6>
+              <p class="text-muted fs-xs mb-0">7 amis en commun</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Suivre</button>
+          </div>
+
+          <div class="d-flex align-items-center">
+            <img src="assets/images/users/avatar-9.jpg" alt="User" class="rounded-circle me-2" width="40" height="40">
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Nadia Cherif</h6>
+              <p class="text-muted fs-xs mb-0">5 amis en commun</p>
+            </div>
+            <button class="btn btn-sm btn-primary">Suivre</button>
+          </div>
+
+          <a href="javascript:void(0);" class="d-block text-center text-primary mt-3 small">
+            Voir plus de suggestions
+          </a>
+        </div>
+      </div>
+
+      <!-- Group Suggestions -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">Groupes suggérés</h6>
+
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-primary rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+              <i class="bi bi-people-fill text-white"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Développeurs Angular</h6>
+              <p class="text-muted fs-xs mb-0">12.4K membres</p>
+            </div>
+            <button class="btn btn-sm btn-light">Rejoindre</button>
+          </div>
+
+          <div class="d-flex align-items-center mb-3">
+            <div class="bg-success rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+              <i class="bi bi-people-fill text-white"></i>
+            </div>
+            <div class="flex-grow-1">
+              <h6 class="mb-0 fs-sm fw-medium">Tunisie Tech</h6>
+              <p class="text-muted fs-xs mb-0">8.7K membres</p>
+            </div>
+            <button class="btn btn-sm btn-light">Rejoindre</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Birthdays Section -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="fs-4 text-primary me-2">
+              <i class="bi bi-gift-fill"></i>
+            </div>
+            <h6 class="fw-bold mb-0">Anniversaires</h6>
+          </div>
+
+          <p class="mb-0">
+            <a href="javascript:void(0);" class="fw-medium text-decoration-none">Ahmed Ben Ali</a> et
+            <a href="javascript:void(0);" class="fw-medium text-decoration-none">2 autres personnes</a>
+            fêtent leur anniversaire aujourd'hui.
+          </p>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+<!-- Reduced padding (p-2), smaller icon (fs-4), and modal-sm for a more compact design -->
+<!-- Updated Inappropriate Content Modal -->
+<div *ngIf="toxicContentDetected" id="deleteRecordModal" class="modal fade zoomIn" bsModal #deleteRecordModal="bs-modal">
+  <div class="modal-dialog1 modal-dialog-centered mx-auto" style="max-width: 600px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" id="deleteRecord-close" (click)="deleteRecordModal.hide()"></button>
+      </div>
+      <div class="modal-body p-md-5">
+        <div class="text-center">
+          <div class="text-warning">
+            <i class="bi bi-exclamation-triangle display-4"></i>
+          </div>
+          <div class="mt-4">
+            <h3 class="mb-2">Inappropriate Content</h3>
+            <p class="text-muted fs-lg mx-3 mb-0">Comment content contains inappropriate language that violates our community guidelines!</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+          <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating AI Generator Button -->
+<div class="floating-extension-button" (click)="toggleMediaSidebar()">
+  <div class="extension-icon-container">
+    <i class="bi bi-magic"></i>
+    <span class="extension-tooltip">AI Tools</span>
+  </div>
+</div>
+
+<!-- AI Tools Sidebar -->
+<div class="media-sidebar-overlay" [class.active]="isMediaSidebarOpen" (click)="closeMediaSidebar($event)"></div>
+<div class="media-sidebar" [class.active]="isMediaSidebarOpen">
+  <div class="media-sidebar-header shadow-sm">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-stars me-2 text-primary"></i>
+      <h5 class="mb-0">AI Tools</h5>
+    </div>
+    <button class="btn-close" (click)="resetAndCloseMediaSidebar($event)"></button>
+  </div>
+
+  <!-- Tool Selection Tabs -->
+  <div class="tool-tabs d-flex border-bottom mb-3">
+    <button class="tool-tab flex-grow-1 py-2"
+            [class.active]="selectedAITool === 'generator'"
+            (click)="selectAITool('generator')">
+      <i class="bi bi-image-alt me-2"></i>Generate Content
+    </button>
+    <button class="tool-tab flex-grow-1 py-2"
+            [class.active]="selectedAITool === 'translator'"
+            (click)="selectAITool('translator')">
+      <i class="bi bi-translate me-2"></i>Translate Text
+    </button>
+  </div>
+
+  <!-- CONTENT GENERATOR SECTION -->
+<div *ngIf="selectedAITool === 'generator'" class="generator-container">
+  <div class="ai-tool-content">
+    <!-- Input Section -->
+    <div class="media-sidebar-body p-3 mb-3">
+      <div class="mb-4">
+        <label class="form-label fw-semibold d-flex align-items-center">
+          <i class="bi bi-pencil-square text-primary me-2"></i>
+          Describe what you want to create
+        </label>
+        <textarea
+          class="form-control custom-textarea border-primary-subtle shadow-sm"
+          rows="4"
+          [(ngModel)]="mediaDescription"
+          [disabled]="isGenerating"
+          placeholder="Be as detailed as possible in your description..."></textarea>
+      </div>
+
+      <div class="content-type-selector mb-4">
+        <label class="form-label fw-semibold mb-2 d-flex align-items-center">
+          <i class="bi bi-grid text-primary me-2"></i>
+          Content Type
+        </label>
+        <div class="d-flex content-type-options gap-3">
+          <div class="type-option shadow-sm" [class.active]="contentType === 'image'" (click)="contentType = 'image'">
+            <i class="bi bi-image text-primary"></i>
+            <span>Image</span>
+          </div>
+          <div class="type-option shadow-sm" [class.active]="contentType === 'video'" (click)="contentType = 'video'">
+            <i class="bi bi-film text-primary"></i>
+            <span>Video</span>
+          </div>
+        </div>
+      </div>
+
+      <button
+        class="btn btn-primary w-100 custom-generate-btn shadow-sm"
+        [disabled]="isGenerating || !mediaDescription"
+        (click)="generateMedia()">
+        <span *ngIf="!isGenerating">
+          <i class="bi bi-stars me-2"></i>Generate Content
+        </span>
+        <span *ngIf="isGenerating" class="d-flex align-items-center justify-content-center">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Creating...
+        </span>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="media-sidebar-loading p-4" *ngIf="isGenerating && !generatedMediaUrl">
+      <div class="text-center py-4">
+        <div class="loading-animation mb-4">
+          <div class="spinner-grow text-primary" role="status"></div>
+        </div>
+        <h6 class="mb-2 fw-semibold">Creating your {{ contentType }}</h6>
+        <p class="text-muted small">This may take a few moments...</p>
+      </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="media-preview-section" *ngIf="generatedMediaUrl">
+      <div class="media-sidebar-preview p-3">
+        <h6 class="preview-title d-flex align-items-center mb-3">
+          <i class="bi bi-check-circle-fill text-success me-2"></i>
+          Generated Content
+        </h6>
+
+        <div class="generated-content-container mt-3 shadow-sm rounded position-relative">
+          <img *ngIf="contentType === 'image'" [src]="generatedMediaUrl" class="img-fluid rounded" alt="Generated image">
+          <video *ngIf="contentType === 'video'" controls class="img-fluid rounded">
+            <source [src]="generatedMediaUrl" type="video/mp4">
+            Your browser does not support HTML video.
+          </video>
+        </div>
+
+        <div class="action-buttons mt-4 d-flex gap-2 justify-content-between">
+          <button class="btn btn-outline-secondary" (click)="regenerateMedia()">
+            <i class="bi bi-arrow-repeat me-1"></i>Regenerate
+          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" (click)="downloadMedia()">
+              <i class="bi bi-download me-1"></i>Download
+            </button>
+            <button class="btn btn-success" (click)="useGeneratedMedia()">
+              <i class="bi bi-check-lg me-1"></i>Use This
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>  <!-- TRANSLATOR SECTION -->
+  <div *ngIf="selectedAITool === 'translator'" class="p-3">
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Text to translate</label>
+      <textarea
+        class="form-control custom-textarea border-primary-subtle"
+        rows="5"
+        [(ngModel)]="textToTranslate"
+        [disabled]="isTranslating"
+        placeholder="Enter text to translate..."></textarea>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Select target language</label>
+<select class="form-select" [(ngModel)]="targetLanguage" [disabled]="isTranslating || isLoadingLanguages">
+        <option value="">{{ isLoadingLanguages ? 'Loading languages...' : 'Select language' }}</option>
+        <option *ngFor="let lang of languagesArray" [value]="lang.code">
+          {{ lang.name }}
+        </option>
+      </select>
+    </div>
+
+    <button
+      class="btn btn-primary w-100 custom-generate-btn"
+      [disabled]="isTranslating || !textToTranslate || !targetLanguage"
+      (click)="translateText()">
+      <span *ngIf="!isTranslating">
+        <i class="bi bi-translate me-2"></i>Translate
+      </span>
+      <span *ngIf="isTranslating" class="d-flex align-items-center justify-content-center">
+        <span class="spinner-border spinner-border-sm me-2"></span>
+        Translating...
+      </span>
+    </button>
+    <!-- Add this after the translate button -->
+    <div *ngIf="translationError" class="alert alert-warning mt-3 animate__animated animate__fadeIn">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      {{ translationError }}
+    </div>
+
+    <!-- Add a retry button when there's an error -->
+    <button *ngIf="translationError" class="btn btn-outline-secondary mt-2"
+            (click)="translateText()">
+      <i class="bi bi-arrow-repeat me-1"></i> Retry
+    </button>
+
+    <!-- Show translated text section only when there's text to show -->
+    <div *ngIf="translatedText && !translationError" class="mt-4 translated-result">
+      <!-- Your existing translated text output -->
+    </div>
+
+    <!-- Translation Result -->
+    <div class="translation-result mt-4" *ngIf="translatedText">
+      <h6 class="preview-title d-flex align-items-center mb-3">
+        <i class="bi bi-check-circle-fill text-success me-2"></i>
+        Translation Result
+      </h6>
+      <div class="p-3 border rounded bg-light">
+        <p class="mb-0">{{ translatedText }}</p>
+      </div>
+      <div class="action-buttons mt-3 d-flex justify-content-end">
+        <button class="btn btn-sm btn-outline-primary" (click)="copyTranslation()">
+          <i class="bi bi-clipboard me-1"></i>Copy
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
