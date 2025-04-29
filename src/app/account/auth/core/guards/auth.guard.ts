@@ -23,6 +23,8 @@ export const authGuard: CanActivateFn = (route, state) => {
       router.navigate(['/formationback']);
     } else if (role === 'EVENT_MANAGER') {
       router.navigate(['/eventback/event-manager']);
+    } else if (role === 'LIVREUR') {
+      router.navigate(['/marketplaceback/livreur/orders']);
     } else {
       router.navigate(['/auth/signin']);
     }

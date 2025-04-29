@@ -72,7 +72,7 @@ import { UserServiceService } from '../services/user-service.service';
                   text: 'You are now logged in!',
                 }).then(() => {
                   if (authority === 'ADMIN') {
-                    this.router.navigate(['/userback']);
+                    this.router.navigate(['/userback/admin/statistics']);
                   } else if (authority === 'USER') {
                     this.router.navigate(['/forumfront/user/forumpost']);
                   } else if (authority === 'AGENCE') {
@@ -81,6 +81,8 @@ import { UserServiceService } from '../services/user-service.service';
                     this.router.navigate(['/campingback']);
                   } else if (authority === 'FORMATEUR') {
                     this.router.navigate(['/formationback']);
+                  } else if (authority === 'LIVREUR') {
+                    this.router.navigate(['/marketplaceback/livreur/orders']);
                   } else if (authority === 'EVENT_MANAGER') {
                     this.router.navigate(['/eventback/event-manager/event-list ']);
                   } else {
