@@ -1213,6 +1213,36 @@ export const MENU = {
       link: '/transportback/admin',
       parentId: 8,
     },
+    {
+      id: 8,
+      label: 'Education',
+      icon: 'ph-book-open', // Big icon for the main dropdown
+      isDropdown: true,
+      children: [
+        {
+          id: 44,
+          label: 'Courses list',
+          icon: 'ph-books',
+          link: '/formationback/admin/formation-list',
+          parentId: 8
+        },
+        {
+          id: 45,
+          label: 'Categories list',
+          icon: 'ph-map-pin',
+          link: '/formationback/admin/categorie-list',
+          parentId: 8
+        },
+        {
+          id: 46,
+          label: 'Sponsors list',
+          icon: 'ph-handshake', // better icon than 'ph-ticket' for sponsorship
+          link: '/formationback/admin/sponsor-list',
+          parentId: 8
+        }
+      ]
+    }
+    
 
 
     // {
@@ -1267,7 +1297,15 @@ export const MENU = {
 
   ] ,
 
-  FormateurMenu: [] ,
+  FormateurMenu: [
+    {
+      id: 44,
+      label: 'Couses list',
+      icon: 'ph-books',
+      link: '/formationback/admin/formateur-dashboard',
+      parentId: 8
+    }
+  ] ,
 EventManagerMenu: [
     {
       id: 44,
