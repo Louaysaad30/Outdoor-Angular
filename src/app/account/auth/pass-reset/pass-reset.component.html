@@ -81,16 +81,24 @@
                                         Enter your email and instructions will be sent to you!
                                     </div>
                                     <div class="p-2">
-                                        <form>
+                                        <form [formGroup]="resetForm" (ngSubmit)="onSubmit()">
                                             <div class="mb-4">
-                                                <label class="form-label">Email</label>
-                                                <input type="email" class="form-control password-input" id="email" placeholder="Enter Email" required />
+                                              <label class="form-label">Email</label>
+                                              <input type="email" formControlName="email" class="form-control password-input" id="email" placeholder="Enter Email" required />
+                                              <div *ngIf="submitted && resetForm.controls['email'].invalid" class="text-danger mt-1">
+                                                Please enter a valid email.
+                                              </div>
                                             </div>
-
+                                          
                                             <div class="text-center mt-4">
-                                                <button class="btn btn-primary w-100" type="submit">Send Reset Link</button>
+                                              <button class="btn btn-primary w-100" type="submit">Send Reset Link</button>
                                             </div>
-                                        </form>
+                                          
+                                            <div *ngIf="errorMessage" class="alert alert-danger mt-3 text-center">
+                                              {{ errorMessage }}
+                                            </div>
+                                          </form>
+                                          
                                         <!-- end form -->
                                     </div>
                                     <div class="mt-4 text-center">

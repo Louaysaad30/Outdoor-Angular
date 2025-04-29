@@ -7,7 +7,7 @@ import { SharedModule } from 'src/app/shared/shared.module'; // Import shared mo
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { HttpClientModule } from '@angular/common/http';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
-
+import { FlatpickrModule } from 'angularx-flatpickr';
 
 @NgModule({
   declarations: [
@@ -21,7 +21,8 @@ import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
     FormsModule,
     SharedModule,
     HttpClientModule,
-    ModalModule.forRoot() // Import ModalModule for ngx-bootstrap
+    ModalModule.forRoot(),
+    FlatpickrModule.forRoot() // Import ModalModule for ngx-bootstrap
     // Ensure this contains app-breadcrumbs if needed
   ]
 })

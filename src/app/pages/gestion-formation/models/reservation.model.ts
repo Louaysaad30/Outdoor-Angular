@@ -1,11 +1,10 @@
-import { Formation } from './formation.model';
-
 export interface Reservation {
   id: number;
-  participantId: number;
+  participantNom: string;
+  participantPrenom: string;
+  formationTitre: string; // 🆕 un simple string
   statut: StatutReservation;
   dateReservation: string;
-  formation?: Formation;
 }
 
 export enum StatutReservation {

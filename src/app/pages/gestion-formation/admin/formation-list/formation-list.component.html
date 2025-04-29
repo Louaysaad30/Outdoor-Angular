@@ -87,9 +87,18 @@
       <!-- Footer avec Formateur + Dropdown -->
       <div class="card-footer bg-light d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
-          <img [src]="data.profile" class="avatar-xs rounded-circle" alt="Formateur" width="32" height="32">
-          <span class="fw-medium">{{ data.instructor }}</span>
+          <img 
+            [src]="data.formateurId ? (data.profile || 'assets/images/users/default-avatar.png') : 'assets/images/users/avatar-1.jpg'" 
+            class="avatar-xs rounded-circle" 
+            alt="Formateur" 
+            width="32" 
+            height="32">
+            
+          <span class="fw-medium">
+            {{ data.formateurId ? (data.instructor || 'Formateur inconnu') : 'Aucun formateur' }}
+          </span>
         </div>
+              
   
         <!-- Dropdown Steex style -->
         <div dropdown [dropup]="true" container="body" class="dropdown flex-shrink-0">
@@ -214,7 +223,17 @@
                 (change)="onFileSelected($event)"
               />
             </div>
-
+            <div class="col-md-6">
+              <label class="form-label">Formateur</label>
+              <select formControlName="formateurId" class="form-control">
+                <option value="">Aucun(e)</option>
+                <option *ngFor="let formateur of formateurs" [value]="formateur.id">
+                  {{ formateur.nom }} {{ formateur.prenom }}
+                </option>
+              </select>
+              
+            </div>
+            
             <div class="col-md-6">
               <label class="form-label">Date de publication</label>
               <input
@@ -392,10 +411,12 @@
           >
             <i class="bi bi-x-circle"></i> Annuler
           </button>
+        
           <button type="submit" class="btn btn-success">
             <i class="bi bi-check-circle"></i> Enregistrer
           </button>
         </div>
+        
       </form>
     </div>
   </div>

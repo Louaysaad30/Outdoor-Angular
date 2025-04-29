@@ -9,6 +9,8 @@ import { SharedModule } from '../../../../shared/shared.module';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ModalModule, ModalDirective } from 'ngx-bootstrap/modal';
+import { ToastrService } from 'ngx-toastr';
+import * as L from 'leaflet'; // ✅ (Leaflet est déjà dans ton projet)
 
 @Component({
   selector: 'app-formation-details',
@@ -23,15 +25,17 @@ import { ModalModule, ModalDirective } from 'ngx-bootstrap/modal';
   styleUrls: ['./formation-details.component.scss']
 })
 export class FormationDetailsComponent implements OnInit {
-  @ViewChild('reservationModal') reservationModal!: ModalDirective; // ✅
+  @ViewChild('reservationModal') reservationModal!: ModalDirective;
 
   formation!: Formation;
+  formateur: any = null;
   videoUrl!: SafeResourceUrl | null;
   reservationForm!: FormGroup;
-
+  isAlreadyReserved = false;
+  canReserve = true;
   loading = true;
-  status: string = '';
-  duree: string = '';
+  status = '';
+  duree = '';
 
   breadCrumbItems = [
     { label: 'Formations', link: '/user/formation' },
@@ -43,7 +47,8 @@ export class FormationDetailsComponent implements OnInit {
     private formationService: FormationListService,
     private reservationService: ReservationService,
     private sanitizer: DomSanitizer,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -54,7 +59,6 @@ export class FormationDetailsComponent implements OnInit {
     this.initReservationForm();
   }
 
-  // ✅ Initialiser le formulaire de réservation
   initReservationForm(): void {
     this.reservationForm = this.fb.group({
       nom: ['', Validators.required],
@@ -62,25 +66,47 @@ export class FormationDetailsComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       telephone: ['', [
         Validators.required,
-        Validators.pattern(/^\+\d{1,4}\d{7,14}$/) // Format téléphone international : +216xxxxxxxx
+        Validators.pattern(/^\+\d{1,4}\d{7,14}$/)
       ]],
       message: ['']
     });
   }
 
-  // ✅ Charger la formation
   loadFormation(id: number): void {
     this.formationService.getFormationById(id).subscribe({
       next: (data: Formation) => {
         this.formation = data;
         this.loadYoutubeVideo(data.titre);
         this.computeStatusAndDuration();
+        this.canReserve = this.status !== 'Déjà terminée';
+        this.checkReservationStatus();
+  
+        if (!this.formation.enLigne && this.formation.lieu) {
+          this.geocodeAndInitMap(this.formation.lieu);
+        }
+  
+        if (this.formation.formateurId) {
+          this.loadFormateur(this.formation.formateurId);
+        } else {
+          this.formateur = null;
+        }
       },
       error: (err) => console.error('Erreur chargement formation', err)
     });
   }
+  
+  loadFormateur(id: number): void {
+    this.formationService.getUserById(id).subscribe({
+      next: (data) => {
+        this.formateur = data;
+      },
+      error: (err) => {
+        console.error('Erreur chargement formateur', err);
+        this.formateur = null;
+      }
+    });
+  }
 
-  // ✅ Charger vidéo YouTube
   loadYoutubeVideo(title: string): void {
     this.formationService.getYoutubeVideo(title).subscribe({
       next: (videoId: string) => {
@@ -96,7 +122,6 @@ export class FormationDetailsComponent implements OnInit {
     });
   }
 
-  // ✅ Calculer le statut et durée de la formation
   computeStatusAndDuration(): void {
     const now = new Date();
     const start = new Date(this.formation.dateDebut);
@@ -123,10 +148,9 @@ export class FormationDetailsComponent implements OnInit {
     }
   }
 
-  // ✅ Ouvrir le modal réservation
   openReservationModal(): void {
     if (this.reservationModal) {
-      this.reservationModal.show();  // ✅ proprement avec ngx-bootstrap
+      this.reservationModal.show();
     }
   }
 
@@ -135,33 +159,126 @@ export class FormationDetailsComponent implements OnInit {
       this.reservationModal.hide();
     }
   }
-  
 
-  // ✅ Envoyer la réservation
   submitReservation(): void {
     if (this.reservationForm.invalid) {
       this.reservationForm.markAllAsTouched();
       return;
     }
-
+  
+    const userString = localStorage.getItem('user');
+    if (!userString) {
+      this.toastr.error('Veuillez vous connecter pour réserver.');
+      return;
+    }
+  
+    let user: any;
+    try {
+      user = JSON.parse(userString);
+    } catch (e) {
+      this.toastr.error('Erreur d\'authentification. Veuillez vous reconnecter.');
+      return;
+    }
+  
     const payload: ReservationRequest = {
       formationId: this.formation.id!,
       ...this.reservationForm.value
     };
-
-    this.reservationService.createReservation(payload).subscribe({
+  
+    this.reservationService.createReservation(payload, user.id).subscribe({
       next: () => {
-        alert('✅ Réservation effectuée avec succès.');
-        // Fermer le modal
-        const modalElement = document.getElementById('reservationModal');
-        if (modalElement) {
-          (window as any).bootstrap.Modal.getOrCreateInstance(modalElement).hide();
-        }
+        this.toastr.success('Votre réservation a été prise en compte 🎉');
+        this.closeReservationModal();
+  
+        /** 🔥 Ajouter ceci pour MAJ directe du visuel 🔥 **/
+        this.isAlreadyReserved = true;
+        this.canReserve = false;
       },
       error: (err) => {
-        console.error('Erreur réservation', err);
-        alert(err.error?.message || 'Erreur lors de la réservation.');
+        if (err.error?.message?.includes('déjà réservé')) {
+          this.toastr.error('Vous avez déjà réservé cette formation ❌');
+        } else {
+          this.toastr.error('Erreur lors de la réservation.');
+        }
       }
     });
   }
-}
+  
+  checkReservationStatus(): void {
+    const userString = localStorage.getItem('user');
+    if (!userString) return;
+  
+    const user = JSON.parse(userString);
+  
+    this.reservationService.getReservationsForUser(user.id).subscribe({
+      next: (reservations) => {
+        this.isAlreadyReserved = reservations.some(r => 
+          r.formation?.titre === this.formation?.titre
+        );
+        if (this.isAlreadyReserved) {
+          this.canReserve = false;
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching user reservations', err);
+      }
+    });
+  }
+  geocodeAndInitMap(address: string) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+          this.initMap(lat, lon);
+        }
+      })
+      .catch(error => console.error('Erreur géocodage', error));
+  }
+  
+  initMap(lat: number, lon: number) {
+    // Fix Leaflet marker icon
+    const DefaultIcon = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    });
+    L.Marker.prototype.options.icon = DefaultIcon;
+  
+    // Initialize map
+    const map = L.map('map').setView([lat, lon], 13);
+  
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+  
+    // Create marker
+    const marker = L.marker([lat, lon]).addTo(map);
+  
+    // Tooltip (hover)
+    marker.bindTooltip(`Lieu : ${this.formation?.lieu || 'Non spécifié'}`, {
+      permanent: false,
+      direction: 'top',
+      offset: [0, -10],
+      opacity: 0.8
+    });
+  
+    // Popup (click)
+    marker.bindPopup(`
+      <div style="text-align: center;">
+        <h6>${this.formation?.titre || 'Formation'}</h6>
+        <p>${this.formation?.lieu || 'Lieu inconnu'}</p>
+      </div>
+    `, {
+      closeButton: true,
+      autoClose: true,
+      className: 'custom-popup'
+    });
+  }
+    
+  }

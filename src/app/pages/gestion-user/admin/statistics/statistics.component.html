@@ -1,0 +1,208 @@
+<div class="container mt-4">
+    <!-- Start Breadcrumbs -->
+    <app-breadcrumbs title="Statistics Dashboard" [breadcrumbItems]="[{ label: 'Admin' }, { label: 'Statistics', active: true }]"></app-breadcrumbs>
+    <!-- End Breadcrumbs -->
+  
+    <div class="row">
+      <!-- Total Users -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-primary-subtle text-primary fs-3xl rounded">
+                <i class="bi bi-people"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ totalUsers }}</span></h4>
+            <p class="text-muted mb-4">Total Users</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Verified Users -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-success-subtle text-success fs-3xl rounded">
+                <i class="bi bi-check-circle"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ verifiedUsers }}</span></h4>
+            <p class="text-muted mb-4">Verified Users</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Non-Verified Users -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-warning-subtle text-warning fs-3xl rounded">
+                <i class="bi bi-exclamation-circle"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ nonVerifiedUsers }}</span></h4>
+            <p class="text-muted mb-4">Non-Verified Users</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Blocked Users -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-danger-subtle text-danger fs-3xl rounded">
+                <i class="bi bi-slash-circle"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ blockedUsers }}</span></h4>
+            <p class="text-muted mb-4">Blocked Users</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Non-Blocked Users -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-info-subtle text-info fs-3xl rounded">
+                <i class="bi bi-unlock"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ nonBlockedUsers }}</span></h4>
+            <p class="text-muted mb-4">Non-Blocked Users</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Total Messages -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-secondary-subtle text-secondary fs-3xl rounded">
+                <i class="bi bi-chat-dots"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ totalMessages }}</span></h4>
+            <p class="text-muted mb-4">Total Messages</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Unread Messages -->
+      <div class="col-xxl col-sm-6">
+        <div class="card overflow-hidden">
+          <div class="card-body">
+            <div class="avatar-sm float-end">
+              <div class="avatar-title bg-light-subtle text-light fs-3xl rounded">
+                <i class="bi bi-envelope"></i>
+              </div>
+            </div>
+            <h4><span class="counter-value">{{ unreadMessages }}</span></h4>
+            <p class="text-muted mb-4">Unread Messages</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="row">
+      <!-- Users by Role Chart -->
+      <div class="col-xl-6">
+        <div class="card card-height-100">
+          <div class="card-header align-items-center d-flex">
+            <h6 class="card-title mb-0 flex-grow-1">Users by Role</h6>
+          </div>
+          <div class="card-body">
+            <div id="usersByRoleChart" class="apex-charts" dir="ltr">
+              <apx-chart
+                [series]="usersByRoleChartData"
+                [chart]="{ type: 'pie' }"
+                [labels]="usersByRoleChartLabels"
+                [colors]="['#0d6efd', '#198754', '#ffc107', '#dc3545']"
+              ></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Messages by User Chart -->
+      <div class="col-xl-6">
+        <div class="card card-height-100">
+          <div class="card-header align-items-center d-flex">
+            <h6 class="card-title mb-0 flex-grow-1">Messages by User</h6>
+          </div>
+          <div class="card-body">
+            <div id="messagesByUserChart" class="apex-charts" dir="ltr">
+              <apx-chart
+                [series]="messagesByUserChartData"
+                [chart]="{ type: 'bar' }"
+                [xaxis]="{ categories: messagesByUserChartLabels }"
+                [colors]="['#0d6efd']"
+              ></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Messages by Chat Room Chart -->
+      <div class="col-xl-12">
+        <div class="card card-height-100">
+          <div class="card-header align-items-center d-flex">
+            <h6 class="card-title mb-0 flex-grow-1">Messages by Chat Room</h6>
+          </div>
+          <div class="card-body">
+            <div id="messagesByChatRoomChart" class="apex-charts" dir="ltr">
+              <apx-chart
+                [series]="messagesByChatRoomChartData"
+                [chart]="{ type: 'line' }"
+                [xaxis]="{ categories: messagesByChatRoomChartLabels }"
+                [colors]="['#198754']"
+              ></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Churn Analysis -->
+      <div class="col-xl-6">
+        <div class="card card-height-100">
+          <div class="card-header align-items-center d-flex">
+            <h6 class="card-title mb-0 flex-grow-1">User Churn Analysis</h6>
+            <div class="flex-shrink-0">
+              <button 
+                class="btn btn-primary btn-sm" 
+                (click)="sendChurnEmails()"
+                [disabled]="isSendingEmails">
+                <i class="bi bi-envelope me-1"></i>
+                {{ isSendingEmails ? 'Sending...' : 'Send Emails to Churn Users' }}
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Email sent message alert -->
+            <div *ngIf="emailSentMessage" 
+                 class="alert mb-3" 
+                 [ngClass]="{'alert-success': !emailSentMessage.includes('Failed'), 
+                            'alert-danger': emailSentMessage.includes('Failed')}">
+              {{ emailSentMessage }}
+            </div>
+            <!-- Existing chart -->
+            <div id="churnChart" class="apex-charts" dir="ltr">
+              <apx-chart
+                [series]="churnData"
+                [chart]="{ type: 'pie' }"
+                [labels]="churnLabels"
+                [colors]="['#dc3545', '#198754']"
+              ></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>

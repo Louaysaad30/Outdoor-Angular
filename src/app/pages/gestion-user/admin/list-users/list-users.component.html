@@ -1,0 +1,155 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="List of Users" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="container-fluid">
+
+  <!-- Search Input -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search by name, surname, or email"
+        [(ngModel)]="searchTerm"
+        (input)="searchUsers()" />
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-md-auto mb-2">
+      <select class="form-select" [(ngModel)]="filter.accountLocked" (change)="applyFilters()">
+        <option value="">Account Status</option>
+        <option [ngValue]="true">Blocked</option>
+        <option [ngValue]="false">Unblocked</option>
+      </select>
+    </div>
+    <div class="col-md-auto mb-2">
+      <select class="form-select" [(ngModel)]="filter.enabled" (change)="applyFilters()">
+        <option value="">Access</option>
+        <option [ngValue]="true">Enabled</option>
+        <option [ngValue]="false">Disabled</option>
+      </select>
+    </div>
+    <div class="col-md-auto mb-2">
+      <select class="form-select" [(ngModel)]="filter.status" (change)="applyFilters()">
+        <option value="">Verification</option>
+        <option value="1">Verified</option>
+        <option value="0">Not Verified</option>
+      </select>
+    </div>
+    <div class="col-md-auto mb-2">
+      <select class="form-select" [(ngModel)]="filter.role" (change)="applyFilters()">
+        <option value="">Role</option>
+        <option value="USER">User</option>
+        <option value="OWNER">Owner</option>
+        <option value="FORMATEUR">Formateur</option>
+        <option value="EVENT_MANAGER">Event Manager</option>
+        <option value="AGENCE">Agence</option>
+        <option value="LIVREUR">Livreur</option>
+      </select>
+    </div>  
+  </div>
+
+  <!-- No Users Found -->
+  <div *ngIf="filteredUsers.length === 0" class="text-center text-muted my-5">
+    <h5>No users found.</h5>
+  </div>
+
+  <!-- User Cards -->
+  <div class="row">
+    <div class="col-xl-4 col-lg-6 col-md-6 mb-4" *ngFor="let user of paginatedUsers">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">User Card</h6>
+          <button
+            type="button"
+            class="btn btn-sm btn-light text-danger"
+            aria-label="Delete"
+            (click)="deleteUser(user.id)">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+        <div class="card-body text-center">
+          <div class="avatar-lg mx-auto mb-3">
+            <img
+              [src]="user.image || 'assets/images/users/avatar-1.jpg'"
+              alt="{{ user.nom }} {{ user.prenom }}"
+              class="img-fluid rounded-circle border"
+              style="width: 80px; height: 80px; object-fit: cover;" />
+          </div>
+          <h5 class="card-title mb-0">{{ user.nom }} {{ user.prenom }}</h5>
+          <p class="text-muted small">{{ user.email }}</p>
+        </div>
+        <div class="card-footer text-center d-flex justify-content-center gap-2 flex-wrap">
+          <!-- Block/Unblock -->
+          <button
+            class="btn btn-sm"
+            [ngClass]="user.accountLocked ? 'btn-success' : 'btn-danger'"
+            (click)="toggleBlockUser(user)">
+            {{ user.accountLocked ? 'Unblock' : 'Block' }}
+          </button>
+
+          <!-- Verify / Verified -->
+          <ng-container *ngIf="user.status == 0; else verifiedTemplate">
+            <button class="btn btn-sm btn-outline-primary" (click)="verifyUser(user)">
+              Verify
+            </button>
+          </ng-container>
+          <ng-template #verifiedTemplate>
+            <span class="badge bg-primary d-flex align-items-center gap-1 px-2">
+              <i class="bi bi-patch-check-fill fs-6"></i> Verified
+            </span>
+          </ng-template>
+
+          <!-- Predict Churn -->
+          <button *ngIf="!user.churnResult"
+            class="btn btn-sm btn-warning"
+            (click)="getChurnPrediction(user.id)">
+            Prédire Churn
+          </button>
+          
+          <!-- Churn Prediction Result -->
+          <div *ngIf="user.churnResult" class="mt-2 text-center">
+            <span class="badge rounded-pill"
+                  [ngClass]="{
+                    'bg-success': user.churnResult.includes('rester'),
+                    'bg-danger': user.churnResult.includes('churner')
+                  }">--
+              {{ user.churnResult }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="row">
+    <div class="col-12 d-flex justify-content-center mt-4">
+      <nav *ngIf="totalPages > 1">
+        <ul class="pagination">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+              Previous
+            </button>
+          </li>
+          <li
+            class="page-item"
+            *ngFor="let page of [].constructor(totalPages); let i = index"
+            [class.active]="currentPage === i + 1">
+            <button class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</button>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button class="page-link" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+              Next
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+</div>

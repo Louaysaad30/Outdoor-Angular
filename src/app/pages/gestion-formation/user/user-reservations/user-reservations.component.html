@@ -1,0 +1,112 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs title="My Reservations" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row" id="reservationList">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row align-items-center g-3">
+          <div class="col-xxl-3 col-lg-6 me-auto">
+            <h6 class="card-title">My Reservations</h6>
+            <p class="text-muted mb-0">Manage your course reservations easily.</p>
+          </div>
+          <div class="col-xxl-3 col">
+            <div class="search-box">
+              <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterData()" placeholder="Search formations...">
+              <i class="ri-search-line search-icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="col-lg-12">
+    <div class="table-responsive">
+      <table class="table table-custom align-middle table-borderless table-nowrap">
+        <thead>
+          <tr>
+            <th>Plan</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Start In</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody class="list">
+          <tr *ngFor="let res of filteredReservations; trackBy: trackById">
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="flex-shrink-0">
+                  <div class="avatar-sm">
+                    <div class="avatar-title bg-light rounded">
+                      <img [src]="res.formation.imageUrl || 'assets/images/default-course.png'" alt="Formation Image" class="avatar-xxs">
+                    </div>
+                  </div>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="fs-md mb-2">{{ res.formation.titre }}</h6>
+                </div>
+              </div>
+            </td>
+
+            <td>{{ res.formation.prix | currency:'EUR' }}</td>
+
+            <td>{{ res.formation.duree || '-' }}</td>
+
+            <td>
+              <span class="badge"
+                    [ngClass]="{
+                      'bg-success-subtle text-success': res.statut === 'CONFIRME',
+                      'bg-danger-subtle text-danger': res.statut === 'ANNULE',
+                      'bg-info-subtle text-info': res.statut === 'EN_ATTENTE'
+                    }">
+                {{ res.statut === 'CONFIRME' ? 'Confirmed' : res.statut === 'ANNULE' ? 'Canceled' : 'Pending' }}
+              </span>
+            </td>
+
+            <td>
+              <p class="mb-0" [ngClass]="daysUntilFormation(res) <= 0 ? 'text-danger' : 'text-muted'">
+                <i *ngIf="daysUntilFormation(res) <= 0" class="bi bi-clock align-baseline me-1"></i>
+                {{ daysUntilFormation(res) > 0 ? daysUntilFormation(res) + ' days' : 'Started' }}
+              </p>
+            </td>
+
+            <td>
+              <ng-container *ngIf="res.statut === 'EN_ATTENTE'; else noAction">
+                <a href="javascript:void(0);" (click)="cancelReservation(res.id)" class="text-decoration-underline text-danger">
+                  Cancel
+                </a>
+              </ng-container>
+
+              <ng-template #noAction>
+                <span class="text-muted small">Not editable</span>
+              </ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Loading Spinner -->
+      <div *ngIf="loading" id="elmLoader" class="text-center p-4">
+        <div class="spinner-border text-primary avatar-sm" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <!-- No Result -->
+      <div *ngIf="!loading && filteredReservations.length === 0" class="noresult">
+        <div class="text-center py-4">
+          <i class="ph-magnifying-glass fs-1 text-primary"></i>
+          <h5 class="mt-2">Sorry! No Result Found</h5>
+          <p class="text-muted mb-0">We couldn't find any reservations matching your search.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

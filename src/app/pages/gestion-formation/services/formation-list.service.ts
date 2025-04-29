@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Formation } from '../models/formation.model'; // ✅ le modèle que tu viens de montrer
+import { Formation } from '../models/formation.model';
 
 @Injectable({
   providedIn: 'root'
@@ -10,31 +10,30 @@ export class FormationListService {
   private baseUrl = 'http://localhost:9094/Formation-Service/api/formations';
   private categoryUrl = 'http://localhost:9094/Formation-Service/api/categories';
   private sponsorUrl = 'http://localhost:9094/Formation-Service/api/sponsors';
+  private userBaseUrl = 'http://localhost:9096/user'; // ✅ Corrigé : URL de base user-service
 
   constructor(private http: HttpClient) {}
 
+  // 🔵 FORMATIONS
+
   getFormations(): Observable<Formation[]> {
-    return this.http.get<Formation[]>(this.baseUrl);
+    return this.http.get<Formation[]>(`${this.baseUrl}`);
   }
 
   getFormationById(id: number): Observable<Formation> {
     return this.http.get<Formation>(`${this.baseUrl}/${id}`);
   }
 
-  getCategories(): Observable<any[]> {
-    return this.http.get<any[]>(this.categoryUrl);
-  }
-
-  getSponsors(): Observable<any[]> {
-    return this.http.get<any[]>(this.sponsorUrl);
+  getFormationsByFormateur(formateurId: number): Observable<Formation[]> {
+    return this.http.get<Formation[]>(`${this.baseUrl}/formateur/${formateurId}`);
   }
 
   createFormationWithImage(formData: FormData): Observable<any> {
-    return this.http.post(this.baseUrl + '/upload', formData);
+    return this.http.post(`${this.baseUrl}/upload`, formData);
   }
 
   updateFormationWithImage(formData: FormData, id: number): Observable<any> {
-    return this.http.put(`${this.baseUrl}/upload/${id}`, formData);
+    return this.http.put(`${this.baseUrl}/${id}/update`, formData);
   }
 
   deleteFormation(id: number): Observable<any> {
@@ -45,17 +44,32 @@ export class FormationListService {
     return this.http.post(`${this.baseUrl}/improve-description`, { text });
   }
 
-  suggestSponsor(data: {
-    description: string;
-    prix: number;
-    mode: string;
-    lieu: string;
-  }): Observable<any> {
+  suggestSponsor(data: { description: string; prix: number; mode: string; lieu: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/suggest-sponsor`, data);
   }
+
   getYoutubeVideo(title: string): Observable<string> {
     const encoded = encodeURIComponent(title.trim());
-    const url = `http://localhost:9094/Formation-Service/api/youtube/video?query=${encoded}`;
-    return this.http.get(url, { responseType: 'text' });
-  } 
-    }
+    return this.http.get(`${this.baseUrl.replace('/formations', '')}/youtube/video?query=${encoded}`, { responseType: 'text' });
+  }
+
+  // 🔵 CATEGORIES & SPONSORS
+
+  getCategories(): Observable<any[]> {
+    return this.http.get<any[]>(this.categoryUrl);
+  }
+
+  getSponsors(): Observable<any[]> {
+    return this.http.get<any[]>(this.sponsorUrl);
+  }
+
+  // 🔵 USERS
+
+  getAllUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.userBaseUrl}/all`);
+  }
+
+  getUserById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.userBaseUrl}/${id}`);
+  }
+}
