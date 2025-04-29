@@ -29,7 +29,7 @@ const routes: Routes = [
   { path: 'transportback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule)  },
   { path: 'transportfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule)  },
   { path: '**', component: Error404Component }
-
+];
 
   @NgModule({
     imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top' })],
