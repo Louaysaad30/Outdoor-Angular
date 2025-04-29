@@ -26,7 +26,7 @@ const routes: Routes = [
   { path: 'eventfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-event/gestion-event.module').then( m   => m.GestionEventModule)   },
   { path: 'formationback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-formation/gestion-formation.module').then( m   => m.GestionFormationModule)  },
   { path: 'formationfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-formation/gestion-formation.module').then( m   => m.GestionFormationModule)  },
-  { path: 'marketplaceback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-marketplace/gestion-marketplace.module').then( m   => m.GestionMarketplaceModule)  },
+  { path: 'marketplaceback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-marketplace/gestion-marketplace.module').then( m   => m.GestionMarketplaceModule) ,canActivate: [ roleGuard] ,  data: { role: ['ADMIN', 'LIVREUR'] } },
   { path: 'marketplacefront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-marketplace/gestion-marketplace.module').then( m   => m.GestionMarketplaceModule) ,canActivate: [ roleGuard] ,  data: { role: ['USER' ]} },
   { path: 'transportback', component: LayoutComponent, loadChildren: () =>import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule) ,canActivate: [ roleGuard] ,  data: { role: ['ADMIN','AGENCE'] } },
   { path: 'transportfront', component: LayoutsUserComponent, loadChildren: () => import('./pages/gestion-transport/gestion-transport.module').then( m   => m.GestionTransportModule) ,canActivate: [ roleGuard] ,  data: { role: ['USER'] } },

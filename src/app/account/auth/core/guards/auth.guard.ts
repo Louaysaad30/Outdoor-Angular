@@ -20,7 +20,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     } else if (role === 'OWNER') {
       router.navigate(['/campingback']);
     } else if (role === 'FORMATEUR') {
-      router.navigate(['/formationback']);
+      router.navigate(['/formationback/admin/formateur-dashboard']);
     } else if (role === 'EVENT_MANAGER') {
       router.navigate(['/eventback/event-manager']);
     } else if (role === 'LIVREUR') {

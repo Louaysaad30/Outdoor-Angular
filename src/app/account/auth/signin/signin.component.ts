@@ -76,11 +76,11 @@ import { UserServiceService } from '../services/user-service.service';
                   } else if (authority === 'USER') {
                     this.router.navigate(['/forumfront/user/forumpost']);
                   } else if (authority === 'AGENCE') {
-                    this.router.navigate(['/transportback']);
+                    this.router.navigate(['/transportback/agence']);
                   } else if (authority === 'OWNER') {
-                    this.router.navigate(['/campingback']);
+                    this.router.navigate(['/campingback/owner/camping']);
                   } else if (authority === 'FORMATEUR') {
-                    this.router.navigate(['/formationback']);
+                    this.router.navigate(['/formationback/admin/formateur-dashboard']);
                   } else if (authority === 'LIVREUR') {
                     this.router.navigate(['/marketplaceback/livreur/orders']);
                   } else if (authority === 'EVENT_MANAGER') {

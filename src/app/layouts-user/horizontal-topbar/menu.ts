@@ -1178,7 +1178,27 @@ export const MENU: MenuItem[] = [
               parentId: 8
             }
           ]
-        }
+        },
+        {
+          id: 11,
+          label: 'Education',
+          icon: 'ph-books',
+          parentId: 8,
+          subItems: [
+            {
+              id: 12,
+              label: 'List courses',
+              link: '/formationfront/user/formation',
+              parentId: 8
+            },
+            {
+              id: 11,
+              label: 'My Reservations',
+              link: '/formationfront/user/my-reservations',
+              parentId: 8
+            }
+          ]
+        },
 
 
 
