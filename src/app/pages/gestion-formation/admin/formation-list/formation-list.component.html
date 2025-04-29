@@ -1,6 +1,8 @@
 <!-- Start Breadcrumbs -->
 <app-breadcrumbs title="Formation Grid View" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+<!-- End Breadcrumbs -->
 
+<!-- Search & Filters -->
 <div class="row">
   <div class="col-lg-12">
     <div class="card">
@@ -8,11 +10,10 @@
         <div class="row align-items-center gy-3">
           <div class="col-lg-3 me-auto">
             <div class="search-box">
-              <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterdata()" placeholder="Search for title...">
+              <input type="text" class="form-control search" [(ngModel)]="term" (keyup)="filterdata()" placeholder="Search for title..." />
               <i class="ri-search-line search-icon"></i>
             </div>
           </div>
-
           <div class="col-lg-2">
             <select class="form-select" [(ngModel)]="modeFilter" (change)="filterdata()">
               <option value="">All</option>
@@ -20,13 +21,10 @@
               <option value="enligne">En ligne</option>
             </select>
           </div>
-
           <div class="col-lg-auto text-end">
-            <div class="d-flex gap-2">
-              <button class="btn btn-secondary" (click)="openAddFormationModal()">
-                <i class="bi bi-person-plus me-1"></i> Add Formation
-              </button>
-            </div>
+            <button class="btn btn-secondary" (click)="openAddFormationModal()">
+              <i class="bi bi-plus-circle me-1"></i> Nouvelle Formation
+            </button>
           </div>
         </div>
       </div>
@@ -34,158 +32,421 @@
   </div>
 </div>
 
-<!-- Start Formation Cards -->
-<div class="row row-cols-xl-5 row-cols-sm-2 row-cols-1">
+<!-- Formation Cards Grid -->
+<div class="row row-cols-xl-5 row-cols-sm-2 row-cols-1 g-3">
   <div class="col" *ngFor="let data of listData">
-    <div class="card overflow-hidden h-100">
-      <!-- Image -->
-      <div class="card-body text-center">
-        <!-- Vérifiez que l'image existe -->
-        <img *ngIf="data.imageUrl" [src]="data.imageUrl" alt="Formation Image" class="avatar-lg img-fluid" style="height: 120px; object-fit: cover;">
-        <div *ngIf="!data.imageUrl" class="no-image-placeholder">Formation Image</div>
+    <div class="card h-100 d-flex flex-column">
+  
+      <!-- Image Top -->
+      <div class="bg-light-subtle d-flex align-items-center justify-content-center" style="height: 160px; padding: 8px;">
+        <ng-container *ngIf="data.img; else noImage">
+          <img [src]="data.img" alt="Formation"
+               style="width: 100%; height: 100%; object-fit: contain;">
+        </ng-container>
+      
+        <ng-template #noImage>
+          <div class="text-muted fw-medium">wini imagik</div>
+        </ng-template>
       </div>
-
-      <!-- Formation Info -->
-      <div class="card-body">
-        <h6 class="fs-md text-capitalize text-truncate">{{ data.name || 'No Title' }}</h6>
-
-        <p class="text-muted mb-1">
-          <strong>Prix:</strong> {{ data.price ? (data.price | currency:'USD') : 'N/A' }}
-        </p>
-
-        <p class="text-muted mb-1">
-          <strong>Catégorie:</strong> {{ data.category || 'N/A' }}
-        </p>
-
-        <p class="text-muted mb-1">
-          <i class="bi bi-clock"></i>
-          {{ data.dateDebut ? (data.dateDebut | date:'shortTime') : 'N/A' }} - 
-          {{ data.dateFin ? (data.dateFin | date:'shortTime') : 'N/A' }}
-        </p>
-
-        <p class="text-muted mb-1" *ngIf="data.mode === 'enligne'">
-          <strong>Meet:</strong> <a [href]="data.meetLink" target="_blank">{{ data.meetLink || 'N/A' }}</a>
-        </p>
-
-        <p class="text-muted mb-1" *ngIf="data.mode === 'presentiel'">
-          <strong>Lieu:</strong> {{ data.lieu || 'N/A' }}
-        </p>
+      
+  
+      <!-- Contenu Central qui prend l’espace restant -->
+      <div class="d-flex flex-column justify-content-between flex-grow-1 px-3 py-2">
+  
+        <div>
+          <div class="d-flex justify-content-between mb-2 align-items-center">
+            <span 
+            class="badge px-3 py-1 fw-semibold bg-secondary-subtle text-secondary">
+            {{ data.category || 'Sans catégorie' }}
+          </span>
+                    
+            <button class="btn btn-subtle-warning btn-sm rounded-circle rotate-45">
+              <i class="bi bi-star-fill"></i>
+            </button>
+          </div>
+            
+          <h6 class="text-truncate fs-md text-capitalize">{{ data.name }}</h6>
+          <p class="text-muted mb-1">
+            <i class="bi bi-clock text-secondary me-1"></i>
+            {{ data.dateDebut || 'N/A' }} - {{ data.dateFin || 'N/A' }}
+          </p>
+          <p class="text-muted mb-1">
+            <i class="bi bi-cash-coin text-secondary me-1"></i>
+            {{ data.price | currency:'USD' }}
+          </p>
+          <p class="text-muted mb-0" *ngIf="data.mode === 'enligne'">
+            <strong>Meet:</strong>
+            <a [href]="data.meetLink" target="_blank">{{ data.meetLink || 'N/A' }}</a>
+          </p>
+          <p class="text-muted mb-0" *ngIf="data.mode === 'presentiel'">
+            <strong>Lieu:</strong> {{ data.lieu || 'N/A' }}
+          </p>
+        </div>
+  
       </div>
+  
+  
+  
+      <!-- Footer avec Formateur + Dropdown -->
+      <div class="card-footer bg-light d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <img 
+            [src]="data.formateurId ? (data.profile || 'assets/images/users/default-avatar.png') : 'assets/images/users/avatar-1.jpg'" 
+            class="avatar-xs rounded-circle" 
+            alt="Formateur" 
+            width="32" 
+            height="32">
+            
+          <span class="fw-medium">
+            {{ data.formateurId ? (data.instructor || 'Formateur inconnu') : 'Aucun formateur' }}
+          </span>
+        </div>
+              
+  
+        <!-- Dropdown Steex style -->
+        <div dropdown [dropup]="true" container="body" class="dropdown flex-shrink-0">
+          <button dropdownToggle class="btn btn-secondary btn-icon btn-sm">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <ul *dropdownMenu class="dropdown-menu">
+            <li>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="editFormation(data.id)">
+                <i class="bi bi-pencil-square me-1"></i> Edit
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="javascript:void(0);" (click)="removeItem(data.id)">
+                <i class="bi bi-trash3 me-1"></i> Delete
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+  
     </div>
   </div>
+  
 </div>
 
+<style>
+.rotate-45 {
+  transform: rotate(45deg);
+}
+</style>
 
 <!-- Add Formation Modal -->
 <div bsModal #addFormationModal="bs-modal" class="modal fade" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content border-0">
-      <div class="modal-header bg-primary p-3">
-        <h5 class="modal-title text-white">Add Formation</h5>
-        <button type="button" class="btn-close btn-close-white" (click)="addFormationModal.hide()"></button>
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content shadow border-0 rounded-3">
+      <!-- Header stylé -->
+      <div
+        class="modal-header"
+        style="
+          background: linear-gradient(to right, #8ec5fc, #e0c3fc);
+          color: #333;
+        "
+      >
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-mortarboard-fill fs-4"></i>
+          <h5 class="modal-title mb-0 fw-semibold">Ajouter une Formation</h5>
+        </div>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="addFormationModal.hide()"
+        ></button>
       </div>
 
       <form [formGroup]="formationForm" (ngSubmit)="saveFormation()">
-        <div class="modal-body">
-          <div class="row g-3">
+        <div class="modal-body p-4">
+          <div class="row g-4">
             <div class="col-md-6">
-              <label class="form-label">Title</label>
-              <input type="text" class="form-control" formControlName="name" required>
+              <label class="form-label">Titre de la formation</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="name"
+                placeholder="Ex: Angular avancé"
+              />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">Price</label>
-              <input type="number" class="form-control" formControlName="price" required>
+              <label class="form-label">Prix ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                class="form-control"
+                formControlName="price"
+                placeholder="Ex: 99.99"
+              />
             </div>
-
-            <div class="col-md-12">
+            <div class="col-12">
               <label class="form-label">Description</label>
-              <textarea class="form-control" rows="3" formControlName="description" required></textarea>
+            
+              <div class="input-group mb-2">
+                <textarea
+                  class="form-control"
+                  formControlName="description"
+                  rows="3"
+                  placeholder="Brève description de la formation"
+                ></textarea>
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  (click)="onImproveDescription()"
+                  title="Améliorer automatiquement la description"
+                  [disabled]="isImproving"
+                >
+                  <span *ngIf="!isImproving">✨</span>
+                  <span *ngIf="isImproving">...</span>
+                </button>
+              </div>
+            
+              <div *ngIf="previewedDescription" class="border rounded p-2 bg-light mb-2">
+                <strong>Aperçu de la description générée :</strong>
+                <p class="mt-1">{{ previewedDescription }}</p>
+                <button class="btn btn-sm btn-outline-success" (click)="formationForm.get('description')?.setValue(previewedDescription)">
+                  ✅ Utiliser cette description
+                </button>
+              </div>
+            
+              <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-outline-success btn-sm" (click)="onSuggestSponsor()">
+                  🤖 Suggérer un sponsor
+                </button>
+              </div>
             </div>
-
-            <div class="col-md-6">
+            
+                        <div class="col-md-6">
               <label class="form-label">Image</label>
-              <input type="file" class="form-control" (change)="onFileSelected($event)">
+              <input
+                type="file"
+                class="form-control"
+                (change)="onFileSelected($event)"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Formateur</label>
+              <select formControlName="formateurId" class="form-control">
+                <option value="">Aucun(e)</option>
+                <option *ngFor="let formateur of formateurs" [value]="formateur.id">
+                  {{ formateur.nom }} {{ formateur.prenom }}
+                </option>
+              </select>
+              
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Date de publication</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                formControlName="publicationDate"
+              />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">Publication Date</label>
-              <input type="datetime-local" class="form-control" formControlName="publicationDate" required>
+              <label class="form-label">Date début</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                formControlName="dateDebut"
+              />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">Start Time</label>
-              <input type="datetime-local" class="form-control" formControlName="dateDebut">
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">End Time</label>
-              <input type="datetime-local" class="form-control" formControlName="dateFin">
+              <label class="form-label">Date fin</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                formControlName="dateFin"
+              />
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Mode</label>
-              <select class="form-select" formControlName="mode" (change)="onModeChange()">
+              <select
+                class="form-select"
+                formControlName="mode"
+                (change)="onModeChange()"
+              >
                 <option value="presentiel">Présentiel</option>
                 <option value="enligne">En ligne</option>
               </select>
             </div>
 
-            <!-- Présentiel Section -->
-            <div *ngIf="isPresentiel" class="col-12">
+            <!-- EN LIGNE -->
+            <!-- Lien Meet proprement organisé -->
+            <div class="col-md-6" *ngIf="isOnline">
+              <label class="form-label">Lien Meet</label>
+              <div class="input-group">
+                <input
+                  type="url"
+                  class="form-control"
+                  formControlName="meetLink"
+                  placeholder="https://meet.google.com/xyz-abc-def"
+                  pattern="https://meet\.google\.com/[a-z0-9\-]+"
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-primary"
+                  (click)="openGoogleMeet()"
+                >
+                  <i class="bi bi-camera-video"></i> Créer
+                </button>
+              </div>
+              <small class="text-muted"
+                >Lien Google Meet uniquement (ex:
+                https://meet.google.com/xyz-abc-def)</small
+              >
+            </div>
+
+            <!-- Présentiel avec carte -->
+            <div class="col-12" *ngIf="isPresentiel">
               <div class="row g-3">
+                <!-- Champ Lieu avec bouton Carte -->
                 <div class="col-md-6">
                   <label class="form-label">Lieu</label>
-                  <input type="text" class="form-control" formControlName="lieu">
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      formControlName="lieu"
+                      placeholder="Cliquez pour choisir sur la carte"
+                      readonly
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      (click)="openMapModal()"
+                    >
+                      <i class="bi bi-geo-alt-fill"></i> Choisir
+                    </button>
+                  </div>
                 </div>
-
+            
                 <div class="col-md-6">
-                  <label class="form-label">Titre de Pause</label>
-                  <input type="text" class="form-control" formControlName="titrePause">
+                  <label class="form-label">Titre de la pause</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="titrePause"
+                  />
                 </div>
-
+            
                 <div class="col-md-6">
-                  <label class="form-label">Durée de Pause (minutes)</label>
-                  <input type="number" class="form-control" formControlName="dureePauseMinutes">
+                  <label class="form-label">Durée de la pause</label>
+                  <input
+                    type="time"
+                    step="60"
+                    class="form-control"
+                    formControlName="dureePauseMinutes"
+                  />
                 </div>
-
+            
                 <div class="col-md-6">
-                  <label class="form-label">Besoin de Sponsor ?</label>
-                  <select class="form-select" formControlName="besoinSponsor" (ngModelChange)="onSponsorChange()">
+                  <label class="form-label">Besoin de sponsor ?</label>
+                  <select
+                    class="form-select"
+                    formControlName="besoinSponsor"
+                    (ngModelChange)="onSponsorChange()"
+                  >
                     <option [ngValue]="true">Oui</option>
                     <option [ngValue]="false">Non</option>
                   </select>
                 </div>
-
-                <div class="col-md-6" *ngIf="formationForm.get('besoinSponsor')?.value">
+            
+                <div
+                  class="col-md-6"
+                  *ngIf="formationForm.get('besoinSponsor')?.value"
+                >
                   <label class="form-label">Sponsor</label>
                   <select class="form-select" formControlName="sponsorId">
-                    <option *ngFor="let s of sponsors" [value]="s.id">{{ s.nom }}</option>
+                    <option *ngFor="let s of sponsors" [value]="s.id">
+                      {{ s.nom }}
+                    </option>
                   </select>
                 </div>
               </div>
             </div>
+            
+<!-- Modal Carte Leaflet -->
+<div bsModal #mapModal="bs-modal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 rounded-3 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Choisissez un lieu</h5>
+        <button type="button" class="btn-close" (click)="mapModal.hide()"></button>
+      </div>
+      <div class="modal-body p-0" style="height: 480px">
+        <!-- Search bar -->
+        <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 80%;">
+          <input id="searchBox" autocomplete="off" type="text" class="form-control shadow-sm" placeholder="Rechercher un lieu..." (keydown.enter)="onSearchEnter()" />
+          <ul id="suggestions" class="list-group position-absolute w-100" style="max-height: 200px; overflow-y: auto; z-index: 1001;"></ul>
+        </div>
 
-            <!-- En Ligne Section -->
-            <div *ngIf="isOnline" class="col-md-6">
-              <label class="form-label">Meet Link</label>
-              <input type="url" class="form-control" formControlName="meetLink">
-            </div>
+        <!-- Map -->
+        <div id="map" style="height: 100%; width: 100%;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal Carte Leaflet -->
+
 
             <div class="col-md-6">
               <label class="form-label">Catégorie</label>
-              <select class="form-select" formControlName="categorieId" required>
-                <option *ngFor="let c of categories" [value]="c.id">{{ c.nom }}</option>
+              <select class="form-select" formControlName="categorieId">
+                <option *ngFor="let c of categories" [value]="c.id">
+                  {{ c.nom }}
+                </option>
               </select>
             </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" (click)="addFormationModal.hide()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
+        <div class="modal-footer bg-light-subtle p-3 rounded-bottom">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="addFormationModal.hide()"
+          >
+            <i class="bi bi-x-circle"></i> Annuler
+          </button>
+        
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Enregistrer
+          </button>
         </div>
+        
       </form>
+    </div>
+  </div>
+</div>
+<!-- End Add Formation Modal -->
+<!-- deleteRecordModal -->
+<div bsModal #deleteRecordModal="bs-modal" id="deleteRecordModal" class="modal fade zoomIn">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" (click)="deleteRecordModal.hide()"></button>
+      </div>
+      <div class="modal-body p-md-5">
+        <div class="text-center">
+          <div class="text-danger">
+            <i class="bi bi-trash display-5"></i>
+          </div>
+          <div class="mt-4">
+            <h4 class="mb-2">Are you sure ?</h4>
+            <p class="text-muted mx-3 mb-0">Are you sure you want to remove this record ?</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center mt-4 pt-2 mb-2">
+          <button type="button" class="btn w-sm btn-light btn-hover" (click)="deleteRecordModal.hide()">Close</button>
+          <button type="button" class="btn w-sm btn-danger btn-hover" (click)="confirmDelete()">Yes, Delete It!</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

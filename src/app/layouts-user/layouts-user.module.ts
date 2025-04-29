@@ -51,7 +51,7 @@ import { HorizontalTopbarComponent } from './horizontal-topbar/horizontal-topbar
     CommonModule,
     BrowserAnimationsModule,
     RouterModule,
-    SimplebarAngularModule,
+    SimplebarAngularModule, // ← fonctionne maintenant
     BsDropdownModule.forRoot(),
     TranslateModule,
     CollapseModule,
@@ -60,7 +60,7 @@ import { HorizontalTopbarComponent } from './horizontal-topbar/horizontal-topbar
     ModalModule,
     NgxSpinnerModule.forRoot({ type: 'ball-scale-multiple' })
   ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [LanguageService],
 })
 export class LayoutsUserModule { }
