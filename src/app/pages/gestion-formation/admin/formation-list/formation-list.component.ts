@@ -86,7 +86,7 @@
           description: f.description,
           price: f.prix,
           img: f.imageUrl,
-          category: f.categorie?.nom || 'N/A',
+          category: f.categorieNom || 'Sans catégorie', // ✅ ici f.categorieNom
           dateDebut: f.dateDebut,
           dateFin: f.dateFin,
           instructor: (f.formateurNom && f.formateurPrenom) ? `${f.formateurNom} ${f.formateurPrenom}` : 'Aucun formateur',
@@ -104,6 +104,7 @@
         this.gridlist = [...this.listData];
       });
     }
+    
   
 
     loadCategories() {
