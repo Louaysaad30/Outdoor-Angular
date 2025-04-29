@@ -1218,7 +1218,7 @@ export const MENU = {
       label: 'Education',
       icon: 'ph-book-open', // Big icon for the main dropdown
       isDropdown: true,
-      children: [
+      subItems: [
         {
           id: 44,
           label: 'Courses list',
@@ -1231,6 +1231,13 @@ export const MENU = {
           label: 'Categories list',
           icon: 'ph-map-pin',
           link: '/formationback/admin/categorie-list',
+          parentId: 8
+        },
+            {
+          id: 44,
+          label: 'Reservations list',
+          icon: 'ph-calendar-check',
+          link: '/formationback/admin/reservations-list',
           parentId: 8
         },
         {
