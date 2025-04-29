@@ -16,6 +16,25 @@
     </div>
   </div>
 </div>
+<!-- Graphiques Statistiques -->
+<div class="row mt-4">
+  <div class="col-xl-6">
+    <apx-chart
+      [series]="pieChartOptions.series"
+      [chart]="pieChartOptions.chart"
+      [labels]="pieChartOptions.labels"
+      [responsive]="pieChartOptions.responsive">
+    </apx-chart>
+  </div>
+  <div class="col-xl-6">
+    <apx-chart
+      [series]="barChartOptions.series"
+      [chart]="barChartOptions.chart"
+      [xaxis]="barChartOptions.xaxis"
+      [title]="barChartOptions.title">
+    </apx-chart>
+  </div>
+</div>
 
 <!-- Tableau des Réservations -->
 <div class="card mt-4" id="reservationList">

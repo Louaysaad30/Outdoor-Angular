@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ReservationRequest } from '../models/reservation-request.model';
 import { Observable } from 'rxjs';
 import { Reservation } from '../models/reservation.model'; 
-import { UserReservation } from '../models/UserReservation.model'; // attention au nom du fichier aussi !
+import { UserReservation } from '../models/UserReservation.model'; 
 
 @Injectable({
   providedIn: 'root'
@@ -13,12 +13,11 @@ export class ReservationService {
 
   constructor(private http: HttpClient) {}
 
-  // 🟢 Create a reservation with User-ID in header
+  // 🟢 Create reservation
   createReservation(reservation: ReservationRequest, userId: number): Observable<any> {
     const headers = new HttpHeaders({
       'User-ID': userId.toString()
     });
-
     return this.http.post(`${this.baseUrl}`, reservation, { headers });
   }
 
@@ -27,12 +26,12 @@ export class ReservationService {
     return this.http.get<Reservation[]>(`${this.baseUrl}`);
   }
 
-  // 🔵 ADMIN: confirm a reservation
+  // 🔵 ADMIN: confirm reservation
   confirmReservation(reservationId: number): Observable<any> {
     return this.http.put(`${this.baseUrl}/confirm/${reservationId}`, {});
   }
 
-  // 🔵 ADMIN: cancel a reservation
+  // 🔵 ADMIN: cancel reservation
   cancelReservation(reservationId: number): Observable<any> {
     return this.http.put(`${this.baseUrl}/cancel/${reservationId}`, {});
   }
@@ -40,5 +39,10 @@ export class ReservationService {
   // 🔵 USER: get my reservations
   getReservationsForUser(userId: number): Observable<UserReservation[]> {
     return this.http.get<UserReservation[]>(`${this.baseUrl}/user/${userId}`);
+  }
+
+  // 🔵 ADMIN: get reservations stats (NEW)
+  getReservationStats(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/stats`);
   }
 }
