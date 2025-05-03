@@ -133,8 +133,7 @@ This frontend application is built using a **modular architecture** with **lazy-
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/outdoor-adventures-frontend.git
-   cd outdoor-adventures-frontend
+   git clone https://github.com/Louaysaad30/Outdoor-Angular
    ```
 
 2. **Install dependencies**
@@ -144,19 +143,12 @@ This frontend application is built using a **modular architecture** with **lazy-
    yarn install
    ```
 
-3. **Configure environment variables**  
-   Update the files under `src/environments/` with the appropriate API URLs and settings.
-
-4. **Start the development server**
+3. **Start the development server**
    ```bash
    ng serve
    ```
    Navigate to `http://localhost:4200/`
 
-5. **Build for production**
-   ```bash
-   ng build --configuration production
-   ```
 
 ---
 
