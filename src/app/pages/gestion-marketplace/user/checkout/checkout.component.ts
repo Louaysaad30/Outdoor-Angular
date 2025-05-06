@@ -262,7 +262,7 @@ export class CheckoutComponent implements OnInit {
             });
         } else if (this.selectedPaymentMethod === 'stripe') {
             // Create a Stripe checkout session with order details
-            order.etat = Status.IN_PROGRESS;
+            order.etat = Status.ON_HOLD;
 
             this.checkoutService.addCommande(order).subscribe({
                 next: (savedOrder) => {

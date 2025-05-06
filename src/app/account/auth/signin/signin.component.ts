@@ -1,12 +1,14 @@
-import { Component } from '@angular/core';
-  import { FormControl, FormGroup, Validators } from '@angular/forms';
-  import { AuthServiceService } from '../services/auth-service.service';
-  import Swal from 'sweetalert2';
-  import { Router } from '@angular/router';
-  import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
-  import { UserServiceService } from '../services/user-service.service';
-  import { AuthenticationRequest } from '../models/AuthenticationRequest';
-  import { User } from '../models/User';
+import { Component, ViewChild } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { AuthServiceService } from '../services/auth-service.service';
+import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
+import { NgxCaptchaModule } from 'ngx-captcha';
+import {AuthenticationRequest} from '../models/AuthenticationRequest';
+import { User } from '../models/User';
+import { WebsocketService } from 'src/app/pages/gestion-user/services/websocket.service';
+import { UserServiceService } from '../services/user-service.service';
+
 
   @Component({
     selector: 'app-signin',
@@ -17,6 +19,9 @@ import { Component } from '@angular/core';
     failedAttempts = 0;
     maxAttempts = 3;
 
+
+  @ViewChild('captchaElem') captchaElem: any; // Add this line at the top
+
     year: number = new Date().getFullYear();
     fieldTextType!: boolean;
     loginuser!: AuthenticationRequest;
@@ -24,6 +29,7 @@ import { Component } from '@angular/core';
     errorLoginMessage = '';
     siteKey: string = '6LewnB4rAAAAAFWY26OgfY1IAx8-v9f5Z_zSVG31';
     currentUser: any | null = null;
+
 
     constructor(
       private authService: AuthServiceService,
@@ -66,17 +72,19 @@ import { Component } from '@angular/core';
                   text: 'You are now logged in!',
                 }).then(() => {
                   if (authority === 'ADMIN') {
-                    this.router.navigate(['/userback']);
+                    this.router.navigate(['/userback/admin/statistics']);
                   } else if (authority === 'USER') {
                     this.router.navigate(['/forumfront/user/forumpost']);
                   } else if (authority === 'AGENCE') {
-                    this.router.navigate(['/transportback']);
+                    this.router.navigate(['/transportback/agence']);
                   } else if (authority === 'OWNER') {
-                    this.router.navigate(['/campingback']);
+                    this.router.navigate(['/campingback/owner/camping']);
                   } else if (authority === 'FORMATEUR') {
-                    this.router.navigate(['/formationback']);
+                    this.router.navigate(['/formationback/admin/formateur-dashboard']);
+                  } else if (authority === 'LIVREUR') {
+                    this.router.navigate(['/marketplaceback/livreur/orders']);
                   } else if (authority === 'EVENT_MANAGER') {
-                    this.router.navigate(['/eventback/event-manager']);
+                    this.router.navigate(['/eventback/event-manager/event-list ']);
                   } else {
                     this.router.navigate(['/auth/signin']);
                   }
@@ -104,6 +112,12 @@ import { Component } from '@angular/core';
             });
 
             this.failedAttempts++;
+               // Reset recaptcha
+          if (this.captchaElem) {
+            this.captchaElem.resetCaptcha();
+          }
+          this.loginForm.get('recaptcha')?.reset();
+
             if (this.failedAttempts >= this.maxAttempts) {
               this.userService.blockUserFailByEmail(this.loginForm.get('email')?.value).subscribe(() => {
                 Swal.fire({
@@ -120,11 +134,12 @@ import { Component } from '@angular/core';
                 text: `${errorMessage} (${this.maxAttempts - this.failedAttempts} attempts left)`,
               });
             }
+            this.errorLoginMessage = errorMessage;
+
           }
         );
-      }
+        }
     }
-
     toggleFieldTextType(): void {
       this.fieldTextType = !this.fieldTextType;
     }

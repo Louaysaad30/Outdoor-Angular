@@ -167,6 +167,42 @@
           </div>
         </div>
       </div>
+
+      <!-- User Churn Analysis -->
+      <div class="col-xl-6">
+        <div class="card card-height-100">
+          <div class="card-header align-items-center d-flex">
+            <h6 class="card-title mb-0 flex-grow-1">User Churn Analysis</h6>
+            <div class="flex-shrink-0">
+              <button 
+                class="btn btn-primary btn-sm" 
+                (click)="sendChurnEmails()"
+                [disabled]="isSendingEmails">
+                <i class="bi bi-envelope me-1"></i>
+                {{ isSendingEmails ? 'Sending...' : 'Send Emails to Churn Users' }}
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Email sent message alert -->
+            <div *ngIf="emailSentMessage" 
+                 class="alert mb-3" 
+                 [ngClass]="{'alert-success': !emailSentMessage.includes('Failed'), 
+                            'alert-danger': emailSentMessage.includes('Failed')}">
+              {{ emailSentMessage }}
+            </div>
+            <!-- Existing chart -->
+            <div id="churnChart" class="apex-charts" dir="ltr">
+              <apx-chart
+                [series]="churnData"
+                [chart]="{ type: 'pie' }"
+                [labels]="churnLabels"
+                [colors]="['#dc3545', '#198754']"
+              ></apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+      
     </div>
   </div>
-  

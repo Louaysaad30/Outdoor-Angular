@@ -126,6 +126,7 @@ export class ListUsersComponent {
 getChurnPrediction(userId: number) {
   this.userService.predictChurn(userId).subscribe(
     (response) => {
+      console.log('Churn prediction response:', response.message);
       const user = this.paginatedUsers.find(u => u.id === userId); // Trouver l'utilisateur
       if (user) {
         user.churnResult = response.message; // Ajouter le résultat de la prédiction à l'utilisateur

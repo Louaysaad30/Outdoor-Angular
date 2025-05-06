@@ -28,7 +28,7 @@
     "@angular/router": "^17.0.4",
     "@asymmetrik/ngx-leaflet": "^17.0.0",
     "@ckeditor/ckeditor5-angular": "^7.0.1",
-    "@ckeditor/ckeditor5-build-classic": "^44.3.0",
+    "@ckeditor/ckeditor5-build-classic": "^39.0.2",
     "@ctrl/ngx-emoji-mart": "^9.2.0",
     "@fullcalendar/angular": "^6.1.9",
     "@fullcalendar/core": "^6.1.9",
@@ -45,19 +45,26 @@
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0",
     "@nicky-lenaers/ngx-scroll-to": "^14.0.0",
-    "@stripe/stripe-js": "^7.2.0",
-    "@stomp/stompjs": "^7.1.1",
-    "@types/file-saver": "^2.0.7",
+
     "@popperjs/core": "^2.11.8",
+    "@stomp/stompjs": "^7.1.1",
+    "@stripe/stripe-js": "^7.2.0",
+    "@types/chart.js": "^2.9.41",
+    "@types/file-saver": "^2.0.7",
+
     "angular-ng-autocomplete": "^2.0.12",
     "angular-ng-stepper": "^2.0.0",
     "angularx-flatpickr": "^7.3.0",
     "angularx-qrcode": "^19.0.0",
-
     "apexcharts": "^3.54.1",
     "assert": "^2.1.0",
     "bootstrap": "5.3.2",
+    "colorthief": "^2.6.0",
+    "echarts": "^5.4.3",
+    "fast-average-color": "^9.5.0",
+
     "buffer": "^6.0.3",
+    "chart.js": "^4.4.9",
     "crypto-browserify": "^3.12.1",
     "echarts": "^5.4.3",
     "file-saver": "^2.0.5",
@@ -71,7 +78,7 @@
     "maplibre-gl": "^5.2.0",
     "masonry-layout": "^4.2.2",
     "moment": "^2.29.4",
-      "ng-apexcharts": "1.8.0",
+    "ng-apexcharts": "1.8.0",
     "ng-otp-input": "^1.9.3",
     "ng2-dragula": "^5.1.0",
     "ng2-search-filter": "^0.5.1",
@@ -99,10 +106,12 @@
     "prismjs": "^1.29.0",
     "process": "^0.11.10",
     "rxjs": "~7.8.1",
-    "simplebar-angular": "3.2.4",
+    "simplebar-angular": "^3.2.4",
     "slick-carousel": "^1.8.1",
     "sockjs-client": "^1.6.1",
+
     "stream-browserify": "^3.0.0",
+
     "sweetalert2": "^11.6.13",
     "tslib": "^2.6.2",
     "zone.js": "0.14.2"
@@ -125,7 +134,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "5.2.2",
-    "webpack": "^5.98.0"
+    "webpack": "^5.99.5"
   },
   "overrides": {
     "autoprefixer": "10.4.16"

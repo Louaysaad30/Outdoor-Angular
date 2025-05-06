@@ -1,0 +1,229 @@
+<ng-container *ngIf="formation; else loading">
+  <app-breadcrumbs [title]="formation.titre" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+
+  <div class="row">
+    <!-- Colonne gauche -->
+    <div class="col-xl-9 col-lg-8">
+      <div class="card">
+        <div class="card-body">
+
+          <!-- Vidéo -->
+          <div class="ratio ratio-16x9 mb-4" *ngIf="videoUrl; else noVideo">
+            <iframe [src]="videoUrl" allowfullscreen></iframe>
+          </div>
+
+          <ng-template #noVideo>
+            <div class="alert alert-warning text-center">
+              <i class="bi bi-exclamation-triangle me-1"></i> Aucune vidéo trouvée pour cette formation.
+            </div>
+          </ng-template>
+
+          <!-- Infos générales -->
+          <div class="mt-3">
+            <h4 class="fw-bold mb-2">{{ formation.titre }}</h4>
+
+            <div class="d-flex align-items-center flex-wrap gap-3">
+              <div class="d-flex align-items-center text-muted">
+                <i class="bi bi-tags me-1"></i> {{ formation.categorie?.nom || 'Non catégorisé' }}
+              </div>
+
+<!-- Affiche seulement si averageRating est un nombre valide -->
+<div class="d-flex align-items-center">
+  <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
+    <i class="bi" [ngClass]="{
+      'bi-star-fill text-warning': i < getFloor(averageRating),
+      'bi-star-half text-warning': i === getFloor(averageRating),
+      'bi-star text-muted': i > getFloor(averageRating)
+    }"></i>
+  </ng-container>
+  <span class="ms-1 text-muted">{{ averageRating.toFixed(1) }}</span>
+</div>
+            
+              <span class="badge" [ngClass]="formation.enLigne ? 'bg-primary' : 'bg-success'">
+                {{ formation.enLigne ? 'En ligne' : 'Présentiel' }}
+              </span>
+
+              <span *ngIf="!formation.enLigne" class="text-muted">
+                <i class="bi bi-geo-alt me-1"></i> {{ formation.lieu }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Carte Map -->
+          <div *ngIf="!formation.enLigne && formation.lieu" class="mt-4">
+            <h5 class="fw-bold mb-2">Location Map</h5>
+            <div id="map" style="height: 300px; width: 100%; border-radius: 10px; overflow: hidden;"></div>
+          </div>
+
+          <!-- Description -->
+          <h5 class="mt-4">Description</h5>
+          <p class="text-muted">{{ formation.description }}</p>
+
+          <!-- Avis et Notes -->
+          <div class="card mt-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Avis & Notes</h5>
+                <button class="btn btn-sm btn-primary" (click)="openAddReviewModal()">
+                  <i class="bi bi-plus-circle me-1"></i> Ajouter un avis
+                </button>
+              </div>
+
+              <div *ngIf="reviews.length > 0; else noReviews">
+                <div *ngFor="let review of reviews" class="border-bottom py-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="d-flex gap-3 align-items-center">
+                      <div class="text-warning">
+                        <ng-container *ngFor="let i of [].constructor(review.rating)">
+                          <i class="bi bi-star-fill"></i>
+                        </ng-container>
+                        <ng-container *ngFor="let i of [].constructor(5 - review.rating)">
+                          <i class="bi bi-star text-muted"></i>
+                        </ng-container>
+                      </div>
+                      <strong>{{ getUserName(review.userId) }}</strong>
+                    </div>
+                    <small class="text-muted">{{ review.createdAt | date: 'dd MMM, yyyy' }}</small>
+                    <ng-container *ngIf="review.userId === connectedUserId">
+                      <button class="btn btn-sm btn-outline-primary" (click)="editReview(review)">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" (click)="onDeleteReview(review)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </ng-container>
+              
+                  </div>
+
+                  <div class="mt-2">
+                    <h6 class="mb-1">{{ review.title }}</h6>
+                    <p class="mb-1 text-muted">{{ review.comment }}</p>
+                    <img *ngIf="review.imageUrl" [src]="review.imageUrl" alt="Review Image" class="img-fluid rounded" style="max-width: 200px;">
+                  </div>
+                </div>
+              </div>
+
+              <ng-template #noReviews>
+                <p class="text-muted text-center my-4">Aucun avis pour le moment.</p>
+              </ng-template>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne droite -->
+    <div class="col-xl-3 col-lg-4">
+      <div class="card overflow-hidden border">
+        <div class="card-body text-center bg-light">
+          <img [src]="formation.imageUrl || 'assets/images/default-formation.jpg'" class="img-fluid rounded mb-3" alt="Formation">
+          <h5 class="text-truncate">{{ formation.titre }}</h5>
+          <h4 class="fw-bold text-primary">{{ formation.prix | currency:'EUR' }}</h4>
+
+          <div class="mt-2">
+            <p *ngIf="status === 'Déjà terminée'" class="text-danger fw-bold">Déjà terminée</p>
+            <p *ngIf="status === 'Déjà commencée'" class="text-success fw-bold">Déjà commencée</p>
+            <p *ngIf="status.includes('Commence')" class="text-info fw-bold">{{ status }}</p>
+          </div>
+
+          <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-primary" [disabled]="!canReserve" *ngIf="!isAlreadyReserved" (click)="openReservationModal()">
+              <i class="bi bi-cart me-1"></i> Réserver
+            </button>
+            <button class="btn btn-success" disabled *ngIf="isAlreadyReserved">
+              <i class="bi bi-check-circle me-1"></i> Réservé
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body border-top">
+          <h6 class="text-muted mb-2">Détails</h6>
+          <ul class="list-unstyled">
+            <li><i class="bi bi-clock me-1"></i> Durée : {{ duree }}</li>
+            <li><i class="bi bi-tags me-1"></i> Catégorie : {{ formation.categorie?.nom || 'Non catégorisé' }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header"><h6 class="mb-0">Formateur</h6></div>
+        <div class="card-body text-center">
+          <img [src]="formateur?.image || 'assets/images/users/avatar-1.jpg'" class="rounded-circle avatar-md mb-2" alt="Formateur">
+          <h6 class="mb-0">{{ formateur ? (formateur.nom + ' ' + formateur.prenom) : 'Aucun formateur' }}</h6>
+          <p class="text-muted mb-0">Département pédagogique</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajout Avis -->
+  <div bsModal #addReviewModal="bs-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+        <div class="modal-content">
+          <div class="modal-header justify-content-between align-items-center">
+            <h5 class="modal-title mb-0">Ajouter un avis</h5>
+          
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="generateFakeReview()">
+                <i class="bi bi-robot me-1"></i> Générer IA
+              </button>
+              <button type="button" class="btn-close" (click)="closeAddReviewModal()"></button>
+            </div>
+          </div>          
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Note</label>
+              <select class="form-select" formControlName="rating">
+                <option [value]="i" *ngFor="let i of [5,4,3,2,1]">{{ i }} étoiles</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Titre</label>
+              <input type="text" class="form-control" formControlName="title" placeholder="Titre de l'avis">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Commentaire</label>
+              <textarea class="form-control" formControlName="comment" rows="3" placeholder="Votre avis..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" (click)="closeAddReviewModal()">Annuler</button>
+            <button type="submit" class="btn btn-success" [disabled]="reviewForm.invalid">Soumettre</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</ng-container>
+
+<ng-template #loading>
+  <div class="text-center p-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+    <p class="mt-3">Chargement de la formation...</p>
+  </div>
+</ng-template>
+<!-- Modal Confirmation Suppression -->
+<div class="modal fade show" tabindex="-1" [ngClass]="{ 'd-block': showDeleteConfirmModal }" *ngIf="showDeleteConfirmModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmation</h5>
+        <button type="button" class="btn-close" (click)="cancelDeleteReview()"></button>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer cet avis ? Cette action est irréversible.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelDeleteReview()">Annuler</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeleteReview()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>

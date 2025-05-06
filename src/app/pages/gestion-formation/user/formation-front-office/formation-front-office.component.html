@@ -1,0 +1,122 @@
+<!-- Breadcrumbs -->
+<app-breadcrumbs [title]="'Liste des Formations'" [breadcrumbItems]="breadCrumbItems"></app-breadcrumbs>
+
+<!-- Search & Filter -->
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-xl-4 col-sm-6">
+            <div class="search-box">
+              <input type="text" class="form-control search" placeholder="Rechercher une formation..." [(ngModel)]="term" (keyup)="searchList()">
+              <i class="ri-search-line search-icon"></i>
+            </div>
+          </div>
+          <!-- Filtre Catégorie -->
+          <div class="col-xl-3 col-sm-6">
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-funnel"></i></span>
+              <select class="form-select" [(ngModel)]="selectedCategorieId" (change)="applyFilters()">
+                <option value="">Toutes les catégories</option>
+                <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.nom }}</option>
+              </select>
+            </div>
+          </div>
+            <!-- Filtre Prix -->          
+  
+          <div class="col-xl-3 col-sm-6">
+            <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-funnel"></i></span>
+            <select class="form-control" (change)="filterByMode($event)">
+              <option value="all">Tous les modes</option>
+              <option value="online">En ligne</option>
+              <option value="offline">Présentiel</option>
+            </select>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Formations Cards -->
+<div class="row">
+  <div class="col-xl-3 col-lg-4 col-md-6" *ngFor="let formation of displayedFormations">
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="position-relative">
+          <img [src]="formation.imageUrl || 'assets/images/default-formation.jpg'" alt="Formation Image"
+               class="img-fluid rounded-top" style="height: 220px; width: 100%; object-fit: cover;">
+          <div class="position-absolute top-0 end-0 m-2">
+            <button class="btn btn-icon btn-sm btn-ghost-light rounded-circle">
+              <i class="bi bi-star"></i>
+            </button>
+          </div>
+          <div class="position-absolute bottom-0 start-0 m-2">
+            <span class="badge bg-info">{{ formation.enLigne ? 'En ligne' : 'Présentiel' }}</span>
+          </div>
+        </div>
+        <div class="p-3">
+          <h5 class="mb-1">{{ formation.titre }}</h5>
+          <p class="text-muted mb-1">
+            <i class="bi bi-tags me-1"></i> {{ formation.categorie?.nom }}
+          </p>
+          <p class="text-muted mb-1">
+            <i class="bi bi-cash me-1"></i> {{ formation.prix | currency:'EUR' }}
+          </p>
+          <p class="text-muted mb-1" *ngIf="formation.enLigne; else lieuBlock">
+            <i class="bi bi-camera-video me-1"></i>
+            <a [href]="formation.meetLink" target="_blank">Lien Meet</a>
+          </p>
+          <ng-template #lieuBlock>
+            <i class="bi bi-geo-alt me-1"></i> {{ formation.lieu }}
+          </ng-template>
+          <p class="text-muted mb-0">
+            <i class="bi bi-calendar-event me-1"></i>
+            {{ formation.dateDebut | date:'mediumDate' }} → {{ formation.dateFin | date:'mediumDate' }}
+          </p>
+          <p class="text-muted text-truncate mt-2">{{ formation.description }}</p>
+          <div class="hstack gap-2 justify-content-end">
+            <a [routerLink]="['/formationfront/user/formation/details', formation.id]" class="link-effect">
+                Overview <i class="bi bi-arrow-right align-baseline ms-1"></i></a>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Spinner -->
+<div *ngIf="loading" class="text-center py-5">
+  <div class="spinner-border text-primary avatar-md" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<!-- No results -->
+<div *ngIf="!loading && displayedFormations.length === 0" class="py-4 text-center">
+  <div class="avatar-sm mx-auto mb-4">
+    <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+      <i class="bi bi-search"></i>
+    </div>
+  </div>
+  <h5>Désolé ! Aucune formation trouvée</h5>
+</div>
+
+<!-- Pagination -->
+<div class="row align-items-center mt-4">
+  <div class="col-sm">
+    <div class="text-muted text-center text-sm-start">
+      Affichage de <span class="fw-semibold">{{ displayedFormations.length }}</span> sur <span class="fw-semibold">{{ formations.length }}</span> Formations
+    </div>
+  </div>
+  <div class="col-sm-auto mt-3 mt-sm-0">
+    <pagination class="pagination-wrap hstack justify-content-center gap-2"
+                [totalItems]="formations.length"
+                [itemsPerPage]="itemsPerPage"
+                (pageChanged)="pageChanged($event)">
+    </pagination>
+  </div>
+</div>

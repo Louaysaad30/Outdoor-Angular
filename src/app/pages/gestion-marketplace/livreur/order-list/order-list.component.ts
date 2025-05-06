@@ -11,6 +11,7 @@ import { forkJoin, of } from 'rxjs';
 import { DeliveryAssignmentDTO } from '../../models/DTO/DeliveryAssignmentDTO';
 import { DeliveryStatusUpdateDto } from '../../models/DTO/DeliveryStatusUpdateDto';
 import { UpdateStateCommand } from '../../models/DTO/UpdateStateCommand';
+import { MailerService } from '../../services/mail/mailer.service';
 
 @Component({
   selector: 'app-order-list',
@@ -64,7 +65,8 @@ export class OrderListComponent implements OnInit {
   constructor(
     private deliveryService: DeliveryService,
     private checkoutService: CheckoutService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private mailerService: MailerService
   ) {}
 
   ngOnInit(): void {
@@ -259,6 +261,8 @@ export class OrderListComponent implements OnInit {
                   this.updateLocalDeliveryStatus(delivery, newStatus, orderStatus);
 
                   this.toastr.success(`Delivery status updated to ${this.getStatusLabel(newStatus)}`);
+                  this.sendStatusUpdateEmail(orders[0], newStatus);
+
                 },
                 error: (err) => {
                   console.error('Error updating order status:', err);
@@ -272,6 +276,7 @@ export class OrderListComponent implements OnInit {
               // Update local arrays with just delivery status
               this.updateLocalDeliveryStatus(delivery, newStatus, null);
               this.toastr.success(`Delivery status updated to ${this.getStatusLabel(newStatus)}`);
+
             }
           },
           error: (err) => {
@@ -311,6 +316,279 @@ export class OrderListComponent implements OnInit {
     this.applyFilters();
   }
 
+  private sendStatusUpdateEmail(order: Commande, newStatus: Status): void {
+    const statusLabel = this.getStatusLabel(newStatus);
+    console.log('Sending email notification for status:', statusLabel);
+
+    // Modern email template with enhanced design
+    const emailHeader = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Outdoor - Order Update</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+          body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+          }
+          .email-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          }
+          .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            padding: 30px 20px;
+            text-align: center;
+          }
+          .header img {
+            max-width: 150px;
+            height: auto;
+          }
+          .content {
+            padding: 40px 30px;
+            background-color: #fff;
+          }
+          .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            margin: 10px 0;
+            color: white;
+            background-color: ${this.getStatusColor(newStatus)};
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          .order-details {
+            background-color: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+          }
+          .footer {
+            background-color: #f7f7f7;
+            padding: 25px 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+          }
+          .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+          }
+          h2 {
+            color: #2E7D32;
+            margin-bottom: 20px;
+            font-weight: 600;
+          }
+          p {
+            margin-bottom: 15px;
+          }
+          .divider {
+            height: 1px;
+            background-color: #eaeaea;
+            margin: 30px 0;
+          }
+          .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+          }
+          .social-icon {
+            display: inline-block;
+            margin: 0 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          <div class="header">
+            <h1 style="color: white; margin: 10px 0; font-weight: 700; letter-spacing: 1px;">
+              OUTDOOR ADVENTURES
+            </h1>
+          </div>
+          <div class="content">
+    `;
+
+    const emailFooter = `
+          <div class="divider"></div>
+          <p style="text-align: center; font-size: 14px;">
+            Need assistance? Our customer service team is here to help!
+          </p>
+          <div class="contact-info">
+            <span>📞 +216 71 000 000</span>
+            <span>✉️ support@outdoor.com</span>
+          </div>
+          </div>
+          <div class="footer">
+            <p style="margin: 5px 0;">© ${new Date().getFullYear()} Outdoor - All Rights Reserved</p>
+            <p style="margin: 5px 0;">Tunisia, Africa Mall</p>
+            <div style="margin-top: 15px;">
+              <a href="#" class="social-icon">Facebook</a> •
+              <a href="#" class="social-icon">Instagram</a> •
+              <a href="#" class="social-icon">Twitter</a>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Content based on status
+    let subject = `Your Order ${order.OrderNumber} - Delivery Update`;
+    let messageContent = '';
+
+    switch (newStatus) {
+      case Status.IN_PROGRESS:
+        messageContent = `
+          <h2>🚚 Your Order is Out for Delivery!</h2>
+          <p style="font-size: 16px;">Dear ${order.nom},</p>
+          <p>Great news! Your order is now <strong>out for delivery</strong>.</p>
+
+          <div class="order-details">
+            <p><strong>Order Number:</strong> #${order.OrderNumber}</p>
+            <p><strong>Status:</strong> <span class="status-badge">OUT FOR DELIVERY</span></p>
+            <p><strong>Estimated Delivery:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <p>Our delivery person is on the way with your package. You should receive it soon!</p>
+          <p>If you have any questions, please don't hesitate to contact us.</p>
+
+          <p>Thank you for shopping with Outdoor!</p>
+          <p style="margin-top: 25px;">Best regards,<br><strong>The Outdoor Team</strong></p>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="https://outdoor.com/track-order?id=${order.OrderNumber}" class="btn">TRACK YOUR DELIVERY</a>
+          </div>
+        `;
+        break;
+
+      case Status.DELIVERED:
+        messageContent = `
+          <h2>✓ Your Order Has Been Delivered!</h2>
+          <p style="font-size: 16px;">Dear ${order.nom},</p>
+          <p>We're happy to inform you that your order has been <strong>successfully delivered</strong>!</p>
+
+          <div class="order-details">
+            <p><strong>Order Number:</strong> #${order.OrderNumber}</p>
+            <p><strong>Status:</strong> <span class="status-badge">DELIVERED</span></p>
+            <p><strong>Delivery Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <p>We hope you enjoy your purchase. If you're satisfied with our service, we would appreciate your feedback.</p>
+
+          <p>Thank you for choosing Outdoor for your outdoor needs.</p>
+          <p style="margin-top: 25px;">Best regards,<br><strong>The Outdoor Team</strong></p>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="https://outdoor.com/review?order=${order.OrderNumber}" class="btn">LEAVE FEEDBACK</a>
+          </div>
+        `;
+        break;
+
+      case Status.CANCELED:
+        messageContent = `
+          <h2>⚠️ Your Order Delivery Has Been Canceled</h2>
+          <p style="font-size: 16px;">Dear ${order.nom},</p>
+          <p>We regret to inform you that the delivery for your order has been <strong>canceled</strong>.</p>
+
+          <div class="order-details">
+            <p><strong>Order Number:</strong> #${order.OrderNumber}</p>
+            <p><strong>Status:</strong> <span class="status-badge">CANCELED</span></p>
+            <p><strong>Cancellation Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <p>Our customer service team will contact you shortly to provide more information and reschedule the delivery if needed.</p>
+          <p>We apologize for any inconvenience this may cause.</p>
+
+          <p style="margin-top: 25px;">Best regards,<br><strong>The Outdoor Team</strong></p>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="https://outdoor.com/contact-us" class="btn">CONTACT SUPPORT</a>
+          </div>
+        `;
+        break;
+
+      default:
+        messageContent = `
+          <h2>📋 Your Order Status Has Been Updated</h2>
+          <p style="font-size: 16px;">Dear ${order.nom},</p>
+          <p>Your order status has been updated to <strong>${statusLabel}</strong>.</p>
+
+          <div class="order-details">
+            <p><strong>Order Number:</strong> #${order.OrderNumber}</p>
+            <p><strong>Status:</strong> <span class="status-badge">${statusLabel.toUpperCase()}</span></p>
+            <p><strong>Update Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+
+          <p>Thank you for shopping with Outdoor!</p>
+          <p style="margin-top: 25px;">Best regards,<br><strong>The Outdoor Team</strong></p>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="https://outdoor.com/track-order?id=${order.OrderNumber}" class="btn">TRACK YOUR ORDER</a>
+          </div>
+        `;
+    }
+
+    // Combine header, content and footer
+    const fullHtmlMessage = emailHeader + messageContent + emailFooter;
+
+    // Send the email
+    this.mailerService.sendEmail(order.email, subject, fullHtmlMessage) // Use the correct parameter name here (body)
+      .subscribe({
+        next: (response) => {
+          console.log('Email sent successfully:', response);
+          this.toastr.success('Status update notification sent to customer');
+        },
+        error: (err) => {
+          // Only treat actual errors as errors, not "OK" responses
+          if (err === 'OK' || err.status === 200) {
+            console.log('Email sent successfully with OK response');
+            this.toastr.success('Status update notification sent to customer');
+          } else {
+            console.error('Error sending email notification:', err);
+            this.toastr.warning('Delivery status updated but failed to send email notification');
+          }
+        }
+      });
+  }
+
+  // Helper method to get appropriate color for status badges
+  private getStatusColor(status: Status): string {
+    switch (status) {
+      case Status.IN_PROGRESS:
+        return '#2196F3'; // Blue
+      case Status.SHIPPED:
+        return '#FF9800'; // Orange
+      case Status.DELIVERED:
+        return '#4CAF50'; // Green
+      case Status.CANCELED:
+        return '#F44336'; // Red
+      default:
+        return '#9E9E9E'; // Grey
+    }
+  }
+
   // Helper method to map delivery status to order status
   private mapDeliveryStatusToOrderStatus(deliveryStatus: Status): Status {
     switch (deliveryStatus) {
@@ -330,8 +608,8 @@ export class OrderListComponent implements OnInit {
     switch (status) {
       case Status.IN_PROGRESS:
         return 'In Progress';
-      case Status.SHIPPED:
-        return 'Shipped';
+      case Status.ON_HOLD:
+        return 'ON_HOLD';
       case Status.DELIVERED:
         return 'Delivered';
       case Status.CANCELED:

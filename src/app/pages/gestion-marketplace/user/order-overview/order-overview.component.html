@@ -44,10 +44,10 @@
                                             <p class="text-muted mb-0">{{ order.dateCommande | date:'h:mm a' }} <i class="bi bi-clock align-baseline ms-1"></i></p>
                                         </div>
                                         <div class="flex-shrink-0">
-                                            <button class="btn btn-primary" *ngIf="order.idCommande !== undefined" (click)="downloadInvoice(order.idCommande)">
-                                                <i class="ph-download-simple align-middle me-1"></i> Download Facture
-                                            </button>
-                                        </div>
+                                          <button class="btn btn-primary" *ngIf="order.idCommande !== undefined" (click)="downloadInvoice(order.idCommande)">
+                                              <i class="ph-download-simple align-middle me-1"></i> Download Facture
+                                          </button>
+                                      </div>
                                     </div>
                                 </div><!--end card-->
                             </div><!--end col-->
@@ -121,8 +121,8 @@
                                         <div class="flex-grow-1">
                                             <h6 class="card-title mb-3">Payment Info</h6>
                                             <p class="fw-medium fs-md mb-1">ID: {{ order.OrderNumber }}</p>
-                                            <p class="text-muted mb-1">Payment Method: <b>Cash On Delivery</b></p>
-                                            <p class="text-muted mb-0">Status: <b>Pending</b></p>
+                                            <p class="text-muted mb-1">Payment Method: <b>{{order.paymentMethod}}</b></p>
+                                            <p class="text-muted mb-0">Status: <b>{{order.etat}}</b></p>
                                         </div>
                                         <div class="flex-shrink-0">
                                             <div class="avatar-sm">
@@ -236,7 +236,7 @@
                                                     </span>
 
                                                     <!-- Cancel Order Button - Only displayed if order can be cancelled -->
-                                                    <div class="mt-2" *ngIf="order.etat === 'IN_PROGRESS'">
+                                                    <div class="mt-2" *ngIf="order.etat === 'IN_PROGRESS' || order.etat === 'ON_HOLD'">
                                                         <button class="btn btn-sm btn-danger"
                                                                 (click)="order.idCommande !== undefined && openCancelModal(order)"
                                                                 [disabled]="order.idCommande === undefined">
@@ -430,6 +430,8 @@
     </div>
 </div>
 
+
+
 <!-- Cancelled Orders Section -->
 <div class="card mt-5" *ngIf="cancelledOrders && cancelledOrders.length > 0">
   <div class="card-header">
@@ -464,13 +466,61 @@
             <td class="text-end">
               <button class="btn btn-sm btn-outline-primary me-1"
                       *ngIf="order.idCommande"
-                      (click)="downloadInvoice(order.idCommande)">
+                      (click)="downloadInvoice(order.idCommande, $event)"
+                      [disabled]="downloadInProgress">
                 <i class="ph-download-simple"></i>
               </button>
             <!--   <button class="btn btn-sm btn-outline-success"
                       (click)="reorderItems(order)">
                 <i class="ph-arrows-clockwise me-1"></i>Reorder
               </button> -->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Delivered Orders Section -->
+<div class="card mt-5" *ngIf="deliveredOrders && deliveredOrders.length > 0">
+  <div class="card-header">
+    <h5 class="card-title mb-0">
+      <i class="bi bi-check-circle me-2 text-success"></i>Delivered Orders
+    </h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Order #</th>
+            <th scope="col">Date</th>
+            <th scope="col">Total</th>
+            <th scope="col">Items</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of deliveredOrders">
+            <td>
+              <span class="badge bg-light text-dark">{{ order.OrderNumber }}</span>
+            </td>
+            <td>{{ order.dateCommande | date:'MMM d, yyyy' }}</td>
+            <td>{{ order.montantCommande | currency }}</td>
+            <td>
+              <span class="badge bg-light text-secondary">
+                {{ getOrderItemCount(order) }} item(s)
+              </span>
+            </td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-primary me-1"
+                      *ngIf="order.idCommande"
+                      (click)="downloadInvoice(order.idCommande, $event)"
+                      [disabled]="downloadInProgress">
+                <i class="ph-download-simple"></i>
+              </button>
+
             </td>
           </tr>
         </tbody>
@@ -494,6 +544,9 @@
         <h4 class="mb-3">Are you sure you want to cancel this order?</h4>
         <p class="text-muted mb-4">
           This action cannot be undone. The order will be marked as cancelled and you'll need to place a new order if you change your mind.
+          <span *ngIf="selectedOrder?.etat === 'ON_HOLD'" class="d-block mt-2 text-info">
+              <i class="ph-info-circle me-1"></i> Your order is currently on hold and has not yet been processed.
+          </span>
         </p>
         <div *ngIf="selectedOrderNumber" class="alert alert-info">
           <div class="d-flex align-items-center">

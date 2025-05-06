@@ -1,0 +1,271 @@
+<!-- Start Breadcrumbs -->
+<app-breadcrumbs
+  title="Sponsor Grid"
+  [breadcrumbItems]="breadCrumbItems"
+></app-breadcrumbs>
+<!-- End Breadcrumbs -->
+
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row align-items-center gy-3">
+          <div class="col-lg-3 col-md-6 order-last order-md-first me-auto">
+            <div class="search-box">
+              <input
+                type="text"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Search for sponsor..."
+                [(ngModel)]="searchTerm"
+                (ngModelChange)="performSearch()"
+              />
+              <i class="ri-search-line search-icon"></i>
+            </div>
+          </div>
+          <div class="col-auto text-end">
+            <button class="btn btn-secondary" (click)="openAddModal()">
+              <i class="bi bi-plus-circle align-baseline me-1"></i> Add Sponsor
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cols-xxl-5 row-cols-md-2 row-cols-1" id="sponsor-list">
+  <div class="col" *ngFor="let sponsor of sponsorList">
+    <div class="card ribbon-box ribbon-fill">
+      <div class="card-body">
+        <div class="d-flex justify-content-end">
+          <div class="flex-shrink-0">
+            <div dropdown class="dropdown">
+              <a
+                dropdownToggle
+                class="btn btn-ghost-secondary btn-icon btn-sm"
+                href="javascript:void(0);"
+              >
+                <i class="bi bi-three-dots"></i>
+              </a>
+              <ul *bsDropdownMenu class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="javascript:void(0);"
+                    (click)="editSponsor(sponsor)"
+                  >
+                    <i class="bi bi-pencil-square align-baseline me-1"></i> Edit
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="javascript:void(0);"
+                    (click)="removeSponsor(sponsor.id)"
+                  >
+                    <i class="bi bi-trash3 align-baseline me-1"></i> Delete
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 text-center">
+          <!-- Ribbon with emoji and dynamic background -->
+          <div
+            class="ribbon ribbon-top-left"
+            [ngClass]="getBadgeClass(sponsor.niveauSponsor)"
+          >
+            <span>{{ getBadgeLabel(sponsor.niveauSponsor) }}</span>
+          </div>
+          <img
+            [src]="sponsor.logoUrl"
+            alt="Sponsor Logo"
+            class="avatar-md rounded mx-auto d-block"
+          />
+          <h5 class="mt-4 mb-1">
+            {{ sponsor.nom
+            }}<span *ngIf="sponsor.niveauSponsor" class="ms-2">{{
+              getBadgeIconOnly(sponsor.niveauSponsor)
+            }}</span>
+          </h5>
+          <p class="text-muted fw-medium mb-1">{{ sponsor.typeSponsor }}</p>
+          <p class="text-muted">
+            <i class="bi bi-geo-alt"></i>
+            {{
+              sponsor.typeSponsor === "INDIVIDU"
+                ? sponsor.pays
+                : sponsor.adresse
+            }}
+          </p>
+          <h6 class="text-body-emphasis mb-3">
+            {{ sponsor.formations?.length || 0 }} Formations
+          </h6>
+          <div class="hstack gap-2">
+            <a
+              [href]="whatsappLink(sponsor.telephone)"
+              target="_blank"
+              class="btn btn-info btn-icon flex-shrink-0"
+              ><i class="bi bi-telephone"></i
+            ></a>
+            <a
+              [href]="emailLink(sponsor.contactEmail)"
+              class="btn btn-subtle-primary w-100"
+              ><i class="bi bi-chat-text align-baseline me-1"></i> Message</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Sponsor Modal -->
+<div bsModal #addSponsorModal="bs-modal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form [formGroup]="sponsorForm" (ngSubmit)="saveSponsor()">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Sponsor</h5>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="addSponsorModal.hide()"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <!-- Logo Upload -->
+          <div class="mb-3">
+            <label class="form-label"
+              >Logo <span class="text-danger">*</span></label
+            >
+            <dropzone
+              class="dropzone"
+              [config]="dropzoneConfig"
+              (addedFile)="onFileAdded($event)"
+            ></dropzone>
+            <ul class="list-unstyled mt-2" *ngIf="uploadedFiles.length > 0">
+              <li *ngFor="let file of uploadedFiles">
+                <div class="d-flex align-items-center border rounded p-2">
+                  <img
+                    *ngIf="file.dataURL"
+                    [src]="file.dataURL"
+                    alt="preview"
+                    class="img-fluid rounded me-3"
+                    style="width: 60px; height: 60px; object-fit: contain"
+                  />
+                  <div class="flex-grow-1">
+                    <strong>{{ file.name }}</strong
+                    ><br />
+                    <small>{{ file.size }} bytes</small>
+                  </div>
+                  <button
+                    class="btn btn-sm btn-danger ms-2"
+                    type="button"
+                    (click)="removeFile(file)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Name -->
+          <div class="mb-3">
+            <label class="form-label"
+              >Name <span class="text-danger">*</span></label
+            >
+            <input type="text" class="form-control" formControlName="nom" />
+          </div>
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label class="form-label"
+              >Email <span class="text-danger">*</span></label
+            >
+            <input
+              type="email"
+              class="form-control"
+              formControlName="contactEmail"
+            />
+          </div>
+
+          <!-- Phone -->
+          <div class="mb-3">
+            <label class="form-label"
+              >Phone <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              formControlName="telephone"
+            />
+          </div>
+
+          <!-- Type -->
+          <div class="mb-3">
+            <label class="form-label"
+              >Type <span class="text-danger">*</span></label
+            >
+            <select class="form-select" formControlName="typeSponsor">
+              <option value="INDIVIDU">Individu</option>
+              <option value="ENTREPRISE">Entreprise</option>
+            </select>
+          </div>
+
+          <!-- Country or Address -->
+          <div
+            class="mb-3"
+            *ngIf="sponsorForm.value.typeSponsor === 'INDIVIDU'"
+          >
+            <label class="form-label">Country</label>
+            <input type="text" class="form-control" formControlName="pays" />
+          </div>
+          <div
+            class="mb-3"
+            *ngIf="sponsorForm.value.typeSponsor === 'ENTREPRISE'"
+          >
+            <label class="form-label">Address</label>
+            <textarea
+              class="form-control"
+              rows="2"
+              formControlName="adresse"
+            ></textarea>
+          </div>
+
+          <!-- Level -->
+          <div class="mb-3">
+            <label class="form-label">Sponsor Level</label>
+            <select class="form-select" formControlName="niveauSponsor">
+              <option value="BRONZE">Bronze</option>
+              <option value="SILVER">Silver</option>
+              <option value="GOLD">Gold</option>
+              <option value="PLATINUM">Platinum</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-outline-danger"
+            (click)="addSponsorModal.hide()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="sponsorForm.invalid"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
